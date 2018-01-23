@@ -6,9 +6,22 @@ public class DaoFactory {
    * @return UserDao
    */
   public UserDao userDao() {
-    ConnectionMaker connectionMaker = new DConnectionMaker(); // UserDao가 사용할 ConnectionMaker 구현 클래스를 결정하고 오브젝트를 만든다.
-    //    ConnectionMaker connectionMaker = new NConnectionMaker(); // D 사의 ConnectionMaker로도 자유롭게 변경가능
-    UserDao userDao = new UserDao(connectionMaker);
-    return userDao;
+    //      return new UserDao(new DConnectionMaker());  // ConnectionMaker 생성코드 중복
+    return new UserDao(connectionMaker());
+  }
+
+  public AccountDao accountDao() {
+    //    return new AccountDao(new DConnectionMaker()); // ConnectionMaker 생성코드 중복
+    return new AccountDao(connectionMaker());
+  }
+
+  public MessageDao messageDao() {
+    //    return new MessageDao(new DConnectionMaker()); // ConnectionMaker 생성코드 중복
+    return new MessageDao(connectionMaker());
+  }
+
+  public ConnectionMaker connectionMaker() {
+    // 분리해서 중복을 제거한 ConnectionMaker 타입 오브젝트 생성 코드
+    return new DConnectionMaker();
   }
 }
