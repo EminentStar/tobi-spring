@@ -5,11 +5,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public abstract class UserDao {
+public class UserDao {
   private ConnectionMaker connectionMaker;
 
-  public UserDao(){
-    connectionMaker = new DConnectionMaker();
+  public UserDao(ConnectionMaker connectionMaker){
+    this.connectionMaker = connectionMaker;
   }
 
   public void add(User user) throws ClassNotFoundException, SQLException {
@@ -47,7 +47,7 @@ public abstract class UserDao {
     return user;
   }
 
-  public abstract Connection getConnection() throws ClassNotFoundException, SQLException;
+//  public abstract Connection getConnection() throws ClassNotFoundException, SQLException;
 //    Class.forName("org.h2.Driver");
 //    Connection c = DriverManager.getConnection("jdbc:h2:~/test", "sa", "");
 //
