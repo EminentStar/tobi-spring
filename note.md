@@ -69,3 +69,10 @@ ApplicationContext는 IoC container이기도 하면서 동시에 Singleton Regis
 - request: http 요청이 생길때마다 생성되는
 - session: 웹의 세션과 유사함.
 
+
+## 1.7 Dependency Injection (DI; 의존관계 주입)
+### 1.7.1 IoC와 DI
+- 스프링 IoC 기능의 대표적인 동작원리는 주로 DI로 불림.  
+- DI의 핵심은 오브젝트 레퍼런스를 외부로부터 제공(주입)받고 이를 통해 여타 오브젝트와 dynamic하게 의존관계가 만들어지는 것.
+
+
