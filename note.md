@@ -61,3 +61,11 @@ ApplicationContext는 IoC container이기도 하면서 동시에 Singleton Regis
 - 개별적으로 바뀌는 정보는 데이터의 전역 공유를 막기 위해서 method parameter, local variables를 이용하면 싱글톤 내에서 필요한 데이터를 바르게 저장할 수 있음.
 
 
+### 1.6.3 스프링 빈의 스코프
+* scope: 빈이 생성되고, 존재하고, 적용되는 범위
+
+- 기본 스코프: singleton
+- prototype: 컨테이너가 빈을 요청할 때마다 새로운 오브젝트 생성
+- request: http 요청이 생길때마다 생성되는
+- session: 웹의 세션과 유사함.
+
