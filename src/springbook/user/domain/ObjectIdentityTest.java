@@ -1,12 +1,12 @@
 package springbook.user.domain;
 
+import java.sql.SQLException;
+
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-import java.sql.SQLException;
-
 public class ObjectIdentityTest {
-  public static void main(String[] args)throws ClassNotFoundException, SQLException {
+  public static void main(String[] args) throws ClassNotFoundException, SQLException {
     testObjectIdentity();
   }
 
@@ -17,7 +17,8 @@ public class ObjectIdentityTest {
 
   public static void testObjectIdentityByDaoFactory() {
     DaoFactory factory = new DaoFactory();
-    UserDao dao1 = factory.userDao(); UserDao dao2 = factory.userDao();
+    UserDao dao1 = factory.userDao();
+    UserDao dao2 = factory.userDao();
 
     System.out.println("objects directly created by DaoFactory");
     System.out.println(dao1); // (example) springbook.user.domain.UserDao@3764951d

@@ -8,7 +8,10 @@ import java.sql.SQLException;
 public class UserDao {
   private ConnectionMaker connectionMaker;
 
-  public UserDao(ConnectionMaker connectionMaker){
+  /**
+   * 의존관계 주입을 위한 코드
+   */
+  public UserDao(ConnectionMaker connectionMaker) {
     this.connectionMaker = connectionMaker;
   }
 
@@ -59,11 +62,11 @@ public class UserDao {
     c.close();
   }
 
-//  public abstract Connection getConnection() throws ClassNotFoundException, SQLException;
-//    Class.forName("org.h2.Driver");
-//    Connection c = DriverManager.getConnection("jdbc:h2:~/test", "sa", "");
-//
-//    return c;
-//  }
+  //  public abstract Connection getConnection() throws ClassNotFoundException, SQLException;
+  //    Class.forName("org.h2.Driver");
+  //    Connection c = DriverManager.getConnection("jdbc:h2:~/test", "sa", "");
+  //
+  //    return c;
+  //  }
 }
 
