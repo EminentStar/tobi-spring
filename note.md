@@ -31,6 +31,12 @@ IoC에선 프레임워크 또는 컨테이너같이 애플리케이션 컴포넌
   - org.springframework.context-3.0.7.RELEASE.jar
   - org.springframework.core-3.0.7.RELEASE.jar
   - org.springframework.expression-3.0.7.RELEASE.jar
-  
-  
+
+### 1.5.3 스프링 IoC의 용어 정리
+* bean: 스프링이 (IoC 방식으로) 직접 그 생성과 제어를 담당하는 오브젝트
+* bean factory: 스프링의 IoC를 담당하는 핵심 컨테이너.
+* application context: 빈 팩토리를 확장한 IoC 컨테이너.
+* configuration metadata: application context or bean factory가 IoC를 적용하기 위해 사용하는 메타정보
+* IoC container: IoC방식으로 빈을 관리한다는 의미에서 application context or bean factory를 이렇게 부름. 애플리케이션 컨텍스트 오브젝트는 하나의 애플리케이션에 보통 여러 개가 만들어져 사용됨(이를 통틀어 스프링 컨테이너라고 부름)
+* spring framework: IoC container, application context를 포함한 스프링이 제공하는 모든 기능을 통틀어 말할 때 사용.
   
