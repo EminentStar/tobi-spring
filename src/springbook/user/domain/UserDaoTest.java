@@ -2,9 +2,15 @@ package springbook.user.domain;
 
 import java.sql.SQLException;
 
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
 public class UserDaoTest {
   public static void main(String[] args)throws ClassNotFoundException, SQLException {
-    UserDao dao = new DaoFactory().userDao();
+    ApplicationContext context =
+      new AnnotationConfigApplicationContext(DaoFactory.class);
+    UserDao dao = context.getBean("userDao", UserDao.class);
+
     String id = "junk3843";
 
     dao.delete(id);
