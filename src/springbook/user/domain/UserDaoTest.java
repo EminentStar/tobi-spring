@@ -1,9 +1,9 @@
 package springbook.user.domain;
 
-import java.sql.SQLException;
-
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+import java.sql.SQLException;
 
 public class UserDaoTest {
   public static void main(String[] args)throws ClassNotFoundException, SQLException {
@@ -29,6 +29,5 @@ public class UserDaoTest {
     System.out.println(user2.getPassword());
 
     System.out.println(user2.getId() + " 조회 성공 ");
-
   }
 }
