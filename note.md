@@ -94,3 +94,66 @@ ApplicationContext는 IoC container이기도 하면서 동시에 Singleton Regis
 * **DI를 원하는 오브젝트는 먼저 자기 자신이 Container가 관리하는 bean이 돼야 함.**
 * DI받는 메소드 파라미터가 특정 클래스 타입으로 고정되어 있다면 DI는 일어날 수 없음. 
   - DI의 주입은 다이나믹하게 구현 클래스를 결정해서 제공받을 수 있도록 인터페이스 타입의 파라미터를 통해 이뤄져야 함.
+  
+
+## 1.8 XML을 이용한 설정 
+* ApplicationContext와 같은 범용 ㅇI컨테이너를 사용하면 오브젝트 사이 의존정보를 자바코드로 관리하기 힘듬.
+  - DI 구성이 바뀔 때마다 자바 코드 수정 후 클래스를 다시 컴파일하는 것도 귀찮음.
+ 
+* 그외 대표적인 방법중 하나가 XML을 통한 DI 의존관계 설정정보 생성
+  - 쉽게 이해
+  - 컴파일 같은 별도의 빌드 작업이 없음.
+  - 변경사항도 빠르게 반영
+  - 스키마나 DTD를 이용해서 정해진 포맷을 따라 작성됐는지 손쉽게 확인가능
+
+### 1.8.1 XML 설정
+DI 정보가 담긴 XML 파일은 \<beans\>를 루트 엘러먼트로 사용  
+\<beans\>안에는 여러개의 \<bean\>를 정의 가능   
+
+- @Configuration이 \<beans\>에
+- @Bean이 \<bean\>에 해당한다고 보면됨
+
+* @Bean 메서드를 통해 얻을 수 있는 Bean의 DI 정보
+  1. name: @Bean 메서드 이름이 빈의 이름. getBean()에서 사용함.
+    - xml에선 `id` attr
+  2. class: 빈 오브젝트를 어떤 클래스를 이용해서 만들지 정의
+    - xml에선 `class` attr
+      - 메서드에서의 리턴 타입(Interface)가 아니라, return할때 오브젝트를 만들 때 사용하는 클래스를 설정해야함.
+  3. dependent object: 빈의 생성자나 setter method를 통해서 의존 오브젝트를 넣어줌.
+
+**단, XML은 자바 코드처럼 유연하게 정의될 수 있는 것이 아니므로, 핵심 요소를 잘 짚어서 그에 해당하는 태그와 애트리뷰트가 무엇인지 알아야함.**
+
+|          |java code config       |xml config                      |
+|----------|-----------------------|--------------------------------|
+|빈 설정파일  |@Configuration         |\<beans\>                       |
+|빈 이름     |@Bean methodName()     | \<bean id="methodName"\>       |
+|빈의 클래스  |return new BeanClass();| class="a.b.c... BeawnClass"\>  |
+
+- 자바빈의 관례를 따라서 수정자 메소드는 프로퍼티가 됨.
+- 프로퍼티 이름은 메서드 이름에서 set을 제외한 나머지 부분을 사용한다. 
+- xml에선  \<property\> 태그를 사용해 의존 오브젝트와의 관계를 정의(setter method DI에서)
+  - name attr: 프로퍼티 이름
+  - ref attr: setter method 를 통해 주입해줄 오브젝트의 빈의 이름(DI할 오브젝트도 빈이기에)
+  
+  
+#### DTD와 schema
+XML 문서는 미리 정해진 구조를 따라서 작성됐는지 검사할 수 있음.  
+XML 문서의 구조를 정의하는 방법엔 DTD, schema가 있음.(스프링 xml 은 이걸 모두 지원함.)   
+
+* DTD를 사용할 경우 beans 엘러먼트 앞에 DTD 선언해야함.
+```$xslt
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN 2.0//EN"
+  "http://www.springframework.org/dtd/spring-beans-2.0.dtd">
+```
+
+* schema
+  - DI를 위한 기본 태그인 beans, bean 이외에 특별한 목적을 위해 별도의 태그를 사용할 수 있는 방법을 제공.
+  - 각 태그들은 별개의 스키마 파일에 정의되어 있고, 독립저인 네임스페이스를 사용해야만 함.
+  - 이 태그를 사용하려면 DTD 대신 네임스페이스가 지원되는 스키마를 사용해야 함.
+```$xslt
+<beans xmlns="http://www.springframework.org/schema/beans"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+```
+

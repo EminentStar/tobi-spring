@@ -1,0 +1,12 @@
+<beans>
+  <!-- 빈을 환경별로 독립적으로 만들어두고 ref 애트리뷰트를 이용해 DI 받을 빈을 지정해주면 됨. -->
+  <bean id="localDBConnectionMaker" class="springbook.user.dao.LocalDBConnectionMaker"/>
+  <bean id="testDBConnectionMaker" class="springbook.user.dao.TestDBConnectionMaker"/>
+  <bean id="productionDBConnectionMaker" class="springbook.user.dao.ProductionDBConnectionMaker"/>
+
+  <bean id="connectionMaker" class="springbook.user.dao.DConnectionMaker"/>
+  <bean id="userDao" class="springbook.user.dao.UserDao">
+    <property name="connectionMaker" ref="connectionMaker"/>
+    <!--<property name="connectionMaker" ref="localDBConnectionMaker"/>-->
+  </bean>
+</beans>

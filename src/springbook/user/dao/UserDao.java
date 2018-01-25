@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import springbook.user.domain.User;
 
 public class UserDao {
-  private ConnectionMaker connectionMaker;
+  private ConnectionMaker connectionMaker; // UserDao의 프로퍼티
 
   public UserDao() {
   }
@@ -69,6 +69,10 @@ public class UserDao {
 
   /**
    * setter method DI의 전형적인 코드. 잘 기억할 것.
+   *
+   * e.g. userDao.setConnectionMaker(connectionMaker());
+   * userDao.setConnectionMaker()는 userDao빈의 connectionMAker 프로퍼티를 이용해 의존관계를 주입한다는 뜻임.
+   * connectionMaker()는 connectionMaker() 메소드를 호출해서 리턴하는 오브젝트를 주입하라는 의미
    */
   public void setConnectionMaker(ConnectionMaker connectionMaker) {
     this.connectionMaker = connectionMaker;

@@ -9,16 +9,17 @@ public class DaoFactory {
    * 팩토리의 메소드는 UserDao 타입의 오브젝트를 어떻게 만들고, 어떻게 준비시킬지를 결정함.
    * @return UserDao
    */
-  @Bean // Object 생성을 담당하는 IoC용 메소드라는 표시
-  public UserDao userDao() {
+  // Object 생성을 담당하는 IoC용 메소드라는 표시
+  @Bean      // -------------------------------> <bean
+  public UserDao userDao() {       // -----> id="userDao"
     UserDao userDao = new UserDao();
-    userDao.setConnectionMaker(connectionMaker());
-    return userDao;
+    userDao.setConnectionMaker(connectionMaker()); // -> <property name="connectionMaker" ref="connectionMaker/>
+    return userDao; // ---------------------> class="springbook..UserDao" />
   }
 
-  @Bean
-  public ConnectionMaker connectionMaker() {
+  @Bean      // -------------------------------------------> <bean
+  public ConnectionMaker connectionMaker() {       // -----> id="connectionMaker"
     // 분리해서 중복을 제거한 ConnectionMaker 타입 오브젝트 생성 코드
-    return new DConnectionMaker();
+    return new DConnectionMaker(); // ---------------------> class="springbook..DConnectionMaker" />
   }
 }
