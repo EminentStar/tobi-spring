@@ -1,10 +1,10 @@
-package springbook.user.domain;
+package springbook.user.dao;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class NConnectionMaker implements ConnectionMaker {
+public class DConnectionMaker implements ConnectionMaker {
   /***
    * D사의 독자적인 방법으로 Connection을 생성하는 코드
    * @return

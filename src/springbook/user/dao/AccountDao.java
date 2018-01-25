@@ -1,9 +1,4 @@
-package springbook.user.domain;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+package springbook.user.dao;
 
 public class AccountDao {
   private ConnectionMaker connectionMaker;

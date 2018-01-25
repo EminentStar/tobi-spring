@@ -1,4 +1,4 @@
-package springbook.user.domain;
+package springbook.user.dao;
 
 public class MessageDao {
   private ConnectionMaker connectionMaker;
