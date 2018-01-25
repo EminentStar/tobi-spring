@@ -10,6 +10,9 @@ import springbook.user.domain.User;
 public class UserDao {
   private ConnectionMaker connectionMaker;
 
+  public UserDao() {
+  }
+
   /**
    * 의존관계 주입을 위한 코드
    */
@@ -62,6 +65,13 @@ public class UserDao {
 
     ps.close();
     c.close();
+  }
+
+  /**
+   * setter method DI의 전형적인 코드. 잘 기억할 것.
+   */
+  public void setConnectionMaker(ConnectionMaker connectionMaker) {
+    this.connectionMaker = connectionMaker;
   }
 
   //  public abstract Connection getConnection() throws ClassNotFoundException, SQLException;
