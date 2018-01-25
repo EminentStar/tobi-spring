@@ -157,3 +157,13 @@ XML 문서의 구조를 정의하는 방법엔 DTD, schema가 있음.(스프링 
            http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 ```
 
+
+
+### 1.8.2 XML을 이용하는 애플리케이션 컨텍스트
+* XML에서 빈의 의존관계 정보를 이용하는 IoC/DI 작업에는 GenericXmlApplicationContext를 사용.  
+* GenericXmlApplicationContext의 생성자 파라미터로 XML 파일의 클래스패스를 지정해주면 됨. 
+  - GenericXmlApplicationContext는 classpath뿐만 아니라 다양한 소스로부터 설정파일을 읽어올 수 있음
+* XML 설정파일은 클랲스패스 최상단에 두면 편함.
+
+
+
