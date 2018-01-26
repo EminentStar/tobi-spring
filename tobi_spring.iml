@@ -9,5 +9,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="spring-core-3.0.7.RELEASE" level="project" />
     <orderEntry type="library" name="h2-1.4.196" level="project" />
+    <orderEntry type="library" name="spring-jdbc-3.0.7.release" level="project" />
   </component>
 </module>

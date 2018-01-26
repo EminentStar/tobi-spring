@@ -6,8 +6,8 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
 public class UserDaoConnectionCountingTest {
   public static void main(String[] args) throws ClassNotFoundException, SQLException {
-    AnnotationConfigApplicationContext context =
-      new AnnotationConfigApplicationContext(CountingDaoFactory.class);
+    AnnotationConfigApplicationContext context = null;
+//      new AnnotationConfigApplicationContext(CountingDaoFactory.class);
     UserDao dao = context.getBean("userDao", UserDao.class);
 
     //

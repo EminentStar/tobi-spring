@@ -23,7 +23,7 @@ IoC에선 프레임워크 또는 컨테이너같이 애플리케이션 컴포넌
 
 ## 1.5 스프링의 IoC
 
-* 라이브러리 추가 필요
+* 라이브러리 추가 필요(File/Project Structure/Libraries/New Project Library/Java)
   - com.springsource.net.sf.cglib-2.2.0.jar
   - com.springsource.org.apache.commons.logging-1.1.1.jar
   - org.springframework.asm-3.0.7.RELEASE.jar
@@ -165,5 +165,12 @@ XML 문서의 구조를 정의하는 방법엔 DTD, schema가 있음.(스프링 
   - GenericXmlApplicationContext는 classpath뿐만 아니라 다양한 소스로부터 설정파일을 읽어올 수 있음
 * XML 설정파일은 클랲스패스 최상단에 두면 편함.
 
+
+
+### 1.8.3 DataSource Interface로 변환
+* 라이브러리 추가 필요
+  - spring-jdbc-3.0.7.release.jar
+
+* DataSource Interface: Java에서 DB connection을 가져오는 오브젝트의 기능을 추상화해서 비슷한 용도로 사용할 수 있게 만든 interface
 
 

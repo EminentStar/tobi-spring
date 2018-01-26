@@ -1,7 +1,10 @@
 package springbook.user.dao;
 
+import javax.sql.DataSource;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 @Configuration // ApplicationContext or BeanFactory가 사용할 설정정보라는 표시
 public class DaoFactory {
@@ -13,8 +16,22 @@ public class DaoFactory {
   @Bean      // -------------------------------> <bean
   public UserDao userDao() {       // -----> id="userDao"
     UserDao userDao = new UserDao();
-    userDao.setConnectionMaker(connectionMaker()); // -> <property name="connectionMaker" ref="connectionMaker/>
+    userDao.setDataSource(dataSource()); // -> <property name="connectionMaker" ref="connectionMaker/>
     return userDao; // ---------------------> class="springbook..UserDao" />
+  }
+
+  @Bean
+  public DataSource dataSource() {
+    SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
+
+    // DB 연결정보를 수정자 메소드를 통해 넣어줌.
+    // 이렇게 하면 오브젝트 레벨에서 DB 연결 방식을 변경할 수 있음.
+    dataSource.setDriverClass(org.h2.Driver.class);
+    dataSource.setUrl("jdbc:h2:~/test");
+    dataSource.setUsername("sa");
+    dataSource.setPassword("");
+
+    return dataSource;
   }
 
   @Bean      // -------------------------------------------> <bean

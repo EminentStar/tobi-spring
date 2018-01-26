@@ -3,7 +3,7 @@ package springbook.user.dao;
 import java.sql.SQLException;
 
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.GenericXmlApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import springbook.user.domain.User;
 
@@ -12,7 +12,8 @@ public class UserDaoTest {
     // classpath를 시작하는 / 는 넣을 수도 있고 생략할 수도 있음.
     // 시작하는 / 가 없는 경우 항상 루트에서부터 시작하는 classpath라는 점을 기억.
     ApplicationContext context =
-      new GenericXmlApplicationContext("applicationContext.xml");
+      new AnnotationConfigApplicationContext(DaoFactory.class);
+//    new GenericXmlApplicationContext("applicationContext.xml");
     UserDao dao = context.getBean("userDao", UserDao.class);
 
     String id = "junk3843";
