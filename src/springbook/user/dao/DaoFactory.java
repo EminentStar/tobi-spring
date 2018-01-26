@@ -26,6 +26,7 @@ public class DaoFactory {
 
     // DB 연결정보를 수정자 메소드를 통해 넣어줌.
     // 이렇게 하면 오브젝트 레벨에서 DB 연결 방식을 변경할 수 있음.
+    /* TODO: XML 방식에선 각 DB접속정보를 어떻게 넣어주지? */
     dataSource.setDriverClass(org.h2.Driver.class);
     dataSource.setUrl("jdbc:h2:~/test");
     dataSource.setUsername("sa");
