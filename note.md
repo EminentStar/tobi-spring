@@ -174,3 +174,40 @@ XML 문서의 구조를 정의하는 방법엔 DTD, schema가 있음.(스프링 
 * DataSource Interface: Java에서 DB connection을 가져오는 오브젝트의 기능을 추상화해서 비슷한 용도로 사용할 수 있게 만든 interface
 
 
+
+### 1.8.4 프로퍼티 값의 주입
+setter method엔 다른 빈이나 오브젝트 뿐만 아니라, String 같은 단순 값을 넣어줄 수도 있음.   
+DI에서처럼 오브젝트의 구현 클래스를 다이내믹하게 바꿀 수 있게 하는 것이 목적은 아니지만,   
+**클래스 외부에서** DB 연결정보같이 변경 가능한 정보를 설정해줄 수 있도록 프로퍼티 값을 주입할 수 있다.   
+(e.g. DB 접속 아이디가 바뀌었더라도 클래스 코드는 수정해줄 필요가 없게 해주는 것.)  
+
+이걸 `값을 주입한다`라고 말함. 성격은 다르지만 일종의 DI라고 볼 수 있음.(사용할 오브젝트 자체를 바꾸지는 않지만, 오브젝트의 특성은 외부에서 변경할 수 있기 때문)  
+
+- 빈으로 등록될 클래스에 setter method가 정의되어 있으면 \<property\>를 사용해 주입할 정보를 지정할 수 있다는 점에서 \<property ref=""\>와 동일.  
+- 하지만 다른 빈 오브젝트의 reference(ref)가 아니라 단순 값(value)를 주입하는 것이기에 ref attr 대신 value attr을 사용함.
+
+#### value 값의 자동 변환
+dataSource 빈에 property를 세팅할 때 url, username, password는 String이라 value attr을 사용하는게 상관은 없음.   
+근데 `driverClass`의 경우 type은 java.lang.Class 타입이다.   
+```java
+Class driverClass = "com.mysql.jdbc.Driver"; // 말이 안됨.
+```
+이런게 가능 한 이유는 스프링이 property's value를 setter method's parameter type을 참고해서 적절한 형태로 변환해주기 때문임.  
+
+내부적으론 아래와 같은 변환작업이 일어난다고 생각하면 됨.
+```java
+Class driverClass = Class.forName("com.mysql.jdbc.Driver");
+dataSource.setDriverClass(driverClass);
+```
+
+스프링은 value에 지정한 텍스트 값을 적절한 자바 타입으로 변환해줌.
+
+
+
+
+
+
+
+
+
+
