@@ -257,3 +257,18 @@ dataSource.setDriverClass(driverClass);
 
 * Fixture: 테스트를 수행하는 데 필요한 정보나 오브젝트
   - 중복제거를 위해 픽스쳐를 로컬변수에서 인스턴스 변수화시키고, @Before 메소드에서 초기화해주는 쪽으로
+  
+## 2.4 스프링 테스트 적용
+- @Before 메소드는 테스트 개수만큼 반복되는데, 이 안에 ApplicationContext 생성 코드를 넣으면 ApplicationContext를 여러번 생성하게됨.
+- ApplicationContext 생성시 모든 싱글톤 빈 오브젝트를 초기화하는데, 빈 오브젝트에 따라 오랜 시간이나 많은 리소스를 할당해야하는 것도 있음.
+- ApplicationContext는 초기화되고 나면 내부의 상태가 바뀌는 일은 거의 없음.(stateless)
+- ApplicationContext는 스프링에서 제공하는 애플리케이션 컨텍스트 테스트 지원 기능을 사용하는게 편리
+
+
+### 2.4.1 테스트를 위한 애플리케이션 컨텍스트 관리
+* 라이브러리 추가 필요
+  - org.springframework.test-3.0.7.RELEASE.jar
+  
+* @RunWith: JUnit 프레임워크의 테스트 실행 방법을 확장할 때 사용하는 애노테이션
+  - SpringJUnit4ClassRunner 라는 JUnit 테스트 컨텍스트 프레임워크 확장 클래스를 지정하면 JUnit이 테스트를 진행하는 동안 테스트가 사용할 애플리케이션 컨텍스트를 만들고 관리하는 작업 진행
+* @ContextConfiguration: 자동으로 만들어줄 애플리케이션 컨텍스트의 설정파일 위치 지정

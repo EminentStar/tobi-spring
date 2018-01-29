@@ -8,12 +8,23 @@ import java.util.NoSuchElementException;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.GenericXmlApplicationContext;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import springbook.user.domain.User;
 
+// 스프링의 테스트 컨텍스트 프레임워크의 JUnit 확장기능 지정
+@RunWith(SpringJUnit4ClassRunner.class)
+// 테스트 컨텍스트가 자동으로 만들어줄 애플리케이션 컨텍스트의 위치 지정
+@ContextConfiguration(locations = "/applicationContext.xml")
 public class UserDaoTest {
+  @Autowired
+  // 테스트 오브젝트가 만들어지고 나면 스프링 컨텍스트 테스트에 의해 자동으로 값이 주입
+  private ApplicationContext context;
+
   private UserDao dao;
   private User user1;
   private User user2;
@@ -26,8 +37,8 @@ public class UserDaoTest {
   public void setUp() {
     // classpath를 시작하는 / 는 넣을 수도 있고 생략할 수도 있음.
     // 시작하는 / 가 없는 경우 항상 루트에서부터 시작하는 classpath라는 점을 기억.
-    ApplicationContext context =
-      new GenericXmlApplicationContext("applicationContext.xml");
+    //    ApplicationContext context =
+    //      new GenericXmlApplicationContext("applicationContext.xml");
     dao = context.getBean("userDao", UserDao.class);
 
     this.user1 = new User("junk3843", "박준규", "123!@#");
