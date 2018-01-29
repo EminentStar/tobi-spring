@@ -1,14 +1,19 @@
 package springbook.user.dao;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+
 import java.sql.SQLException;
 
+import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericXmlApplicationContext;
 
 import springbook.user.domain.User;
 
 public class UserDaoTest {
-  public static void main(String[] args) throws ClassNotFoundException, SQLException {
+  @Test
+  public void addAndGet() throws SQLException, ClassNotFoundException {
     // classpath를 시작하는 / 는 넣을 수도 있고 생략할 수도 있음.
     // 시작하는 / 가 없는 경우 항상 루트에서부터 시작하는 classpath라는 점을 기억.
     ApplicationContext context =
@@ -30,12 +35,7 @@ public class UserDaoTest {
 
     User user2 = dao.get(user.getId());
 
-    if (!user.getName().equals(user2.getName())) {
-      System.out.println("테스트 실패 (name)");
-    }else if (!user.getPassword().equals(user2.getPassword())) {
-      System.out.println("테스트 실패 (password)");
-    }else {
-      System.out.println("조회 테스트 성공");
-    }
+    assertThat(user2.getName(), is(user.getName()));
+    assertThat(user2.getPassword(), is(user.getPassword()));
   }
 }

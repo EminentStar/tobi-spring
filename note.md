@@ -204,7 +204,15 @@ dataSource.setDriverClass(driverClass);
 
 
 
+# Chap 02: 테스트
 
+### 2.2.2 테스트의 효율적인 수행과 결과 관리
+* 라이브러리 추가 필요
+  - com.springsource.org.junit-4.7.0.jar
+
+
+* JUnit
+  - 테스트 메소드는 public으로 선언돼야 하고, 메소드에 @Test 애노테이션을 붙여줘야함.
 
 
 
