@@ -44,6 +44,20 @@ public class UserDaoTest {
     this.user1 = new User("junk3843", "박준규", "123!@#");
     this.user2 = new User("eminent", "박준규", "123!@#");
     this.user3 = new User("eminent2", "박준규", "123!@#");
+
+    // context 확인용
+    System.out.println(this.context);
+    System.out.println(this);
+    /*
+      org.springframework.context.support.GenericApplicationContext@71e7a66b: startup date [Tue Jan 30 07:29:36 KST 2018]; root of context hierarchy
+      springbook.user.dao.UserDaoTest@76b0bfab org.springframework.context.support.GenericApplicationContext@71e7a66b: startup date [Tue Jan 30 07:29:36 KST 2018]; root of context hierarchy
+      springbook.user.dao.UserDaoTest@61dd025
+      org.springframework.context.support.GenericApplicationContext@71e7a66b: startup date [Tue Jan 30 07:29:36 KST 2018]; root of context hierarchy
+      springbook.user.dao.UserDaoTest@6dbb137d
+
+      보는 것처럼 context는 3 테스트 오브젝트 모두 동일
+      테스트 오브젝트는 매번 달라짐.(새로 생성됨)
+     */
   }
 
   @Test

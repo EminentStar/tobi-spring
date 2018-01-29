@@ -269,6 +269,10 @@ dataSource.setDriverClass(driverClass);
 * 라이브러리 추가 필요
   - org.springframework.test-3.0.7.RELEASE.jar
   
-* @RunWith: JUnit 프레임워크의 테스트 실행 방법을 확장할 때 사용하는 애노테이션
-  - SpringJUnit4ClassRunner 라는 JUnit 테스트 컨텍스트 프레임워크 확장 클래스를 지정하면 JUnit이 테스트를 진행하는 동안 테스트가 사용할 애플리케이션 컨텍스트를 만들고 관리하는 작업 진행
-* @ContextConfiguration: 자동으로 만들어줄 애플리케이션 컨텍스트의 설정파일 위치 지정
+#### @RunWith: JUnit 프레임워크의 테스트 실행 방법을 확장할 때 사용하는 애노테이션
+- SpringJUnit4ClassRunner 라는 JUnit 테스트 컨텍스트 프레임워크 확장 클래스를 지정하면 JUnit이 테스트를 진행하는 동안 테스트가 사용할 애플리케이션 컨텍스트를 만들고 관리하는 작업 진행
+  
+#### @ContextConfiguration: 자동으로 만들어줄 애플리케이션 컨텍스트의 설정파일 위치 지정
+- 스프링은 설정파일의 종류만큼 애플리케이션 컨텍스트를 만들고, 같은 설정파일을 지정한 테스트 클래스에서는 이를 공유하게 함.
+  - (100개의 테스트 클래스에서도 1개의 설정파일을 호출하면 applicationContext는 1개)
+  
