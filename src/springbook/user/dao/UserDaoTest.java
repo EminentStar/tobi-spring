@@ -15,6 +15,9 @@ import springbook.user.domain.User;
 
 public class UserDaoTest {
   private UserDao dao;
+  private User user1;
+  private User user2;
+  private User user3;
 
   /***
    * @Before: JUnit 제공 애노테이션. @Test 메소드가 실행되기 전에 먼저 실행돼야하는 메소드를 정의
@@ -26,13 +29,14 @@ public class UserDaoTest {
     ApplicationContext context =
       new GenericXmlApplicationContext("applicationContext.xml");
     dao = context.getBean("userDao", UserDao.class);
+
+    this.user1 = new User("junk3843", "박준규", "123!@#");
+    this.user2 = new User("eminent", "박준규", "123!@#");
+    this.user3 = new User("eminent2", "박준규", "123!@#");
   }
 
   @Test
   public void addAndGet() throws SQLException {
-    User user1 = new User("junk3843", "박준규", "123!@#");
-    User user2 = new User("eminent", "박준규", "123!@#");
-
     dao.deleteAll();
     assertThat(dao.getCount(), is(0));
 
@@ -51,10 +55,6 @@ public class UserDaoTest {
 
   @Test
   public void count() throws SQLException {
-    User user1 = new User("junk3843", "박준규", "123!@#");
-    User user2 = new User("eminent", "박준규", "123!@#");
-    User user3 = new User("eminent2", "박준규", "123!@#");
-
     dao.deleteAll();
     assertThat(dao.getCount(), is(0));
 
