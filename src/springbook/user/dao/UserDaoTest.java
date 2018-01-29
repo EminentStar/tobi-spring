@@ -6,6 +6,7 @@ import static org.junit.Assert.*;
 import java.sql.SQLException;
 import java.util.NoSuchElementException;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericXmlApplicationContext;
@@ -13,14 +14,22 @@ import org.springframework.context.support.GenericXmlApplicationContext;
 import springbook.user.domain.User;
 
 public class UserDaoTest {
-  @Test
-  public void addAndGet() throws SQLException {
+  private UserDao dao;
+
+  /***
+   * @Before: JUnit 제공 애노테이션. @Test 메소드가 실행되기 전에 먼저 실행돼야하는 메소드를 정의
+   */
+  @Before
+  public void setUp() {
     // classpath를 시작하는 / 는 넣을 수도 있고 생략할 수도 있음.
     // 시작하는 / 가 없는 경우 항상 루트에서부터 시작하는 classpath라는 점을 기억.
     ApplicationContext context =
       new GenericXmlApplicationContext("applicationContext.xml");
+    dao = context.getBean("userDao", UserDao.class);
+  }
 
-    UserDao dao = context.getBean("userDao", UserDao.class);
+  @Test
+  public void addAndGet() throws SQLException {
     User user1 = new User("junk3843", "박준규", "123!@#");
     User user2 = new User("eminent", "박준규", "123!@#");
 
@@ -42,10 +51,6 @@ public class UserDaoTest {
 
   @Test
   public void count() throws SQLException {
-    ApplicationContext context =
-      new GenericXmlApplicationContext("applicationContext.xml");
-
-    UserDao dao = context.getBean("userDao", UserDao.class);
     User user1 = new User("junk3843", "박준규", "123!@#");
     User user2 = new User("eminent", "박준규", "123!@#");
     User user3 = new User("eminent2", "박준규", "123!@#");
@@ -63,7 +68,8 @@ public class UserDaoTest {
     assertThat(dao.getCount(), is(3));
   }
 
-//  @Test(expected = IncorrectResultSetColumnCountException.class)
+  //  @Test(expected = IncorrectResultSetColumnCountException.class)
+
   /**
    * TODO:
    * @Test(expected = EmptyResultDataAccessException.class) // 테스트 중에 발생할 것으로 기대되는 예외 클래스를 지정.
@@ -71,10 +77,6 @@ public class UserDaoTest {
    *  */
   @Test(expected = NoSuchElementException.class)
   public void getUserFailure() throws SQLException {
-    ApplicationContext context =
-      new GenericXmlApplicationContext("applicationContext.xml");
-
-    UserDao dao = context.getBean("userDao", UserDao.class);
     dao.deleteAll();
     assertThat(dao.getCount(), is(0));
 
