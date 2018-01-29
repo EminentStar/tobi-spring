@@ -24,8 +24,9 @@ public class UserDaoTest {
   @Autowired
   // 테스트 오브젝트가 만들어지고 나면 스프링 컨텍스트 테스트에 의해 자동으로 값이 주입
   private ApplicationContext context;
+  @Autowired
+  private UserDao dao; // UserDao TYPE의 빈을 직접 DI받음.
 
-  private UserDao dao;
   private User user1;
   private User user2;
   private User user3;
@@ -35,12 +36,6 @@ public class UserDaoTest {
    */
   @Before
   public void setUp() {
-    // classpath를 시작하는 / 는 넣을 수도 있고 생략할 수도 있음.
-    // 시작하는 / 가 없는 경우 항상 루트에서부터 시작하는 classpath라는 점을 기억.
-    //    ApplicationContext context =
-    //      new GenericXmlApplicationContext("applicationContext.xml");
-    dao = context.getBean("userDao", UserDao.class);
-
     this.user1 = new User("junk3843", "박준규", "123!@#");
     this.user2 = new User("eminent", "박준규", "123!@#");
     this.user3 = new User("eminent2", "박준규", "123!@#");
