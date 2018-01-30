@@ -286,3 +286,9 @@ dataSource.setDriverClass(driverClass);
   - @Autowired는 타입으로 가져올 빈 하나를 선택할 수 없는 경우에는 변수의 이름과 같은 이름의 빈이 있는지 확인.
     - 그마저도 없으면 예외 발생.
 
+
+
+### 2.4.2 DI와 테스트
+만약 테스트내에서 공유되는 ApplicationContext의 상태를 변경할 필요가 있다면, 테스트 클래스에 @DirtiesContext 애노테이션을 붙이면 됨.   
+테스트 컨텍스트는 이 애노테이션이 붙은 클래스에는 애플리케이션컨텍스트의 공유를 허용X  
+@DirtiesContext를 메소드 레벨에 붙일 수도 있음.
