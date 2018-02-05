@@ -11,18 +11,22 @@ import javax.sql.DataSource;
 import springbook.user.domain.User;
 
 public class UserDao {
-  private ConnectionMaker connectionMaker; // UserDao의 프로퍼티
   private DataSource dataSource;
+  private JdbcContext jdbcContext;
 
   public void setDataSource(DataSource dataSource) {
     this.dataSource = dataSource;
+  }
+
+  public void setJdbcContext(JdbcContext jdbcContext) {
+    this.jdbcContext = jdbcContext;
   }
 
   /**
    *  내부 클래스에서 외부의 변수를 사용할 때는 외부 변수는 반드시 final로 선언해줘야 함.
    */
   public void add(final User user) throws SQLException {
-    jdbcContextWithStatementStrategy(
+    this.jdbcContext.workWithStatementStrategy(
       new StatementStrategy() {
         /* 익명 내부 클래스는 구현하는 인터페이스를 생성자처럼 이용해서 오브젝트로 만든다. */
         @Override
@@ -120,7 +124,7 @@ public class UserDao {
   }
 
   public void deleteAll() throws SQLException {
-    jdbcContextWithStatementStrategy(
+    this.jdbcContext.workWithStatementStrategy(
       new StatementStrategy() {
         @Override
         public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
@@ -131,37 +135,5 @@ public class UserDao {
     ); // 컨텍스트 호출. 전력 오브젝트 전달
   }
 
-  /**
-   *
-   * @param stmt : 클라이언트가 컨텍스트를 호출할 때 넘겨줄 전략 파라미터
-   * @throws SQLException
-   */
-  public void jdbcContextWithStatementStrategy(StatementStrategy stmt) throws SQLException {
-    Connection c = null;
-    PreparedStatement ps = null;
-
-    try { // 예외가 발생할 가능성이 있는 코드를 모두 try 블록으로 묶어준다.
-      c = dataSource.getConnection();
-
-      ps = stmt.makePreparedStatement(c);
-
-      ps.executeUpdate();
-    } catch (SQLException e) {
-      throw e;
-    } finally {
-      if (ps != null) {
-        try {
-          ps.close();
-        } catch (SQLException e) {
-        }
-      }
-      if (c != null) {
-        try {
-          c.close();
-        } catch (SQLException e) {
-        }
-      }
-    }
-  }
 }
 
