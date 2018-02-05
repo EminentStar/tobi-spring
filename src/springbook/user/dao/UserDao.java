@@ -22,19 +22,21 @@ public class UserDao {
    *  내부 클래스에서 외부의 변수를 사용할 때는 외부 변수는 반드시 final로 선언해줘야 함.
    */
   public void add(final User user) throws SQLException {
-    class AddStatement implements StatementStrategy { // add() 메소드 내부에 선언된 로컬 클래스
-      public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
-        PreparedStatement ps = c.prepareStatement("INSERT INTO users(id, name, password) VALUES(?,?,?)");
-        ps.setString(1, user.getId());
-        ps.setString(2, user.getName());
-        ps.setString(3, user.getPassword());
+    jdbcContextWithStatementStrategy(
+      new StatementStrategy() {
+        /* 익명 내부 클래스는 구현하는 인터페이스를 생성자처럼 이용해서 오브젝트로 만든다. */
+        @Override
+        public PreparedStatement makePreparedStatement(Connection c)
+          throws SQLException {
+          PreparedStatement ps = c.prepareStatement("INSERT INTO users(id, name, password) VALUES(?,?,?)");
+          ps.setString(1, user.getId());
+          ps.setString(2, user.getName());
+          ps.setString(3, user.getPassword());
 
-        return ps;
+          return ps;
+        }
       }
-    }
-
-    StatementStrategy st = new AddStatement();
-    jdbcContextWithStatementStrategy(st);
+    );
   }
 
   public User get(String id) throws SQLException {
@@ -118,8 +120,15 @@ public class UserDao {
   }
 
   public void deleteAll() throws SQLException {
-    StatementStrategy st = new DeleteAllStatement(); // 선정할 전략 클래스의 오브젝트 생성
-    jdbcContextWithStatementStrategy(st); // 컨텍스트 호출. 전력 오브젝트 전달
+    jdbcContextWithStatementStrategy(
+      new StatementStrategy() {
+        @Override
+        public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
+          PreparedStatement ps = c.prepareStatement("DELETE FROM users");
+          return ps;
+        }
+      }
+    ); // 컨텍스트 호출. 전력 오브젝트 전달
   }
 
   /**
