@@ -114,12 +114,24 @@ public class UserDao {
   }
 
   public void deleteAll() throws SQLException {
+    StatementStrategy st = new DeleteAllStatement(); // 선정할 전략 클래스의 오브젝트 생성
+    jdbcContextWithStatementStrategy(st); // 컨텍스트 호출. 전력 오브젝트 전달
+  }
+
+  /**
+   *
+   * @param stmt : 클라이언트가 컨텍스트를 호출할 때 넘겨줄 전략 파라미터
+   * @throws SQLException
+   */
+  public void jdbcContextWithStatementStrategy(StatementStrategy stmt) throws SQLException {
     Connection c = null;
     PreparedStatement ps = null;
 
     try { // 예외가 발생할 가능성이 있는 코드를 모두 try 블록으로 묶어준다.
       c = dataSource.getConnection();
-      ps = c.prepareStatement("DELETE FROM users");
+
+      ps = stmt.makePreparedStatement(c);
+
       ps.executeUpdate();
     } catch (SQLException e) {
       throw e;
@@ -138,6 +150,5 @@ public class UserDao {
       }
     }
   }
-
 }
 
