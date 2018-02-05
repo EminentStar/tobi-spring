@@ -312,3 +312,15 @@ dataSource.setDriverClass(driverClass);
 #### DB connection pool
 일반적으로 서버에서는 제한된 개수의 DB 커넥션을 만들어서 재사용 가능한 풀로 관리  
 db풀은 매번 getConnection()으로 가져간 커넥션을 명시적으로 close()해서 돌려줘야지만 다시 풀에 넣었다가 다음 커넥션 요청이 있을 때 재사용 가능.(close()는 사용한 리소스를 풀로 다시 돌려주는 역할)  
+
+
+## 3.3 JDBC 전략 패턴의 최적화
+
+#### 다른 클래스 내부에 정의되는 클래스를 중첩 클래스(nested class)라고 함.
+* static class: 독립적으로 오브젝트로 만들어질 수 있음.
+* inner class: 자신이 정의된 클래스의 오브젝트 안에서만 만들어질 수 있음.
+  - score에 따라 나뉨
+  1. member inner class: 멤버 필드처럼 오브젝트 레벨에서 정의되는
+  2. local class: 메소드 레벨에서 정의되는
+  3. anonymous inner class: 이름을 갖지 않는
+
