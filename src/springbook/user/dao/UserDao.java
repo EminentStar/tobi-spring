@@ -14,12 +14,15 @@ public class UserDao {
   private DataSource dataSource;
   private JdbcContext jdbcContext;
 
-  public void setDataSource(DataSource dataSource) {
-    this.dataSource = dataSource;
-  }
+  /**
+   * 수정자 메소드이면서 JdbcContext에 대한 생성, DI 작업을 동시에 수행
+   */
+  public void setDataSource(DataSource dataSource) { // DI 컨테이너가 DataSource 오브젝트를 주입해줄 때 호출됨.
+    this.jdbcContext = new JdbcContext(); // JdbcContext 생성 (IoC)
 
-  public void setJdbcContext(JdbcContext jdbcContext) {
-    this.jdbcContext = jdbcContext;
+    this.jdbcContext.setDataSource(dataSource); // 의존 오브젝트 주입(DI)
+
+    this.dataSource = dataSource; // 아직 JdbcContext를 적용하지 않은 메소드를 위해 저장해둠.
   }
 
   /**
