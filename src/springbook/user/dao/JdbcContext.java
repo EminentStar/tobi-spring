@@ -61,4 +61,21 @@ public class JdbcContext {
     ); // 컨텍스트 호출. 전략 오브젝트 전달
   }
 
+  public void executeSql(final String query, String... params) throws SQLException {
+    workWithStatementStrategy(
+      new StatementStrategy() {
+        @Override
+        public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
+          PreparedStatement ps = c.prepareStatement(query);
+
+          for (int i = 0; i < params.length; i++) {
+            ps.setString(i + 1, params[i]);
+          }
+
+          return ps;
+        }
+      }
+    ); // 컨텍스트 호출. 전략 오브젝트 전달
+  }
+
 }

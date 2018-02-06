@@ -102,4 +102,25 @@ public class UserDaoTest {
 
     dao.get("unknown_id");
   }
+
+  @Test
+  public void delete() throws SQLException {
+    // Given
+    dao.deleteAll();
+    dao.add(user1);
+    dao.add(user2);
+    dao.add(user3);
+    assertThat(dao.getCount(), is(3));
+
+    // When
+    // Then
+    dao.delete(user1.getId());
+    assertThat(dao.getCount(), is(2));
+
+    dao.delete(user2.getId());
+    assertThat(dao.getCount(), is(1));
+
+    dao.delete(user3.getId());
+    assertThat(dao.getCount(), is(0));
+  }
 }

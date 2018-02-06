@@ -29,21 +29,8 @@ public class UserDao {
    *  내부 클래스에서 외부의 변수를 사용할 때는 외부 변수는 반드시 final로 선언해줘야 함.
    */
   public void add(final User user) throws SQLException {
-    this.jdbcContext.workWithStatementStrategy(
-      new StatementStrategy() {
-        /* 익명 내부 클래스는 구현하는 인터페이스를 생성자처럼 이용해서 오브젝트로 만든다. */
-        @Override
-        public PreparedStatement makePreparedStatement(Connection c)
-          throws SQLException {
-          PreparedStatement ps = c.prepareStatement("INSERT INTO users(id, name, password) VALUES(?,?,?)");
-          ps.setString(1, user.getId());
-          ps.setString(2, user.getName());
-          ps.setString(3, user.getPassword());
-
-          return ps;
-        }
-      }
-    );
+    this.jdbcContext.executeSql("INSERT INTO users(id, name, password) VALUES(?,?,?)",
+      user.getId(), user.getName(), user.getPassword());
   }
 
   public User get(String id) throws SQLException {
@@ -115,15 +102,7 @@ public class UserDao {
   }
 
   public void delete(String id) throws SQLException {
-    Connection c = dataSource.getConnection();
-
-    PreparedStatement ps = c.prepareStatement("DELETE FROM users WHERE id = ?");
-    ps.setString(1, id);
-
-    ps.executeUpdate();
-
-    ps.close();
-    c.close();
+    this.jdbcContext.executeSql("DELETE FROM users WHERE id = ?", id);
   }
 
   public void deleteAll() throws SQLException {
