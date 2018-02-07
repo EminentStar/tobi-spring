@@ -4,13 +4,13 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 import java.sql.SQLException;
-import java.util.NoSuchElementException;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -88,14 +88,7 @@ public class UserDaoTest {
     assertThat(dao.getCount(), is(3));
   }
 
-  //  @Test(expected = IncorrectResultSetColumnCountException.class)
-
-  /**
-   * TODO:
-   * @Test(expected = EmptyResultDataAccessException.class) // 테스트 중에 발생할 것으로 기대되는 예외 클래스를 지정.
-   * 해당 exception class를 스프링에서 찾을 수 없네. 3.1 부터 있나?
-   *  */
-  @Test(expected = NoSuchElementException.class)
+  @Test(expected = EmptyResultDataAccessException.class)
   public void getUserFailure() throws SQLException {
     dao.deleteAll();
     assertThat(dao.getCount(), is(0));

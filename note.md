@@ -170,6 +170,8 @@ XML 문서의 구조를 정의하는 방법엔 DTD, schema가 있음.(스프링 
 ### 1.8.3 DataSource Interface로 변환
 * 라이브러리 추가 필요
   - spring-jdbc-3.0.7.release.jar
+  - org.springframework.transaction-3.0.0.RELEASE.jar
+    - Spring 3에서 DataAccessException, EmptyResultDataAccessException은 위의 jar에 포함되있었음..
 
 * DataSource Interface: Java에서 DB connection을 가져오는 오브젝트의 기능을 추상화해서 비슷한 용도로 사용할 수 있게 만든 interface
 

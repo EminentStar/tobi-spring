@@ -1,16 +1,12 @@
 package springbook.user.dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.NoSuchElementException;
 
 import javax.sql.DataSource;
 
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementCreator;
-import org.springframework.jdbc.core.ResultSetExtractor;
+import org.springframework.jdbc.core.RowMapper;
 
 import springbook.user.domain.User;
 
@@ -36,30 +32,20 @@ public class UserDao {
   }
 
   public User get(String id) throws SQLException {
-    Connection c = dataSource.getConnection();
+    // queryForObject() 는 SQL을 실행하면 한 개의 로우만 얻을 것이라 기대
+    return this.jdbcTemplate.queryForObject("SELECT * FROM users WHERE id = ?",
+      new Object[] {id}, // SQL에 바인딩할 파라미터 값. 가변인자 대신 배열을 사용
+      new RowMapper<User>() { // ResultSet 한 로우의 결과를 오브젝트에 매핑해주는 RowMapper 콜백
+        @Override
+        public User mapRow(ResultSet rs, int rowNum) throws SQLException {
+          User user = new User();
 
-    PreparedStatement ps = c.prepareStatement("select * from users where id = ?");
-    ps.setString(1, id);
-    ResultSet rs = ps.executeQuery();
-
-    User user = null;
-    if (rs.next()) {
-      user = new User();
-      user.setId(rs.getString("id"));
-      user.setName(rs.getString("name"));
-      user.setPassword(rs.getString("password"));
-    }
-
-    rs.close();
-    ps.close();
-    c.close();
-
-    if (user == null) {
-      /* TODO: EmptyResultDataAccessException으로 교체해야함. */
-      throw new NoSuchElementException();
-    }
-
-    return user;
+          user.setId(rs.getString("id"));
+          user.setName(rs.getString("name"));
+          user.setPassword(rs.getString("password"));
+          return user;
+        }
+      });
   }
 
   public int getCount() throws SQLException {
