@@ -10,6 +10,7 @@ import javax.sql.DataSource;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
+import org.springframework.jdbc.core.ResultSetExtractor;
 
 import springbook.user.domain.User;
 
@@ -62,44 +63,21 @@ public class UserDao {
   }
 
   public int getCount() throws SQLException {
-    Connection c = null;
-    PreparedStatement ps = null;
-    ResultSet rs = null;
-
-    try {
-      c = dataSource.getConnection();
-
-      ps = c.prepareStatement("select COUNT(*) from users");
-
-      rs = ps.executeQuery();
-      rs.next();
-      int count = rs.getInt(1);
-
-      return count;
-    } catch (SQLException e) {
-      throw e;
-    } finally {
-      if (rs != null) {
-        try {
-          rs.close();
-        } catch (SQLException e) {
-        }
-      }
-
-      if (ps != null) {
-        try {
-          ps.close();
-        } catch (SQLException e) {
-        }
-      }
-
-      if (c != null) {
-        try {
-          c.close();
-        } catch (SQLException e) {
-        }
-      }
-    }
+    return this.jdbcTemplate.queryForInt("SELECT COUNT(*) FROM users");
+    // 아래의 콜벡 오브젝트 코드를 재사용하여 위의 코드를 만들 수 있음.
+    //    return this.jdbcTemplate.query(new PreparedStatementCreator() { // 첫번째 콜백. Statement 생성
+    //      @Override
+    //      public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
+    //        return con.prepareStatement("SELECT COUNT(*) FROM users");
+    //      }
+    //    }, new ResultSetExtractor<Integer>() { // 두번쨰 콜백. ResultSet으로부터 값 추출
+    //      // ResultSet에서 추출할 수 있는 값의 타입은 다양학 때문에 제네릭스 타입파라미터를 사용.
+    //      @Override
+    //      public Integer extractData(ResultSet rs) throws SQLException {// ,DataAccessException {
+    //        rs.next();
+    //        return rs.getInt(1);
+    //      }
+    //    });
   }
 
   public void delete(String id) throws SQLException {
