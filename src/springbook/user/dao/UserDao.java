@@ -8,28 +8,29 @@ import java.util.NoSuchElementException;
 
 import javax.sql.DataSource;
 
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreator;
+
 import springbook.user.domain.User;
 
 public class UserDao {
   private DataSource dataSource;
-  private JdbcContext jdbcContext;
+  private JdbcTemplate jdbcTemplate;
 
   /**
-   * 수정자 메소드이면서 JdbcContext에 대한 생성, DI 작업을 동시에 수행
+   * JdbcTemplate: 스프링이 제공하는 JDBC 코드용 기본 템플릿.
    */
-  public void setDataSource(DataSource dataSource) { // DI 컨테이너가 DataSource 오브젝트를 주입해줄 때 호출됨.
-    this.jdbcContext = new JdbcContext(); // JdbcContext 생성 (IoC)
+  public void setDataSource(DataSource dataSource) {
+    this.jdbcTemplate = new JdbcTemplate(dataSource);
 
-    this.jdbcContext.setDataSource(dataSource); // 의존 오브젝트 주입(DI)
-
-    this.dataSource = dataSource; // 아직 JdbcContext를 적용하지 않은 메소드를 위해 저장해둠.
+    this.dataSource = dataSource;
   }
 
   /**
    *  내부 클래스에서 외부의 변수를 사용할 때는 외부 변수는 반드시 final로 선언해줘야 함.
    */
   public void add(final User user) throws SQLException {
-    this.jdbcContext.executeSql("INSERT INTO users(id, name, password) VALUES(?,?,?)",
+    this.jdbcTemplate.update("INSERT INTO users(id, name, password) VALUES(?,?,?)",
       user.getId(), user.getName(), user.getPassword());
   }
 
@@ -102,11 +103,21 @@ public class UserDao {
   }
 
   public void delete(String id) throws SQLException {
-    this.jdbcContext.executeSql("DELETE FROM users WHERE id = ?", id);
+    this.jdbcTemplate.executeSql("DELETE FROM users WHERE id = ?", id);
   }
 
   public void deleteAll() throws SQLException {
-    this.jdbcContext.executeSql("DELETE FROM users");
+    this.jdbcTemplate.update("DELETE FROM users");
+    // 아래와 같이 콜백을 넘겨주는 형태로도 가능 (JdbcTemplate의 콜백은 PreparedStatementCreator 인터페이스의
+    // createPreparedStatement() 임.
+    //    this.jdbcTemplate.update(
+    //      new PreparedStatementCreator() {
+    //        @Override
+    //        public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
+    //          return con.prepareStatement("DELETE FROM users");
+    //        }
+    //      }
+    //    );
   }
 
 }
