@@ -4,8 +4,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-import javax.sql.DataSource;
-
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
@@ -20,8 +18,12 @@ public class UserDao {
    * JdbcTemplate을 생성하면서 직접 DI 해주기 위해 필요한 DataSource를 받아야하니 setter method는 남겨놓음.
    *  - 이렇게 setter method에서 다른 오브젝트를 생성하는 경우는 종종 있으니 익숙해질 것.
    */
-  public void setDataSource(DataSource dataSource) {
-    this.jdbcTemplate = new JdbcTemplate(dataSource);
+  //  public void setDataSource(DataSource dataSource) {
+  //    this.jdbcTemplate = new JdbcTemplate(dataSource);
+  //  }
+
+  public void setJdbcTemplate(JdbcTemplate jdbcTemplate) {
+    this.jdbcTemplate = jdbcTemplate;
   }
 
   /**

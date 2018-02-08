@@ -4,6 +4,7 @@ import javax.sql.DataSource;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 @Configuration // ApplicationContext or BeanFactory가 사용할 설정정보라는 표시
@@ -16,7 +17,8 @@ public class DaoFactory {
   @Bean      // -------------------------------> <bean
   public UserDao userDao() {       // -----> id="userDao"
     UserDao userDao = new UserDao();
-    userDao.setDataSource(dataSource()); // -> <property name="connectionMaker" ref="connectionMaker/>
+    //    userDao.setDataSource(dataSource()); // -> <property name="connectionMaker" ref="connectionMaker/>
+    userDao.setJdbcTemplate(jdbcTemplate()); // -> <property name="connectionMaker" ref="connectionMaker/>
     return userDao; // ---------------------> class="springbook..UserDao" />
   }
 
@@ -33,6 +35,14 @@ public class DaoFactory {
     dataSource.setPassword("");
 
     return dataSource;
+  }
+
+  @Bean
+  public JdbcTemplate jdbcTemplate() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate();
+    jdbcTemplate.setDataSource(dataSource());
+
+    return jdbcTemplate;
   }
 
   @Bean      // -------------------------------------------> <bean
