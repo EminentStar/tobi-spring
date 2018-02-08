@@ -12,16 +12,16 @@ import org.springframework.jdbc.core.RowMapper;
 import springbook.user.domain.User;
 
 public class UserDao {
-  private DataSource dataSource;
   private JdbcTemplate jdbcTemplate;
 
   /**
    * JdbcTemplate: 스프링이 제공하는 JDBC 코드용 기본 템플릿.
+   *
+   * JdbcTemplate을 생성하면서 직접 DI 해주기 위해 필요한 DataSource를 받아야하니 setter method는 남겨놓음.
+   *  - 이렇게 setter method에서 다른 오브젝트를 생성하는 경우는 종종 있으니 익숙해질 것.
    */
   public void setDataSource(DataSource dataSource) {
     this.jdbcTemplate = new JdbcTemplate(dataSource);
-
-    this.dataSource = dataSource;
   }
 
   /**
