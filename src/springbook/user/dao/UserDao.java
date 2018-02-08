@@ -82,7 +82,7 @@ public class UserDao {
   }
 
   public void delete(String id) {
-    //    this.jdbcTemplate.executeSql("DELETE FROM users WHERE id = ?", id);
+    this.jdbcTemplate.update("DELETE FROM users WHERE id = ?", id);
   }
 
   public void deleteAll() {
