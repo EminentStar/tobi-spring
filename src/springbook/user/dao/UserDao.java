@@ -10,6 +10,19 @@ import org.springframework.jdbc.core.RowMapper;
 import springbook.user.domain.User;
 
 public class UserDao {
+  // RowMapper 콜백 오브젝트에는 상태정보가 없음. 따라서 하나의 콜백 오브젝트를 멀티 스레드에서 동시에 사용해도 문제가 되지 않음.
+  private RowMapper<User> userMapper =
+    new RowMapper<User>() {
+      @Override
+      public User mapRow(ResultSet rs, int rowNum) throws SQLException {
+        User user = new User();
+        user.setId(rs.getString("id"));
+        user.setName(rs.getString("name"));
+        user.setPassword(rs.getString("password"));
+        return user;
+      }
+    };
+
   private JdbcTemplate jdbcTemplate;
 
   /**
@@ -21,7 +34,6 @@ public class UserDao {
   //  public void setDataSource(DataSource dataSource) {
   //    this.jdbcTemplate = new JdbcTemplate(dataSource);
   //  }
-
   public void setJdbcTemplate(JdbcTemplate jdbcTemplate) {
     this.jdbcTemplate = jdbcTemplate;
   }
@@ -38,31 +50,11 @@ public class UserDao {
     // queryForObject() 는 SQL을 실행하면 한 개의 로우만 얻을 것이라 기대
     return this.jdbcTemplate.queryForObject("SELECT * FROM users WHERE id = ?",
       new Object[] {id}, // SQL에 바인딩할 파라미터 값. 가변인자 대신 배열을 사용
-      new RowMapper<User>() { // ResultSet 한 로우의 결과를 오브젝트에 매핑해주는 RowMapper 콜백
-        @Override
-        public User mapRow(ResultSet rs, int rowNum) throws SQLException {
-          User user = new User();
-
-          user.setId(rs.getString("id"));
-          user.setName(rs.getString("name"));
-          user.setPassword(rs.getString("password"));
-          return user;
-        }
-      });
+      userMapper);
   }
 
   public List<User> getAll() {
-    return this.jdbcTemplate.query("SELECT * FROM users ORDER BY id",
-      new RowMapper<User>() {
-        @Override
-        public User mapRow(ResultSet rs, int rowNum) throws SQLException {
-          User user = new User();
-          user.setId(rs.getString("id"));
-          user.setName(rs.getString("name"));
-          user.setPassword(rs.getString("password"));
-          return user;
-        }
-      });
+    return this.jdbcTemplate.query("SELECT * FROM users ORDER BY id", userMapper);
   }
 
   public int getCount() {
