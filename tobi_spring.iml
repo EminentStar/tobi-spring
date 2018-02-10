@@ -23,5 +23,6 @@
     <orderEntry type="library" name="com.springsource.org.junit-4.7.0" level="project" />
     <orderEntry type="library" name="spring-test-3.0.7.RELEASE" level="project" />
     <orderEntry type="library" name="spring-tx-3.0.7.RELEASE" level="project" />
+    <orderEntry type="library" name="com.mysql.jdbc_5.1.5" level="project" />
   </component>
 </module>

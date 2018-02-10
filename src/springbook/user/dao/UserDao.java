@@ -4,6 +4,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+import com.mysql.jdbc.MysqlErrorNumbers;
+
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
@@ -105,11 +107,13 @@ public class UserDao {
       // 그런 기능을 가진 다른 SQLException을 던지는 메소드를 호출하는 코드
     } catch (SQLException e) {
       // ErrorCode가 MySQL의 "Duplicate Entry(1062)"이면 예외 전환
-      if (e.getErrorCode() == MySQLErrorNumbers.ER_DUP_ENTRY)
-        throw DuplicateUserIdException(e); // 보통 전환하는 예외에 원래 발생한 예외를 담아서 중첩 예외로 만드는 것이 좋음.
+      if (e.getErrorCode() == MysqlErrorNumbers.ER_DUP_ENTRY) {
+        // 보통 전환하는 예외에 원래 발생한 예외를 담아서 중첩 예외로 만드는 것이 좋음.
+        throw new DuplicateUserIdException(e);  // 예외 전환
         //        throw DuplicateUserIdException().initCause(e); // 혹은 wrapping. 주로 예외처리를 강제하는 체크 예외를 언체크 예외인 런타임 예외로 바꾸는 경우에 사용.
-      else
-        throw e; // 그 외의 경우는 SQLException 그대로
+      } else {
+        throw new RuntimeException(e); // 예외 포장
+      }
     }
     // JDBC API
   }
