@@ -357,7 +357,7 @@ new INTERFACE_NAME() { // codes };
         - e.g. NullPointerException, IllegalArgumentException
 
 ### 4.1.3 예외처리 방법
-1. 예외 복구: 문제를 해결해서 정상 상태로 돌려놓는 것.
+#### 1. 예외 복구: 문제를 해결해서 정상 상태로 돌려놓는 것.
 ```java
 int maxretry = MAX_RETRY;
 while (maxretry --> 0) {
@@ -376,7 +376,26 @@ while (maxretry --> 0) {
 throw new RetryFailedException(); // 최대 재시도 횟수를 넘기면 직접 예외 발생
 
 ```
-2. 예외처리 회피
-  - 콜백-템플릿처럼 긴밀하게 역할을 분담하고 있는 관계가 아니라면 자신의 코드에서 발생하는 예외를 그냥 던져버리는 건 무책임한 책임회피 일수도 잇음.
-  - 예외를 회피하는 것은 예외를 복구하는 것처럼 의도가 분명해야 함.
-3. 예외 전환
+#### 2. 예외처리 회피
+- 콜백-템플릿처럼 긴밀하게 역할을 분담하고 있는 관계가 아니라면 자신의 코드에서 발생하는 예외를 그냥 던져버리는 건 무책임한 책임회피 일수도 잇음.
+- 예외를 회피하는 것은 예외를 복구하는 것처럼 의도가 분명해야 함.
+#### 3. 예외 전환
+- (발생한 예외를 그대로 넘기는 게 아니라) 적절한 예외로 전환해서 던짐.
+- 목적
+  - 기존에 내부에서 발생하는 예외를 그대로 던지는 것이 그 예외상황에 대한 적절한 의미를 부여해주지 못하는 경우에 의미를 분명하게 해줄 수 있는 예외로 바꿔주기 위해.
+    - 의미가 분명한 예외가 던져지면 서비스 계층 오브젝트에는 적절한 복구 작업을 시도할 수 있음.
+##### 예외 포장: 
+체크 예외에서 비즈니스 로직으로 봤을 때 의미있는 예외가 아니거나, 복구 불가능한 예외이면 런타임 예외로 포장해서 던지는 편이 나음.
+(e.g StorePlatformException)
+```java
+try {
+  OrderHome orderHome = EJBHomeFactory.getInstance().getOrderHome();
+  Order order = orderHome.findByPrimaryKey(Integer id);
+} catch (SQLException se) {
+  throw new EJBException(se);  
+} catch (RemoteException re) {
+  throw new EJBException(re);  
+}
+```
+일반적으로 체크예외를 계속 throws 로 던지는 것은 무의미함.(메소드만 지저분해지고 아무런 장점이 없음.)  
+어차피 복구가 불가능한 예외라면 가능한 한 빨리 런타임 예외로 포장해 던지게 해서 다른 계층의 메소드를 작성할 때 불필요한 throws 선언이 들어가지 않도록 해줘야 함.

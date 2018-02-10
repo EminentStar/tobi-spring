@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
+import springbook.exception.DuplicateUserIdException;
 import springbook.user.domain.User;
 
 public class UserDao {
@@ -94,25 +95,23 @@ public class UserDao {
   }
 
   /**
-   * 예외처리 회피1
+   * 예외 전환 기능을 가진 DAO 메소드
    *
    *
    * */
-  public void add() throws SQLException {
+  public void addForChap4(User user) throws DuplicateUserIdException, SQLException {
+    try {
+      // JDBC를 이용해 user 정보를 DB에 추가하는 코드 또는
+      // 그런 기능을 가진 다른 SQLException을 던지는 메소드를 호출하는 코드
+    } catch (SQLException e) {
+      // ErrorCode가 MySQL의 "Duplicate Entry(1062)"이면 예외 전환
+      if (e.getErrorCode() == MySQLErrorNumbers.ER_DUP_ENTRY)
+        throw DuplicateUserIdException(e); // 보통 전환하는 예외에 원래 발생한 예외를 담아서 중첩 예외로 만드는 것이 좋음.
+        //        throw DuplicateUserIdException().initCause(e); // 혹은 wrapping. 주로 예외처리를 강제하는 체크 예외를 언체크 예외인 런타임 예외로 바꾸는 경우에 사용.
+      else
+        throw e; // 그 외의 경우는 SQLException 그대로
+    }
     // JDBC API
   }
-
-  /**
-   * 예외처리 회피2
-   * */
-  public void add2() throws SQLException {
-    try {
-      // JDBC API
-    } catch (SQLException e) {
-      // 로그 출력
-      throw e;
-    }
-  }
-
 }
 
