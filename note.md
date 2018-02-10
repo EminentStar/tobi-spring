@@ -356,3 +356,25 @@ new INTERFACE_NAME() { // codes };
       - 피할 수 있지만 개발자가 부주의해서 발생할 수 있는 경우에 발생하도록 만든 것.
         - e.g. NullPointerException, IllegalArgumentException
 
+### 4.1.3 예외처리 방법
+1. 예외 복구: 문제를 해결해서 정상 상태로 돌려놓는 것.
+```java
+int maxretry = MAX_RETRY;
+while (maxretry --> 0) {
+  try {
+    // ... 
+    return;
+  } 
+  catch (SomeException e) {
+    // 로그 출력. 정해진 시간만큼 대기
+  }
+  finally {
+    // 리소스 반납. 정리 작업
+  }
+}
+
+throw new RetryFailedException(); // 최대 재시도 횟수를 넘기면 직접 예외 발생
+
+```
+2. 예외처리 회피
+3. 예외 전환
