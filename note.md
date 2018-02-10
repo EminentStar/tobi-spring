@@ -333,3 +333,26 @@ db풀은 매번 getConnection()으로 가져간 커넥션을 명시적으로 clo
 ```java
 new INTERFACE_NAME() { // codes };
 ```
+
+
+# Chap 04: 예외
+### 4.1.2 예외의 종류와 특징
+자바에서 throw를 통해 발생시킬 수 있는 예외는 크게 3가지
+1. Error
+  - java.lang.Error클래스의 서브클래스들.
+  - 시스템에 뭔가 비정상적인 상황이 발생했을 경우에 사용됨.
+  - e.g. OutOfMemoryError, ThreadDeath
+2. Exception과 체크 예외
+  - java.lang.Exception 클래스와 그 서브클래스로 정의되는 예외.
+  - 에러와 달리 개발자들이 만든 애플리케이션 코드의 작업 중에 예외상황이 발생했을 경우에 사용됨.
+  - Exception은 체크 예외와 언체크 예외로 구분됨.
+    - 체크 예외: RuntimeException을 상속하지 않은 것.
+      - 체크 예외가 발생할 수 있는 메소드를 사용할 경우 반드시 예외를 처리하는 코드를 함께 작성해야 함.(catch 혹은 throws 정의)
+        - 안하면 컴파일 에러.
+        - e.g IOException, SQLException
+    - 언체크 예외/런타임 예외: RuntimeException을 상속한 것.
+      - 명시적인 예외처리를 강제하지 않기 때문에 unchecked 예외라 불림.
+      - 주로 프로그램의 오류가 있을 때 발생하도록 의도된 것들.
+      - 피할 수 있지만 개발자가 부주의해서 발생할 수 있는 경우에 발생하도록 만든 것.
+        - e.g. NullPointerException, IllegalArgumentException
+
