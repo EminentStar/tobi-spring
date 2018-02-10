@@ -93,5 +93,26 @@ public class UserDao {
     //    );
   }
 
+  /**
+   * 예외처리 회피1
+   *
+   *
+   * */
+  public void add() throws SQLException {
+    // JDBC API
+  }
+
+  /**
+   * 예외처리 회피2
+   * */
+  public void add2() throws SQLException {
+    try {
+      // JDBC API
+    } catch (SQLException e) {
+      // 로그 출력
+      throw e;
+    }
+  }
+
 }
 
