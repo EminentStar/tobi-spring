@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -25,8 +26,8 @@ public class UserDaoTest {
   @Autowired
   // 테스트 오브젝트가 만들어지고 나면 스프링 컨텍스트 테스트에 의해 자동으로 값이 주입
   private ApplicationContext context;
-  @Autowired
-  private UserDao dao; // UserDao TYPE의 빈을 직접 DI받음.
+  @Autowired // @Autowired는 스프링의 컨텍스트 내에서 정의된 빈 중에서 인스턴스 변수에 주입 가능한 타입의 빈을 찾아줌.
+  private UserDao dao; // UserDaoJdbc TYPE의 빈을 직접 DI받음.
 
   private User user1;
   private User user2;
@@ -143,6 +144,14 @@ public class UserDaoTest {
 
     dao.delete(user3.getId());
     assertThat(dao.getCount(), is(0));
+  }
+
+  @Test(expected = DuplicateKeyException.class)
+  public void duplicateKey() {
+    dao.deleteAll();
+
+    dao.add(user1);
+    dao.add(user1);
   }
 
   /**

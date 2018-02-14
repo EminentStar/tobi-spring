@@ -10,16 +10,16 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 @Configuration // ApplicationContext or BeanFactory가 사용할 설정정보라는 표시
 public class DaoFactory {
   /**
-   * 팩토리의 메소드는 UserDao 타입의 오브젝트를 어떻게 만들고, 어떻게 준비시킬지를 결정함.
-   * @return UserDao
+   * 팩토리의 메소드는 UserDaoJdbc 타입의 오브젝트를 어떻게 만들고, 어떻게 준비시킬지를 결정함.
+   * @return UserDaoJdbc
    */
   // Object 생성을 담당하는 IoC용 메소드라는 표시
   @Bean      // -------------------------------> <bean
-  public UserDao userDao() {       // -----> id="userDao"
-    UserDao userDao = new UserDao();
-    //    userDao.setDataSource(dataSource()); // -> <property name="connectionMaker" ref="connectionMaker/>
-    userDao.setJdbcTemplate(jdbcTemplate()); // -> <property name="connectionMaker" ref="connectionMaker/>
-    return userDao; // ---------------------> class="springbook..UserDao" />
+  public UserDaoJdbc userDao() {       // -----> id="userDaoJdbc"
+    UserDaoJdbc userDaoJdbc = new UserDaoJdbc();
+    //    userDaoJdbc.setDataSource(dataSource()); // -> <property name="connectionMaker" ref="connectionMaker/>
+    userDaoJdbc.setJdbcTemplate(jdbcTemplate()); // -> <property name="connectionMaker" ref="connectionMaker/>
+    return userDaoJdbc; // ---------------------> class="springbook..UserDaoJdbc" />
   }
 
   @Bean
