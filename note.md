@@ -425,3 +425,12 @@ try {
 * 스프링은 DataAccessException을 통해 DB에 독립적으로 적용가능한 추상화된 RuntimeException 게층을 제공.
 * DAO를 데이터 액세스 기술에서 독립시키려면 인터페이스 도입과 런타임 예외 전환, 기술에 독립적인 추상화된 예외로 전환이 필요함.
 
+
+# Chap 05: 서비스 추상화
+
+* USER 테이블에 필드 추가
+  - Level: int not null
+  - Login: int not null
+  - Recommend: int not null
+
+
