@@ -16,6 +16,14 @@ public class UserService {
     this.userDao = userDao;
   }
 
+  public void add(User user) {
+    if (user.getLevel() == null) {
+      user.setLevel(Level.BASIC);
+    }
+   
+    userDao.add(user);
+  }
+
   public void upgradeLevels() {
     List<User> users = userDao.getAll();
 
