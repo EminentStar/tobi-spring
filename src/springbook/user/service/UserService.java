@@ -51,7 +51,11 @@ public class UserService {
     }
   }
 
-  private void upgradeLevel(User user) {
+  /**
+   * 테스트를 위한 상속을 할 때 private 접근제한이 걸려있어 오버라이딩이 불가.
+   * 이번은 예제 상의 예외상황으로 상속을 위해 `protected` Access Specifier를 사용하자.
+   */
+  protected void upgradeLevel(User user) {
     user.upgradeLevel();
     userDao.update(user);
   }
