@@ -34,7 +34,8 @@ public class User {
     return name;
   }
 
-  public void setName(String name) { this.name = name;
+  public void setName(String name) {
+    this.name = name;
   }
 
   public String getPassword() {
@@ -67,6 +68,18 @@ public class User {
 
   public void setRecommend(int recommend) {
     this.recommend = recommend;
+  }
+
+  /**
+   * User 내부 정보가 변경되는 것은 UserService보다는 User가 스스로 다루는게 적절.
+   */
+  public void upgradeLevel() {
+    Level nextLevel = this.level.nextLevel();
+    if (nextLevel == null) {
+      throw new IllegalStateException(this.level + "은 업그레이드가 불가능합니다.");
+    } else {
+      this.level = nextLevel;
+    }
   }
 
 }

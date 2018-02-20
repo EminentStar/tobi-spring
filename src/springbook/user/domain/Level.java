@@ -1,16 +1,25 @@
 package springbook.user.domain;
 
 public enum Level {
-  BASIC(1), SILVER(2), GOLD(3); // 세 개의 enum object 정의
+  GOLD(3, null), SILVER(2, GOLD), BASIC(1, SILVER); // 세 개의 enum object 정의
 
   private final int value;
+  private final Level next;
 
-  Level(int value) { // DB에 저장할 값을 넣어줄 생성자를 만들어둔다.
+  Level(int value, Level next) { // DB에 저장할 값을 넣어줄 생성자를 만들어둔다.
     this.value = value;
+    this.next = next;
   }
 
   public int intValue() {
     return value;
+  }
+
+  /**
+   * Level의 순서를 UserService보단 Leevl에 맡기자.
+   */
+  public Level nextLevel() {
+    return this.next;
   }
 
   /**
@@ -29,5 +38,4 @@ public enum Level {
 
     }
   }
-
 }
