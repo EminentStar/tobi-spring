@@ -80,6 +80,14 @@ public class UserDaoJdbc implements UserDao {
     //    });
   }
 
+  @Override
+  public void update(User user) {
+    this.jdbcTemplate.update(
+      "UPDATE users SET name = ?, password = ?, level = ?, login = ?, " +
+        "recommend = ? where id = ?", user.getName(), user.getPassword(), user.getLevel().intValue(),
+      user.getLogin(), user.getRecommend(), user.getId());
+  }
+
   public void delete(String id) {
     this.jdbcTemplate.update("DELETE FROM users WHERE id = ?", id);
   }
