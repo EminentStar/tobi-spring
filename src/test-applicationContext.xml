@@ -21,4 +21,9 @@
     <!--<property name="dataSource" ref="dataSource"/>-->
     <property name="jdbcTemplate" ref="jdbcTemplate"/>
   </bean>
+
+  <bean id="userService" class="springbook.user.service.UserService">
+    <!-- DI 받도록 property 추가 -->
+    <property name="userDao" ref="userDao"/>
+  </bean>
 </beans>

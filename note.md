@@ -433,4 +433,5 @@ try {
   - Login: int not null
   - Recommend: int not null
 
-
+* DAO는 데이터를 어떻게 가져오고 조작할지를 다루는 곳. 비즈니스 로직을 두는 곳은 아님.
+  - Service 클래스를 둬서 DAO를 DI 적용하자.(DI를 적용하려면 받는 쪽(UserService), 주입 당하는 쪽(UserDao) 모두 스프링의 빈으로 등록이 되어야함.)
