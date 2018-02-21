@@ -440,6 +440,41 @@ try {
   - object에게 데이터를 요구하지 말고 작업을 요청하라는 것이 객체지향 프로그래밍의 가장 기본이 되는 원리이기도 함.
 
 ## 5.2 트랜잭션 서비스 추상화
-* 트랜잭션: 더 이상 나눌 수 없는 단위 작업.
+
+### 트랜잭션
+* 더 이상 나눌 수 없는 단위 작업.
   - 작업을 쪼개서 작은 단위로 만들 수 없다는 것은 트랜잭션의 핵심 속성인 원자성을 의미
   - 트랜잭션의 성질: 중간에 예외가 발생해서 작업을 완료할 수 없다면 아예 작업이 시작되지 않은 것처럼 초기 상태로 돌려놔야 함.
+* transaction rollback: 트랜잭션내에서 문제가 발생할 경우 앞에서 처리한 SQL 작업도 취소시키는 것.
+* transaction commit: 여러개의 SQL을 하나의 트랜잭션으로 처리하는 경우 모든 SQL 작업이 다 성공적으로 마무리됐다고 DB에 알려줘서 작업을 확정시키는 것.
+* 트랜잭션 경계: 애플리케이션 내에서 트랜잭션이 시작되고 끝나는 위치
+
+#### JDBC 트랜잭션의 트랜잭션 경계설정
+```java
+Connection c = dataSource.getConnection();
+
+c.setAutoCommit(false); // 트랜잭션 시작; 트랜잭션의 시작과 종료는 Connection object를 통해 이뤄짐.
+
+try {
+  PreparedStatement st1 = 
+    c.preparedStatement("update users ...");
+  st1.eecuteUpdate();
+  
+  PreparedStatement st2 = 
+    c.preparedStatement("delete users ...");
+  st2.eecuteUpdate();
+  
+  c.commit(); // 트랜잭션 커밋
+} catch (Exception e) {
+  c.rollback(); // 트랜잭션 롤백
+}
+
+c.close();
+
+```
+- 일반적으로 작업 중에 예외가 발생하면 트랜잭션을 롤백한다.
+    - (예외가 발생했다는 건, 트랜잭션을 구성하는 데이터 액세스 작업을 마무리할 수 없는 ㅏㅇ황이거나 DB에 결과를 반영하면 안 되는 이유가 생겼기 때문.)
+- 위와 같이 setAutoCommit(false)로 트랜잭션의 시작을 선언하고 commit() or rollback()으로 트랜잭션을 종료하는 작업을 transaction demarcation(트랜잭션의 경계설정)이라고 함.
+- 하나의 DB 커넥션 안에서 만들어지는 트랜잭션을 local transaction이라고도 함.
+- 트랜잭션 작업은 내구성을 보장받기 때문에 일단 커밋되고 나면 DB 서버가 다운되더라도 그 결과는 DB에 그대로 남음.
+
