@@ -1,5 +1,6 @@
 package springbook.user.service;
 
+import java.sql.Connection;
 import java.util.List;
 
 import springbook.user.dao.UserDao;
@@ -28,11 +29,12 @@ public class UserService {
   }
 
   public void upgradeLevels() {
-    List<User> users = userDao.getAll();
+    Connection c = null;
+    List<User> users = userDao.getAll(c);
 
     for (User user : users) {
       if (canUpgradeLevel(user)) {
-        upgradeLevel(user);
+        upgradeLevel(c, user);
       }
     }
   }
@@ -55,9 +57,9 @@ public class UserService {
    * 테스트를 위한 상속을 할 때 private 접근제한이 걸려있어 오버라이딩이 불가.
    * 이번은 예제 상의 예외상황으로 상속을 위해 `protected` Access Specifier를 사용하자.
    */
-  protected void upgradeLevel(User user) {
+  protected void upgradeLevel(Connection c, User user) {
     user.upgradeLevel();
-    userDao.update(user);
+    userDao.update(c, user);
   }
 
 }

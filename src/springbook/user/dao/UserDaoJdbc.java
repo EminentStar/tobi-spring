@@ -1,5 +1,6 @@
 package springbook.user.dao;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -45,24 +46,24 @@ public class UserDaoJdbc implements UserDao {
   /**
    *  내부 클래스에서 외부의 변수를 사용할 때는 외부 변수는 반드시 final로 선언해줘야 함.
    */
-  public void add(final User user) {
+  public void add(Connection c, final User user) {
     this.jdbcTemplate.update("INSERT INTO users(id, name, password, level, login, recommend) "
         + "VALUES(?,?,?,?,?,?)",
       user.getId(), user.getName(), user.getPassword(), user.getLevel().intValue(), user.getLogin(), user.getRecommend());
   }
 
-  public User get(String id) {
+  public User get(Connection c, String id) {
     // queryForObject() 는 SQL을 실행하면 한 개의 로우만 얻을 것이라 기대
     return this.jdbcTemplate.queryForObject("SELECT * FROM users WHERE id = ?",
       new Object[] {id}, // SQL에 바인딩할 파라미터 값. 가변인자 대신 배열을 사용
       userMapper);
   }
 
-  public List<User> getAll() {
+  public List<User> getAll(Connection c) {
     return this.jdbcTemplate.query("SELECT * FROM users ORDER BY id", userMapper);
   }
 
-  public int getCount() {
+  public int getCount(Connection c) {
     return this.jdbcTemplate.queryForInt("SELECT COUNT(*) FROM users");
     // 아래의 콜벡 오브젝트 코드를 재사용하여 위의 코드를 만들 수 있음.
     //    return this.jdbcTemplate.query(new PreparedStatementCreator() { // 첫번째 콜백. Statement 생성
@@ -81,18 +82,18 @@ public class UserDaoJdbc implements UserDao {
   }
 
   @Override
-  public void update(User user) {
+  public void update(Connection c, User user) {
     this.jdbcTemplate.update(
       "UPDATE users SET name = ?, password = ?, level = ?, login = ?, " +
         "recommend = ? where id = ?", user.getName(), user.getPassword(), user.getLevel().intValue(),
       user.getLogin(), user.getRecommend(), user.getId());
   }
 
-  public void delete(String id) {
+  public void delete(Connection c, String id) {
     this.jdbcTemplate.update("DELETE FROM users WHERE id = ?", id);
   }
 
-  public void deleteAll() {
+  public void deleteAll(Connection c) {
     this.jdbcTemplate.update("DELETE FROM users");
     // 아래와 같이 콜백을 넘겨주는 형태로도 가능 (JdbcTemplate의 콜백은 PreparedStatementCreator 인터페이스의
     // createPreparedStatement() 임.

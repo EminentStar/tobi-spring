@@ -477,4 +477,5 @@ c.close();
 - 위와 같이 setAutoCommit(false)로 트랜잭션의 시작을 선언하고 commit() or rollback()으로 트랜잭션을 종료하는 작업을 transaction demarcation(트랜잭션의 경계설정)이라고 함.
 - 하나의 DB 커넥션 안에서 만들어지는 트랜잭션을 local transaction이라고도 함.
 - 트랜잭션 작업은 내구성을 보장받기 때문에 일단 커밋되고 나면 DB 서버가 다운되더라도 그 결과는 DB에 그대로 남음.
-
+- 트랜잭션은 Connection 오브젝트 안에서 만들어짐.
+  - 여러 작업이 하나의 트랜잭션으로 묶이려면 그 작업이 진행되는 동안 DB 커넥션도 하나만 사용돼야 함.
