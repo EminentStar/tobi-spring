@@ -7,6 +7,8 @@ import static springbook.user.service.UserService.*;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.sql.DataSource;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -48,6 +50,8 @@ public class UserServiceTest {
   UserService userService;
   @Autowired
   UserDao userDao;
+  @Autowired
+  DataSource dataSource;
 
   List<User> users; // test fixture
 
@@ -69,7 +73,7 @@ public class UserServiceTest {
   }
 
   @Test
-  public void upgradeLevels() {
+  public void upgradeLevels() throws Exception {
     // Given
     userDao.deleteAll();
     for (User user : users) {
@@ -92,10 +96,11 @@ public class UserServiceTest {
    * 그 전에 업그레이드했던 사용자도 다시 원래 상태로 돌아갔는지 확인
    */
   @Test
-  public void upgradeAllOrNothing() {
+  public void upgradeAllOrNothing() throws Exception {
     // Given
     UserService testUserService = new TestUserService(users.get(3).getId());
     testUserService.setUserDao(this.userDao); // userDao manual DI
+    testUserService.setDataSource(this.dataSource);
 
     userDao.deleteAll();
 
