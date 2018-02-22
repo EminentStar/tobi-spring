@@ -502,3 +502,41 @@ UserService에서 트랜잭션을 시작하기 위해 만든 Connection 오브�
 - 만약 미리 생성돼서 트랜잭션 동기화 저장소에 등록된 DB 커넥션이나 트랜잭션이 없는 경우에는 JdbcTemplate이 직접 DB 커넥션을 만들고 트랜잭션을 시작해서 JDBC 작업을 진행
 - 트랜잭션 동기화를 시작해놓았다면 그때부터 실행되는 JdbcTemplate의 메소드에서는 (직접 DB 커넥션을 만드는 대신) 트랜잭션 동기화 저장소에 들어 있는 DB 커넥션을 가져와서 사용함.
 * JDBC 코드의 `try/catch/finally 작업 흐름 지원`, `SQLException 예외 변환`과 함께 JdbcTemplate이 제공하는 3 가지 유용한 기능중 하나임.
+
+#### 5.2.4 트랜잭션 서비스 추상화
+- 한개 이상의 DB로의 작업을 하나의 트랜잭션으로 만드는 건 JDBC의 Connection을 이용한 트랜잭션 방식인 로컬 트랜잭션으로는 불가능.(로컬 트랜잭션은 하나의 DB 커넥션에 종속됨.)
+- 별도의 트랜잭션 관리자를 통해 트랜잭션을 관리하는 글로벌 트랜잭션 방식을 사용해야함. (e.g. JTA(Java Transaction API))
+- 근데 DB 종류가 바뀌면 트랜잭션 관리자도 변경되어야 함.
+- UserService에서 트랜잭션의 경계설정을 해야 할 필요가 생기면서 다시 특정 데이터 액세스 기술에 종속되는 구조가 되고 말았음.
+```java
+/**
+* JTA르 이용한 트랜잭션 코드 구조
+* */
+InitialContext ctx = new InitialContext();
+UserTransaction tx = (UserTransaction)ctx.lookup(USER_TX_JNDI_NAME);
+
+tx.begin();
+Connection c = dataSource.getConnection();
+
+try {
+  // 데이터 액세스 코드
+  
+  tx.commit();
+} catch (Exception e) {
+  tx.rollback();
+  throw e;
+} finally {
+  c.close();
+}
+```
+* 그런데 트랜잭션 경계설정을 담당하는 코드는 일정한 패턴을 갖는 유사한 구조임.
+  - 이렇게 공통점이 있다면 추상화를 생각해볼 수 있음.
+  - `추상화`란 하위 시스템의 공통점을 뽑아내서 분리시키는 것을 말함. 이렇게 하면 하위 시스템이 어떤 것인지 알지 못해도, 또는 하위 시스템이 바뀌더라도 일관된 방법으로 접근할 수 있음.
+* **JDBC, JTA, Hibernate, JPA, JDO, JMS등의 트랜잭션 경계설정 방법에서 공통점을 뽑아 낼 수 있음.**
+  - 스프링은 트랜잭션 기술을 공통점을 담은 트랜잭션 추상화 기술을 제공하고 있음.
+  - 이렇게 하면 애플리케이션에서 직접 각 기술의 트랜잭션 API를 이용하지 않고도, 일관된 방식으로 트랜잭션을 제어하는 트랜잭션 경계설정 작업이 가능해짐.
+    - 스프링이 제공하는 트랜잭션 경계설정을 위한 추상 인터페이스는 PlatformTransactionManager.
+    - JDBC의 로컬 트랜잭션을 이용한다면 PlatformTransactionManager를 구현한 DataSourceTransactionManager를 사용하면 됨.
+    - 스프링의 트랜잭션 추상화 기술은 앞에서 적용했던 트랜잭션 동기화를 사용함.
+    - PlatformTransactionManager로 시작한 트랜잭션은 트랜잭션 동기화 저장소에 저장됨.
+    - PlatformTransactionManager를 구현한 DataSourceTransactionManager 오브젝트는 JdbcTemplate에서 사용될 수 있는 방식으로 트랜잭션을 관리함.
