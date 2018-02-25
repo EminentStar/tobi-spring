@@ -540,3 +540,7 @@ try {
     - 스프링의 트랜잭션 추상화 기술은 앞에서 적용했던 트랜잭션 동기화를 사용함.
     - PlatformTransactionManager로 시작한 트랜잭션은 트랜잭션 동기화 저장소에 저장됨.
     - PlatformTransactionManager를 구현한 DataSourceTransactionManager 오브젝트는 JdbcTemplate에서 사용될 수 있는 방식으로 트랜잭션을 관리함.
+
+
+* 어떤 클래스든 스프링의 빈으로 등록할 때 먼저 검토해야 할 것은 싱글톤으로 만들어져 여러 스레드에서 동시에 사용해도 괜찮은 가 하는 점.
+  - 상태를 갖고 있고, 멀티스레드 환경에서 안전하지 않은 클래스를 빈으로 무작정 등록하면 심각한 문제가 발생하기 때문.
