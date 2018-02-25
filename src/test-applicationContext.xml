@@ -26,11 +26,17 @@
     <!-- DI 받도록 property 추가 -->
     <property name="userDao" ref="userDao"/>
     <property name="transactionManager" ref="transactionManager"/>
+    <property name="mailSender" ref="mailSender"/>
   </bean>
 
   <bean id="transactionManager"
     class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
     <!--class="org.springframework.transaction.jta.JtaTransactionManager">-->
     <property name="dataSource" ref="dataSource"/>
+  </bean>
+
+  <bean id="mailSender"
+    class="org.springframework.mail.javamail.JavaMailSenderImpl">
+    <property name="host" value="mail.server.com"/>
   </bean>
 </beans>

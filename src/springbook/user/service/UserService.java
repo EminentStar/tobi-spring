@@ -2,8 +2,8 @@ package springbook.user.service;
 
 import java.util.List;
 
+import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
@@ -20,6 +20,8 @@ public class UserService {
 
   private PlatformTransactionManager transactionManager;
 
+  private MailSender mailSender;
+
   /**
    * UserDao 오브젝트의 DI가 가능하도록 setter method 추가
    */
@@ -29,6 +31,10 @@ public class UserService {
 
   public void setTransactionManager(PlatformTransactionManager transactionManager) {
     this.transactionManager = transactionManager;
+  }
+
+  public void setMailSender(MailSender mailSender) {
+    this.mailSender = mailSender;
   }
 
   public void add(User user) {
@@ -98,16 +104,13 @@ public class UserService {
      * ## JavaMail 처럼 테스트하기 힘든 구조인 API를 테스트 하기 좋은 방법으로 서비스 추상화.
      * 스프링은 JavaMail을 사용해 만든 코드는 손쉽게 테스트하기 힘들다는 문제를 해결하기 위해 JavaMail에 대한 추상화 기능을 제공함.
      */
-    JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
-    mailSender.setHost("mail.server.com");
-
     SimpleMailMessage mailMessage = new SimpleMailMessage();
     mailMessage.setTo(user.getEmail());
     mailMessage.setFrom("useradmin@jsug.org");
     mailMessage.setSubject("Upgrade 안내");
     mailMessage.setText("사용자님의 등급이 " + user.getLevel().name());
 
-    mailSender.send(mailMessage);
+    this.mailSender.send(mailMessage);
 
   }
 
