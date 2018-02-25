@@ -1,16 +1,9 @@
 package springbook.user.service;
 
 import java.util.List;
-import java.util.Properties;
 
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
@@ -94,23 +87,28 @@ public class UserService {
   }
 
   private void sendUpgradeEMail(User user) {
-    Properties props = new Properties();
-    props.put("mail.smtp.host", "mail.ksug.org");
-    Session s = Session.getInstance(props, null);
+    /*
+     * ## JavaMail을 이용한 테스트의 문제점.
+     * JavaMail에서는 Session 오브젝트를 만들어야만 메일 메시지를 생성할 수 있고, 메일을 전송가능.
+     * 근데 이 Session은 인터페이스가 아니라 클래스임. 또 생성자가 private이라 직접 생성도 불가능.(스태틱 팩토리 메소드를 이용해 오브젝트를 만드는 방법밖에 없음.)
+     * 게다가 Session 클래스는 더이상 상속이 불가능한 final 클래스.
+     * MailMessage, Transport 도 마찬가지임.
+     * 결국 JavaMail의 구현을 테스트용으로 바꿔치기하는 건 불가능하다고 볼 수 밖에 없음.
+     *
+     * ## JavaMail 처럼 테스트하기 힘든 구조인 API를 테스트 하기 좋은 방법으로 서비스 추상화.
+     * 스프링은 JavaMail을 사용해 만든 코드는 손쉽게 테스트하기 힘들다는 문제를 해결하기 위해 JavaMail에 대한 추상화 기능을 제공함.
+     */
+    JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+    mailSender.setHost("mail.server.com");
 
-    MimeMessage message = new MimeMessage(s);
-    try {
-      message.setFrom(new InternetAddress("useradmin@ksug.org"));
-      message.addRecipient(Message.RecipientType.TO, new InternetAddress(user.getEmail()));
-      message.setSubject("Upgrade 안내");
-      message.setText("사용자님의 등급이 " + user.getLevel().name() + "로 업그레이드 되었습니다.");
+    SimpleMailMessage mailMessage = new SimpleMailMessage();
+    mailMessage.setTo(user.getEmail());
+    mailMessage.setFrom("useradmin@jsug.org");
+    mailMessage.setSubject("Upgrade 안내");
+    mailMessage.setText("사용자님의 등급이 " + user.getLevel().name());
 
-      Transport.send(message);
-    } catch (AddressException e) {
-      throw new RuntimeException(e);
-    } catch (MessagingException e) {
-      throw new RuntimeException(e);
-    }
+    mailSender.send(mailMessage);
+
   }
 
 }
