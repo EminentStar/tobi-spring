@@ -14,6 +14,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.MailSender;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -55,6 +56,8 @@ public class UserServiceTest {
   UserDao userDao;
   @Autowired
   DataSource dataSource;
+  @Autowired
+  MailSender mailSender;
 
   List<User> users; // test fixture
 
@@ -104,6 +107,7 @@ public class UserServiceTest {
     UserService testUserService = new TestUserService(users.get(3).getId());
     testUserService.setUserDao(this.userDao); // userDao manual DI
     testUserService.setTransactionManager(this.transactionManager);
+    testUserService.setMailSender(this.mailSender);
 
     userDao.deleteAll();
 
