@@ -544,3 +544,9 @@ try {
 
 * 어떤 클래스든 스프링의 빈으로 등록할 때 먼저 검토해야 할 것은 싱글톤으로 만들어져 여러 스레드에서 동시에 사용해도 괜찮은 가 하는 점.
   - 상태를 갖고 있고, 멀티스레드 환경에서 안전하지 않은 클래스를 빈으로 무작정 등록하면 심각한 문제가 발생하기 때문.
+  
+### 5.4 메일 서비스 추상화
+* 라이브러리 추가 필요
+  - com.springsource.javax.activation-1.1.0.jar
+  - com.springsource.javax.mail-1.4.0.jar
+  - org.springframework.context.support-3.0.7.RELEASE.jar

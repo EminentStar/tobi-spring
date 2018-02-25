@@ -39,9 +39,9 @@ public class UserDaoTest {
    */
   @Before
   public void setUp() {
-    this.user1 = new User("unk3843", "박준규", "123!@#", Level.BASIC, 1, 0);
-    this.user2 = new User("junk384", "박준규", "123!@#", Level.SILVER, 55, 10);
-    this.user3 = new User("aminent2", "박준규", "123!@#", Level.GOLD, 100, 40);
+    this.user1 = new User("unk3843", "박준규", "123!@#", Level.BASIC, 1, 0, "junk3843@naver.com");
+    this.user2 = new User("junk384", "박준규", "123!@#", Level.SILVER, 55, 10, "pjk3843@gmail.com");
+    this.user3 = new User("aminent2", "박준규", "123!@#", Level.GOLD, 100, 40, "wnsrb3843@naver.com");
 
     // context 확인용
     System.out.println(this.context);
