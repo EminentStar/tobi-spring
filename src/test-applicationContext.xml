@@ -22,7 +22,7 @@
     <property name="jdbcTemplate" ref="jdbcTemplate"/>
   </bean>
 
-  <bean id="userService" class="springbook.user.service.UserService">
+  <bean id="userService" class="springbook.user.service.UserServiceImpl">
     <!-- DI 받도록 property 추가 -->
     <property name="userDao" ref="userDao"/>
     <property name="transactionManager" ref="transactionManager"/>

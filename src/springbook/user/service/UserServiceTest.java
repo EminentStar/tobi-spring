@@ -2,7 +2,7 @@ package springbook.user.service;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
-import static springbook.user.service.UserService.*;
+import static springbook.user.service.UserServiceImpl.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,10 +36,10 @@ public class UserServiceTest {
   /**
    *  테스트에서만 사용할 클래스이기에 파일을 따로 만들지 말고 테스트 클래스 내부에 스태틱 클래스로 만들어 사용.
    */
-  static class TestUserService extends UserService {
+  static class TestUserServiceImpl extends UserServiceImpl {
     private String id;
 
-    private TestUserService(String id) {
+    private TestUserServiceImpl(String id) {
       this.id = id;
     }
 
@@ -73,7 +73,7 @@ public class UserServiceTest {
   @Autowired
   PlatformTransactionManager transactionManager;
   @Autowired
-  UserService userService;
+  UserServiceImpl userService;
   @Autowired
   UserDao userDao;
   @Autowired
@@ -138,7 +138,7 @@ public class UserServiceTest {
   @Test
   public void upgradeAllOrNothing() throws Exception {
     // Given
-    UserService testUserService = new TestUserService(users.get(3).getId());
+    UserServiceImpl testUserService = new TestUserServiceImpl(users.get(3).getId());
     testUserService.setUserDao(this.userDao); // userDao manual DI
     testUserService.setTransactionManager(this.transactionManager);
     testUserService.setMailSender(this.mailSender);
