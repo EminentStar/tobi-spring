@@ -36,10 +36,10 @@ public class UserServiceTest {
   /**
    *  테스트에서만 사용할 클래스이기에 파일을 따로 만들지 말고 테스트 클래스 내부에 스태틱 클래스로 만들어 사용.
    */
-  static class TestUserServiceImpl extends UserServiceImpl {
+  static class TestUserService extends UserServiceImpl {
     private String id;
 
-    private TestUserServiceImpl(String id) {
+    private TestUserService(String id) {
       this.id = id;
     }
 
@@ -73,7 +73,9 @@ public class UserServiceTest {
   @Autowired
   PlatformTransactionManager transactionManager;
   @Autowired
-  UserServiceImpl userService;
+  UserService userService;
+  @Autowired
+  UserServiceImpl userServiceImpl;
   @Autowired
   UserDao userDao;
   @Autowired
@@ -111,11 +113,11 @@ public class UserServiceTest {
 
     // 메일 발송 결과를 테스트할 수 있도록 목 오브젝틀르 만들어 userService의 의존 오브젝트로 주입.
     MockMailSender mockMailSender = new MockMailSender();
-    userService.setMailSender(mockMailSender);
+    userServiceImpl.setMailSender(mockMailSender);
 
     // When
     // 업그레이드 테스트. 메일 발송이 일어나면 MockMailSender 오브젝트의 리스트에 그 결과가 저장됨.
-    userService.upgradeLevels();
+    userServiceImpl.upgradeLevels();
 
     checkLevelUpgraded(users.get(0), false);
     checkLevelUpgraded(users.get(1), true);
@@ -138,10 +140,13 @@ public class UserServiceTest {
   @Test
   public void upgradeAllOrNothing() throws Exception {
     // Given
-    UserServiceImpl testUserService = new TestUserServiceImpl(users.get(3).getId());
+    UserServiceImpl testUserService = new TestUserService(users.get(3).getId());
     testUserService.setUserDao(this.userDao); // userDao manual DI
-    testUserService.setTransactionManager(this.transactionManager);
     testUserService.setMailSender(this.mailSender);
+
+    UserServiceTx txUserService = new UserServiceTx();
+    txUserService.setTransactionManager(transactionManager);
+    txUserService.setUserService(testUserService);
 
     userDao.deleteAll();
 
@@ -151,7 +156,7 @@ public class UserServiceTest {
     }
 
     try {
-      testUserService.upgradeLevels();
+      txUserService.upgradeLevels();
       fail("TestUserServiceException expected");
     } catch (TestUserServiceException e) {
       // TestUserService가 던지는 예외를 잡아서 계속 진행하도록 함.
