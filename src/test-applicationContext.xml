@@ -22,10 +22,15 @@
     <property name="jdbcTemplate" ref="jdbcTemplate"/>
   </bean>
 
-  <bean id="userService" class="springbook.user.service.UserServiceImpl">
+  <bean id="userService" class="springbook.user.service.UserServiceTx">
+    <!-- DI 받도록 property 추가 -->
+    <property name="transactionManager" ref="transactionManager"/>
+    <property name="userService" ref="userServiceImpl"/>
+  </bean>
+
+  <bean id="userServiceImpl" class="springbook.user.service.UserServiceImpl">
     <!-- DI 받도록 property 추가 -->
     <property name="userDao" ref="userDao"/>
-    <property name="transactionManager" ref="transactionManager"/>
     <property name="mailSender" ref="mailSender"/>
   </bean>
 
