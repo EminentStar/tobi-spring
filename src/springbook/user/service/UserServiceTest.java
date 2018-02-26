@@ -4,6 +4,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static springbook.user.service.UserService.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -14,7 +15,10 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.MailException;
 import org.springframework.mail.MailSender;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -45,6 +49,24 @@ public class UserServiceTest {
       }
 
       super.upgradeLevel(user);
+    }
+  }
+
+  static class MockMailSender implements MailSender {
+    private List<String> requests = new ArrayList<>();
+
+    public List<String> getRequests() {
+      return requests;
+    }
+
+    @Override
+    public void send(SimpleMailMessage mailMessage) throws MailException {
+      requests.add(mailMessage.getTo()[0]); // 전송 요청을 받은 이메일 주소를 저장.
+    }
+
+    @Override
+    public void send(SimpleMailMessage[] mailMessages) throws MailException {
+
     }
   }
 
@@ -79,6 +101,7 @@ public class UserServiceTest {
   }
 
   @Test
+  @DirtiesContext // 컨텍스트의 DI 설정을 변경하는 테스트라는 것을 알려줌.
   public void upgradeLevels() throws Exception {
     // Given
     userDao.deleteAll();
@@ -86,15 +109,26 @@ public class UserServiceTest {
       userDao.add(user);
     }
 
+    // 메일 발송 결과를 테스트할 수 있도록 목 오브젝틀르 만들어 userService의 의존 오브젝트로 주입.
+    MockMailSender mockMailSender = new MockMailSender();
+    userService.setMailSender(mockMailSender);
+
     // When
+    // 업그레이드 테스트. 메일 발송이 일어나면 MockMailSender 오브젝트의 리스트에 그 결과가 저장됨.
     userService.upgradeLevels();
 
-    // Then
     checkLevelUpgraded(users.get(0), false);
     checkLevelUpgraded(users.get(1), true);
     checkLevelUpgraded(users.get(2), false);
     checkLevelUpgraded(users.get(3), true);
     checkLevelUpgraded(users.get(4), false);
+
+    // Then
+    // 목 오브젝트에 저장된 메일 수신자 목록을 가져와 업그레이드 대상과 일치하는지 확인.
+    List<String> requests = mockMailSender.getRequests();
+    assertThat(requests.size(), is(2));
+    assertThat(requests.get(0), is(users.get(1).getEmail()));
+    assertThat(requests.get(1), is(users.get(3).getEmail()));
   }
 
   /**
