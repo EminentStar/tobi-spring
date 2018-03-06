@@ -17,7 +17,7 @@ public class UppercaseHandler implements InvocationHandler {
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     Object ret = method.invoke(target, args); // 타겟으로 위임. 인터페이스의 메소드 호출에 모두 적용됨.
     // 호출한 메소드의 리턴 타입이 String인 경우만 대문자 변경 기능을 적용하도록 수정
-    if (ret instanceof String) {
+    if (ret instanceof String && method.getName().startsWith("say")) {
       return ((String)ret).toUpperCase(); // 부가기능 제공
     } else {
       return ret;

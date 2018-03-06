@@ -21,4 +21,9 @@ public class HelloUppercase implements Hello {
   public String sayThankYou(String name) {
     return hello.sayThankYou(name).toUpperCase();
   }
+
+  @Override
+  public String mumbleSomething(String word) {
+    return hello.mumbleSomething(word);
+  }
 }

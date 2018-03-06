@@ -27,5 +27,6 @@ public class HelloProxyTest {
     assertThat(proxiedHello.sayHello("Toby"), is("HELLO TOBY"));
     assertThat(proxiedHello.sayHi("Toby"), is("HI TOBY"));
     assertThat(proxiedHello.sayThankYou("Toby"), is("THANK YOU TOBY"));
+    assertThat(proxiedHello.mumbleSomething("bulabula"), is("bulabula..."));
   }
 }
