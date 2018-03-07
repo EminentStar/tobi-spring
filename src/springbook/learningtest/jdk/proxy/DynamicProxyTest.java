@@ -9,6 +9,8 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.junit.Test;
 import org.springframework.aop.framework.ProxyFactoryBean;
+import org.springframework.aop.support.DefaultPointcutAdvisor;
+import org.springframework.aop.support.NameMatchMethodPointcut;
 
 import springbook.proxy.UppercaseHandler;
 
@@ -82,6 +84,24 @@ public class DynamicProxyTest {
       String ret = (String)invocation.proceed();
       return ret.toUpperCase(); // 부가기능 적용
     }
+  }
+
+  @Test
+  public void pointcutAdvisor() {
+    ProxyFactoryBean pfBean = new ProxyFactoryBean();
+    pfBean.setTarget(new HelloTarget());
+
+    NameMatchMethodPointcut pointcut = new NameMatchMethodPointcut(); // 메소드 이름을 비교해서 대상을 선정하는 알고리즘을 제공하는 포인트컷 생성
+    pointcut.setMappedName("sayH*"); // 이름 비교조건 설정. sayH로 시작하는 모든 메소드를 선택하게 됨.
+
+    // pointcut과 advice를 Advisor로 묶어서 한 번에 추가 (pointcut이 필요없을때는 addAdvice()만 호출해서 어드바이스만 등록하면 됨)
+    pfBean.addAdvisor(new DefaultPointcutAdvisor(pointcut, new UppercaseAdvice()));
+
+    Hello proxiedHello = (Hello)pfBean.getObject();
+
+    assertThat(proxiedHello.sayHello("Toby"), is("HELLO TOBY"));
+    assertThat(proxiedHello.sayHi("Toby"), is("HI TOBY"));
+    assertThat(proxiedHello.sayThankYou("Toby"), is("Thank You Toby")); // advice 적용되지 않음.
   }
 
 }
