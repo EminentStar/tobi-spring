@@ -641,3 +641,10 @@ AOP는 IoC/DI, 서비스 추상화와 더불어 스프링의 3대 기반기술 �
 
 - 스프링은 private 생성자를 가진 클래스도 빈으로 등록해주면 리플렉션을 이용해 오브젝트를 만들어 주긴 함(리플렉션은 private으로 선언된 접근 규약을 위반할 수 있는 기능이 잇기 때문.)
   - 권장되지 않음. 잘 동작안할 수도 있음.
+
+## 6.4. 스프링의 프록시 팩토리 빈
+
+### 6.4.1. ProxyFactoryBean
+* 라이브러리 추가 필요(File/Project Structure/Libraries/New Project Library/Java)
+  - com.springsource.org.aopalliance-1.0.0.jar
+  - org.springframework.aop-3.0.7.RELEASE.jar
