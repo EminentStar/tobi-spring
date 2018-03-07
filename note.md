@@ -648,3 +648,15 @@ AOP는 IoC/DI, 서비스 추상화와 더불어 스프링의 3대 기반기술 �
 * 라이브러리 추가 필요(File/Project Structure/Libraries/New Project Library/Java)
   - com.springsource.org.aopalliance-1.0.0.jar
   - org.springframework.aop-3.0.7.RELEASE.jar
+  
+#### Advice: 타깃이 필요 없는 순수한 부가기능
+
+* MethodInterceptor로는 메소드 정보와 함께 타깃 오브젝트가 담긴 MethodInvocation 오브젝트가 전달됨.
+  - MethodInvocation은 타깃 오브젝트의 메소드를 실행할 수 있는 기능이 있기 때문에 MethodInterceptor는 부가기능을 제공하는 데만 집중할 수 있음.
+  - MethodInvocation은 일종의 콜백 오브젝트로, prceed() 메소드를 실행하면 타깃 오브젝트의 메소드를 내부적으로 실행해주는 기능이 있음. 
+  - 이 MethodInvocation 구현 클래스는 일종의공유 가능한 템플릿처럼 동작하는 것
+  
+* ProxyFactoryBean은 기본적으로 JDK가 제공하는 다이내믹 프록시를 만들어주는데, 경우에 따라서는 CGLib라고 하는 오픈소스 바이트코드 생성 프레임워크를 이용해 프록시를 만들기도 함. 
+  
+* advice: 타깃 오브젝트에 적용하는 부가기능을 담은 오브젝트를 스프링에선 advice라고 부름
+
