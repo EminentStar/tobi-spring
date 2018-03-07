@@ -22,7 +22,7 @@
     <property name="jdbcTemplate" ref="jdbcTemplate"/>
   </bean>
 
-  <bean id="userService" class="springbook.proxy.TxProxyFactoryBean">
+  <bean id="userService" class="springbook.user.service.TxProxyFactoryBean">
     <property name="target" ref="userServiceImpl"/>
     <property name="transactionManager" ref="transactionManager"/>
     <property name="pattern" value="upgradeLevels"/>
@@ -47,4 +47,21 @@
   </bean>
 
   <bean id="mailSender" class="springbook.user.service.DummyMailSender"/>
+
+  <!-- UserService 외에 트랜잭션 경계설정 기능을 부여해줄 필요가 있는 클래스도 아래와 같이 추가 가능 -->
+
+  <bean id="coreDao" class="complex.module.CoreDaoJdbc">
+  </bean>
+
+  <bean id="coreServiceTarget" class="complex.module.CoreServiceImpl">
+    <property name="coreDao" ref="coreDao"/>
+  </bean>
+
+  <bean id="coreService" class="springbook.user.service.TxProxyFactoryBean">
+    <property name="target" ref="coreServiceTarget"/>
+    <property name="transactionManager" ref="transactionManager"/>
+    <property name="pattern" value=""/>
+    <property name="serviceInterface" value="complex.module.CoreService"/>
+  </bean>
+
 </beans>
