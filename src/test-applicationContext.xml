@@ -22,16 +22,13 @@
     <property name="jdbcTemplate" ref="jdbcTemplate"/>
   </bean>
 
-  <bean id="userService" class="springbook.user.service.TxProxyFactoryBean">
+  <bean id="userService" class="org.springframework.aop.framework.ProxyFactoryBean">
     <property name="target" ref="userServiceImpl"/>
-    <property name="transactionManager" ref="transactionManager"/>
-    <property name="pattern" value="upgradeLevels"/>
-    <!--
-     Class 타입은 value를 이용해 클래스 또는 인터페이스의 이름을 넣어주면 됨.
-     스프링은 setter method의 파라미터의타입을 확인해서 프로퍼티의 타입이 Class인 경우 value로 설정한 이름을 가진
-     Class 오브젝트로 자동 변환해줌.
-      -->
-    <property name="serviceInterface" value="springbook.user.service.UserService"/>
+    <property name="interceptorNames"> <!-- advice와 advisor를 동시에 설정해줄 수 있는 프로퍼티. 리스트에 어드바이스나 어드바이저의 빈 아이디를 값으로 넣으주면 됨. 기존의 ref 애트리뷰터를 사용하는 DI와는 방식이 다름에 주의. -->
+      <list>
+        <value>transactionAdvisor</value>
+      </list>
+    </property>
   </bean>
 
   <bean id="userServiceImpl" class="springbook.user.service.UserServiceImpl">
@@ -47,6 +44,24 @@
   </bean>
 
   <bean id="mailSender" class="springbook.user.service.DummyMailSender"/>
+
+  <bean id="transactionAdvice"
+    class="springbook.user.service.TransactionAdvice">
+    <property name="transactionManager" ref="transactionManager"/>
+  </bean>
+
+  <!-- 스프링이 제공하는 포인트컷 클래스를 사용할 것이기에 빈 설정만 만들어주면 됨. -->
+  <bean id="transactionPointcut"
+    class="org.springframework.aop.support.NameMatchMethodPointcut">
+    <property name="mappedName" value="upgrade*"/>
+  </bean>
+
+  <!-- 어드바이스와 포인트컷을 담을 어드바이저를 빈으로 등록 -->
+  <bean id="transactionAdvisor"
+    class="org.springframework.aop.support.DefaultPointcutAdvisor">
+    <property name="advice" ref="transactionAdvice"/>
+    <property name="pointcut" ref="transactionPointcut"/>
+  </bean>
 
   <!-- UserService 외에 트랜잭션 경계설정 기능을 부여해줄 필요가 있는 클래스도 아래와 같이 추가 가능 -->
 

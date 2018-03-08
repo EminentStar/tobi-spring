@@ -17,6 +17,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.mail.MailException;
@@ -219,15 +220,15 @@ public class UserServiceTest {
    * 그 전에 업그레이드했던 사용자도 다시 원래 상태로 돌아갔는지 확인
    */
   @Test
-  @DirtiesContext // 다이내믹 프록시 팩토리 빈을 직접 만들어 사용할 때는 없앴다가 다시 등장한 컨텍스트 무효화 애노테이션
+  @DirtiesContext // 컨텍스트 설정을 변경하기 때문에 여전히 필요함.
   public void upgradeAllOrNothing() throws Exception {
     // Given
     TestUserService testUserService = new TestUserService(users.get(3).getId());
     testUserService.setUserDao(this.userDao); // userDao manual DI
     testUserService.setMailSender(this.mailSender);
 
-    TxProxyFactoryBean txProxyFactoryBean = // 팩토리 빈 자체를 가져와야 하므로 빈 이름에 &를 반드시 넣어야 함.
-      context.getBean("&userService", TxProxyFactoryBean.class); // 테스트용 타깃 주입
+    ProxyFactoryBean txProxyFactoryBean = // 팩토리 빈 자체를 가져와야 하므로 빈 이름에 &를 반드시 넣어야 함.
+      context.getBean("&userService", ProxyFactoryBean.class); // 테스트용 타깃 주입
     txProxyFactoryBean.setTarget(testUserService);
 
     // 변경된 타깃 설정을 이용해서 트랜잭션 다이내믹 프록시 오브젝트를 다시 생성
