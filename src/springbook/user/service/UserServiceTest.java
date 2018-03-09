@@ -17,16 +17,12 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.transaction.PlatformTransactionManager;
 
 import springbook.user.dao.UserDao;
 import springbook.user.domain.Level;
@@ -40,13 +36,11 @@ public class UserServiceTest {
 
   /**
    *  테스트에서만 사용할 클래스이기에 파일을 따로 만들지 말고 테스트 클래스 내부에 스태틱 클래스로 만들어 사용.
+   *
+   *  특정 테스트 클래스에서만 사용되는 클래스는 스태틱 멤버 클래스로 정의하는 것이 편리함.
    */
-  static class TestUserService extends UserServiceImpl {
-    private String id;
-
-    private TestUserService(String id) {
-      this.id = id;
-    }
+  static class TestUserServiceImpl extends UserServiceImpl {
+    private String id = "madnite1";
 
     protected void upgradeLevel(User user) {
       if (user.getId().equals(this.id)) { // 지정된 id의 User 오브젝트가 발견되면 예외를 던져서 작업을 강제로 중단.
@@ -144,19 +138,15 @@ public class UserServiceTest {
   }
 
   @Autowired
-  PlatformTransactionManager transactionManager;
-  @Autowired
   UserService userService;
   @Autowired
-  UserServiceImpl userServiceImpl;
+  UserService testUserService;
   @Autowired
   UserDao userDao;
   @Autowired
   DataSource dataSource;
   @Autowired
   MailSender mailSender;
-  @Autowired
-  ApplicationContext context; // 팩토리 빈을 가져오려면 애플리케이션 컨텍스트가 필요함.
 
   List<User> users; // test fixture
 
@@ -220,29 +210,16 @@ public class UserServiceTest {
    * 그 전에 업그레이드했던 사용자도 다시 원래 상태로 돌아갔는지 확인
    */
   @Test
-  @DirtiesContext // 컨텍스트 설정을 변경하기 때문에 여전히 필요함.
   public void upgradeAllOrNothing() throws Exception {
     // Given
-    TestUserService testUserService = new TestUserService(users.get(3).getId());
-    testUserService.setUserDao(this.userDao); // userDao manual DI
-    testUserService.setMailSender(this.mailSender);
-
-    ProxyFactoryBean txProxyFactoryBean = // 팩토리 빈 자체를 가져와야 하므로 빈 이름에 &를 반드시 넣어야 함.
-      context.getBean("&userService", ProxyFactoryBean.class); // 테스트용 타깃 주입
-    txProxyFactoryBean.setTarget(testUserService);
-
-    // 변경된 타깃 설정을 이용해서 트랜잭션 다이내믹 프록시 오브젝트를 다시 생성
-    UserService txUserService = (UserService)txProxyFactoryBean.getObject();
-
     userDao.deleteAll();
-
-    // When
     for (User user : users) {
       userDao.add(user);
     }
 
+    // When
     try {
-      txUserService.upgradeLevels();
+      this.testUserService.upgradeLevels();
       fail("TestUserServiceException expected");
     } catch (TestUserServiceException e) {
       // TestUserService가 던지는 예외를 잡아서 계속 진행하도록 함.

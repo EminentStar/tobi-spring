@@ -22,20 +22,25 @@
     <property name="jdbcTemplate" ref="jdbcTemplate"/>
   </bean>
 
-  <bean id="userService" class="org.springframework.aop.framework.ProxyFactoryBean">
-    <property name="target" ref="userServiceImpl"/>
-    <property name="interceptorNames"> <!-- advice와 advisor를 동시에 설정해줄 수 있는 프로퍼티. 리스트에 어드바이스나 어드바이저의 빈 아이디를 값으로 넣으주면 됨. 기존의 ref 애트리뷰터를 사용하는 DI와는 방식이 다름에 주의. -->
-      <list>
-        <value>transactionAdvisor</value>
-      </list>
-    </property>
-  </bean>
+  <!-- DefaultAdvisorAutoProxyCreator로 인해 더이상 명시적인 프록시 팩토리 빈이 필요하지 않음. -->
+  <!--<bean id="userService" class="org.springframework.aop.framework.ProxyFactoryBean">-->
+  <!--<property name="target" ref="userServiceImpl"/>-->
+  <!--<property name="interceptorNames"> &lt;!&ndash; advice와 advisor를 동시에 설정해줄 수 있는 프로퍼티. 리스트에 어드바이스나 어드바이저의 빈 아이디를 값으로 넣으주면 됨. 기존의 ref 애트리뷰터를 사용하는 DI와는 방식이 다름에 주의. &ndash;&gt;-->
+  <!--<list>-->
+  <!--<value>transactionAdvisor</value>-->
+  <!--</list>-->
+  <!--</property>-->
+  <!--</bean>-->
 
-  <bean id="userServiceImpl" class="springbook.user.service.UserServiceImpl">
+  <bean id="userService" class="springbook.user.service.UserServiceImpl">
     <!-- DI 받도록 property 추가 -->
     <property name="userDao" ref="userDao"/>
     <property name="mailSender" ref="mailSender"/>
   </bean>
+
+  <!-- 테스트용 UserService 등록; 스태틱 멤버 클래스는 $로 지정함. -->
+  <bean id="testUserService" class="springbook.user.service.UserServiceTest$TestUserServiceImpl"
+    parent="userService"/> <!-- 프로퍼티 정의를 포함해서 userService빈의 설정을 상속받음. -->
 
   <bean id="transactionManager"
     class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
@@ -52,7 +57,8 @@
 
   <!-- 스프링이 제공하는 포인트컷 클래스를 사용할 것이기에 빈 설정만 만들어주면 됨. -->
   <bean id="transactionPointcut"
-    class="org.springframework.aop.support.NameMatchMethodPointcut">
+    class="springbook.learningtest.jdk.proxy.NameMatchClassMethodPointcut">
+    <property name="mappedClassName" value="*ServiceImpl"/>
     <property name="mappedName" value="upgrade*"/>
   </bean>
 
@@ -62,6 +68,9 @@
     <property name="advice" ref="transactionAdvice"/>
     <property name="pointcut" ref="transactionPointcut"/>
   </bean>
+
+  <!-- 다른 빈에서 참조되거나 코드에서 빈 이름으로 조회될 필요가 없는 빈이라면 아이디를 등록하지 않아도 무방. -->
+  <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"/>
 
   <!-- UserService 외에 트랜잭션 경계설정 기능을 부여해줄 필요가 있는 클래스도 아래와 같이 추가 가능 -->
 
