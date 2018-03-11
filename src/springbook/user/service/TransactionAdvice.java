@@ -15,6 +15,15 @@ public class TransactionAdvice implements MethodInterceptor {
 
   @Override
   public Object invoke(MethodInvocation invocation) throws Throwable {
+    /*
+    * getTransaction()이 항상 트랜잭션을 새로 시작하는 것이 아님.
+    *
+    * 트랜잭션 전파 속성과 현재 진행 중인 트랜잭션이 존재하는지 여부에 따라서 새로운 트랜잭션을 시작할 수동 있고,
+    * 이미 진행중인 트랜잭션에 참여하기만 할 수도 있음.
+    *
+    * 진행중인 트랜잭션에 참여하는 경우는 트랜잭션 경계의 끝에 서 트랜잭션을 커밋시키지도 않음.
+    * 최초로 트랜잭션을 시작한 경계까지 정상적으로 진행돼야 비로소 커밋될 수 있음.
+    * */
     TransactionStatus status =
       this.transactionManager.getTransaction(new DefaultTransactionDefinition());
 
