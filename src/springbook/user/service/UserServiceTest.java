@@ -231,6 +231,13 @@ public class UserServiceTest {
     checkLevelUpgraded(users.get(1), false);
   }
 
+  @Ignore
+  @Test
+  public void advisorAutoProxyCreator() {
+    assertEquals(testUserService.getClass(), java.lang.reflect.Proxy.class); // com.sun.proxy.$Proxy11 타입.
+
+  }
+
   private void checkLevelUpgraded(User user, boolean upgraded) {
     User userUpdate = userDao.get(user.getId());
     if (upgraded) {
