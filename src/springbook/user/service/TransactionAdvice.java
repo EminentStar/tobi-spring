@@ -13,6 +13,12 @@ public class TransactionAdvice implements MethodInterceptor {
     this.transactionManager = transactionManager;
   }
 
+  /**
+   * - new DefaultTransactionDefinition(): 트랜잭션 정의를 통한 네 가지 조건
+   * - catch (RuntimeException e): 롤백 대상인 예외 종류
+   *
+   * 위의 두 가지 항목이 결합해서 트랜잭션 부가기능의 행동을 결정하는 TransactionAttribute 속성이 됨.
+   */
   @Override
   public Object invoke(MethodInvocation invocation) throws Throwable {
     /*

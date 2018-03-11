@@ -712,9 +712,10 @@ AOP는 IoC/DI, 서비스 추상화와 더불어 스프링의 3대 기반기술 �
 * 포인트컷 표현식의 클래스에 적용되는 패턴은 타입 패턴임.(클래스 이름 패턴이 아님.)
 
 
-  ## 6.6. 트랜잭션 속성
+## 6.6. 트랜잭션 속성
 
-### 1. Transaction Propagation
+### 6.6.1. 트랜잭션 정의
+#### 1. Transaction Propagation
 TransactionDefinition은 트랜잭션의 동작방식에 영향을 줄 수 있는 네가지 속성을 정의
 1. transaction propagation: 트랜잭션의 경계에서 이미 진행 중인 트랜잭션이 있을 때 또는 없을 때 어떻게 동작할 것인가를 결정하는 방식.(독자적인 트랜잭션 경계를 가진 코드에 대해 이미 진행 중인 트랜잭션이 어떻게 영향을 미칠 수 있는가를 정의하는 것.)
   * `PROPAGATION_REQUIRED`: 가장많이 사용되는 transaction propagation 속성.
@@ -728,21 +729,28 @@ TransactionDefinition은 트랜잭션의 동작방식에 영향을 줄 수 있�
     - 그런데 그중에 특별한 메소드만 트랜잭션 적용에서 제외하려면 포인트컷이 상당히 복잡해짐.
     - 그래서 특정 메소드의 트랜잭션 전파 속성만 `PROPAGATION_NOT_SUPPORTED`로 설정해서 트랜잭션 없이 동작하게 만드는 편이 나음.
 
-### 2. Isolation Level
+#### 2. Isolation Level
 모든 DB transaction은 isolation level을 갖고 있어야 함.
 - 서버 환경에선 여러개의 트랜잭션이 동시에 진행될 수 있는데, 적절하게 격리수준을 조정해서 가능한 한 많은 트랜잭션을 동시에 진행시키면서도 문제가 발생하지 않게 하는 제어가 필요함.
 - isolation level은 기본적으로 db에 설정되어 있지만, jdbc driver나 DataSource등에서 재설정 할 수 있고, 필요하다면 트랜잭션 단위로 격리수준을 조정할 수 도 있음.
 - DefuaultTransactionDefinition에 설정된 격리수준은 `ISOLATION_DEFAULT`.(DataSource의 격리수준을 그대로 따른다는 뜻.)
 - 특별한 작업을 수행하는 메소드의 경우는 독자적인 격리수준을 지정할 필요가 있음.
 
-### 3. Timeout
+#### 3. Timeout
 트랜잭션을 수행하는 제한시간(timeout)을 설정할 수 있음.
 - DefaultTransactionDefinition의 기본 설정은 제한시간이 없음.
 - 제한시간은 트랜잭션을 직접 시작할 수 있는 `PROPAGATION_REQUIRED`, `PROPAGATION_REQUIRES_NEW`와 함께 사용해야만 의미가 있음.
 
-### 4. Readonly
+#### 4. Readonly
 - readonly로 설정해두면 트랜잭션 내에서 데이터를 조작하는 시도를 막아줄 수 있음.
 - 또한 데이터 액세스 기술에 따라 성능이 향상될 수도 있음.
 
 
 * **트랜잭션 정의를 바꾸고 싶다면 DefaultTransactionDefinition을 사용하는 대신 외부에서 정의된 TransactionDefinition 오브젝트를 DI받아서 사용하도록 하면 됨.**
+
+
+### 6.6.2. 트랜잭션 인터셉터와 트랜잭션 속성
+스프링엔 편리하게 트랜잭션 경계설정 어드바이스로 사용할 수 있도록 만들어진 TransactionInterceptor가 존재함.
+
+* rollbackOn(): 어떤 예외가 발생하면 롤백을 할 것인가를 결정하는 메소드.
+

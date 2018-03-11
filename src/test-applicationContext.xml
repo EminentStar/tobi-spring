@@ -59,10 +59,25 @@ aop 스키마에 정의된 태그를 사용하려면 설정파일에 aop 네임�
 
   <bean id="mailSender" class="springbook.user.service.DummyMailSender"/>
 
+  <!--<bean id="transactionAdvice"-->
+  <!--class="springbook.user.service.TransactionAdvice">-->
+  <!--<property name="transactionManager" ref="transactionManager"/>-->
+  <!--</bean>-->
+
   <bean id="transactionAdvice"
-    class="springbook.user.service.TransactionAdvice">
+    class="org.springframework.transaction.interceptor.TransactionInterceptor">
     <property name="transactionManager" ref="transactionManager"/>
+    <property name="transactionAttributes">
+      <!-- 메소드 패턴에 따라서 각기 다른 트랜잭션 속성을 부여할 수 있음. -->
+      <props>
+        <prop key="get*">PROPAGATION_REQUIRED,readOnly,timeout_30</prop>
+        <prop key="upgrade*">PROPAGATION_REQUIRED_NEW,ISOLATION_SERIALIZABLE</prop>
+        <prop key="*">PROPAGATION_REQUIRED</prop> <!-- 위 두가지 조건에 해당하지 않는 나머지 모든 메소드에 사용될 속성 -->
+      </props>
+      <!-- 메소드 이름이 하나 이상의 패턴과 일치하는 경우에는 메소드 이름 매턴중에서 가장 정확히 일치하는 것이 적용. -->
+    </property>
   </bean>
+
 
   <!-- aop:config, aop:pointcut, aop:advisor 세 가지 태그를 정의해두면 그에 따라 세 개의 빈이 자동으로 등록됨. -->
   <aop:config> <!-- AOP 설정을 담는 부모 태그. 필요에 따라 AspectJAdvisorAutoProxyCreator를 빈으로 등록해줌. -->
@@ -74,7 +89,7 @@ aop 스키마에 정의된 태그를 사용하려면 설정파일에 aop 네임�
 
     <!-- 위의 pointcut, advisor의 결합을 아래와 같이도 사용가능 -->
     <!--<aop:advisor advice-ref="transactionAdvice"-->
-      <!--pointcut="execution(* *..*ServiceImpl.upgrade*(..))"/>-->
+    <!--pointcut="execution(* *..*ServiceImpl.upgrade*(..))"/>-->
   </aop:config>
   <!-- 스프링이 제공하는 포인트컷 클래스를 사용할 것이기에 빈 설정만 만들어주면 됨. -->
   <bean id="transactionPointcutDeprecated"
