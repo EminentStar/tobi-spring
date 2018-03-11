@@ -1,8 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+`beans` schema는 디폴트 네임스페이스이므로 접두어 없이 사용할 수 있음.
+
+aop 스키마에 정의된 태그를 사용하려면 설정파일에 aop 네임스페이스 선언을 추가해줘야한다.
+`aop` schema는 aop 네임스페이스를 가지므로 aop 접두어를 사용한다.
+ -->
 <beans xmlns="http://www.springframework.org/schema/beans"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:aop="http://www.springframework.org/schema/aop"
   xsi:schemaLocation="http://www.springframework.org/schema/beans
-           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+           http://www.springframework.org/schema/aop
+           http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
 
   <bean id="dataSource" class="org.springframework.jdbc.datasource.SimpleDriverDataSource">
     <!-- XML을 이용한 DB 연결정보 설정 -->
@@ -55,8 +64,20 @@
     <property name="transactionManager" ref="transactionManager"/>
   </bean>
 
+  <!-- aop:config, aop:pointcut, aop:advisor 세 가지 태그를 정의해두면 그에 따라 세 개의 빈이 자동으로 등록됨. -->
+  <aop:config> <!-- AOP 설정을 담는 부모 태그. 필요에 따라 AspectJAdvisorAutoProxyCreator를 빈으로 등록해줌. -->
+    <!-- expression의 표현식을 프로퍼티로 가진 AspectJExpressionPointcut을 빈으로 등록해줌. -->
+    <aop:pointcut id="transactionPointcut"
+      expression="execution(* *..*ServiceImpl.upgrade*(..))"/>
+    <!-- advice와 pointcut의 ref를 프로퍼티로 갖는 DefaultBeanFactoryPointcutAdvisor를 등록해줌. -->
+    <aop:advisor advice-ref="transactionAdvice" pointcut-ref="transactionPointcut"/>
+
+    <!-- 위의 pointcut, advisor의 결합을 아래와 같이도 사용가능 -->
+    <!--<aop:advisor advice-ref="transactionAdvice"-->
+      <!--pointcut="execution(* *..*ServiceImpl.upgrade*(..))"/>-->
+  </aop:config>
   <!-- 스프링이 제공하는 포인트컷 클래스를 사용할 것이기에 빈 설정만 만들어주면 됨. -->
-  <bean id="transactionPointcut"
+  <bean id="transactionPointcutDeprecated"
     class="org.springframework.aop.aspectj.AspectJExpressionPointcut">
     <property name="expression" value="execution(* *..*ServiceImpl.upgrade*(..))"/>
   </bean>
