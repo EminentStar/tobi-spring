@@ -62,51 +62,19 @@ aop 스키마에 정의된 태그를 사용하려면 설정파일에 aop 네임�
 
   <bean id="mailSender" class="springbook.user.service.DummyMailSender"/>
 
-  <!--<bean id="transactionAdvice"-->
-  <!--class="springbook.user.service.TransactionAdvice">-->
-  <!--<property name="transactionManager" ref="transactionManager"/>-->
-  <!--</bean>-->
-
   <!-- 이 태그에 의해 TransactionInterceptor 빈이 등록 -->
-  <tx:advice id="transactionAdvice" transaction-manager="transactionManager">
+  <tx:advice id="transactionAdvice"> <!-- TODO: 이 transactionAdvice 라는 id가 tx namespace에 존재하는 것인가?-->
     <tx:attributes>
-      <tx:method name="get*" propagation="REQUIRED" read-only="true" timeout="30"/>
-      <tx:method name="upgrade*" propagation="REQUIRES_NEW" isolation="SERIALIZABLE"/> <!-- property의 값은 Enumeration으로 스키마에 값이 정의되어 있으므로 오타가 있으면 XML 유효성 검사만으로 확인이 가능 -->
-      <tx:method name="*" propagation="REQUIRED"/> <!-- 디폴트 값이 스키마에 정의되어 있으므로 REQUIRED라면 아예 생략도 가능 -->
+      <tx:method name="get*" read-only="true"/>
+      <tx:method name="*"/> <!-- 디폴트 값이 스키마에 정의되어 있으므로 REQUIRED라면 아예 생략도 가능 -->
     </tx:attributes>
   </tx:advice>
-  <tx:advice id="batchTxAdvice">
-    <tx:attributes>
-      <tx:method name="*"/>
-    </tx:attributes>
-  </tx:advice>
-
 
   <!-- aop:config, aop:pointcut, aop:advisor 세 가지 태그를 정의해두면 그에 따라 세 개의 빈이 자동으로 등록됨. -->
   <aop:config> <!-- AOP 설정을 담는 부모 태그. 필요에 따라 AspectJAdvisorAutoProxyCreator를 빈으로 등록해줌. -->
     <!-- expression의 표현식을 프로퍼티로 가진 AspectJExpressionPointcut을 빈으로 등록해줌. -->
-    <aop:pointcut id="transactionPointcut"
-      expression="execution(* *..*ServiceImpl.upgrade*(..))"/>
-    <!-- advice와 pointcut의 ref를 프로퍼티로 갖는 DefaultBeanFactoryPointcutAdvisor를 등록해줌. -->
-    <aop:advisor advice-ref="transactionAdvice" pointcut-ref="transactionPointcut"/>
-
-    <!-- 위의 pointcut, advisor의 결합을 아래와 같이도 사용가능 -->
-    <!--<aop:advisor advice-ref="transactionAdvice"-->
-    <!--pointcut="execution(* *..*ServiceImpl.upgrade*(..))"/>-->
-    <aop:advisor advice-ref="batchTxAdvice" pointcut="execution(* *(..))"/> <!-- 트랜잭션 성격이 많이 다른 배치 작업용 클래스를 위해서는 트랜잭션 어드바이스를 별도로 정의해서 독자적인 트랜잭션 속셩을 지정해줌. -->
+    <aop:advisor advice-ref="transactionAdvice" pointcut="bean(*Service)"/> <!-- id가 Service로 끝나는 모든 빈에 transactionAdvice 빈의 부가기능이 적용됨. -->
   </aop:config>
-  <!-- 스프링이 제공하는 포인트컷 클래스를 사용할 것이기에 빈 설정만 만들어주면 됨. -->
-  <bean id="transactionPointcutDeprecated"
-    class="org.springframework.aop.aspectj.AspectJExpressionPointcut">
-    <property name="expression" value="execution(* *..*ServiceImpl.upgrade*(..))"/>
-  </bean>
-
-  <!-- 어드바이스와 포인트컷을 담을 어드바이저를 빈으로 등록 -->
-  <bean id="transactionAdvisor"
-    class="org.springframework.aop.support.DefaultPointcutAdvisor">
-    <property name="advice" ref="transactionAdvice"/>
-    <property name="pointcut" ref="transactionPointcut"/>
-  </bean>
 
   <!-- 다른 빈에서 참조되거나 코드에서 빈 이름으로 조회될 필요가 없는 빈이라면 아이디를 등록하지 않아도 무방. -->
   <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"/>

@@ -18,6 +18,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.TransientDataAccessResourceException;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
@@ -48,6 +49,14 @@ public class UserServiceTest {
       }
 
       super.upgradeLevel(user);
+    }
+
+    public List<User> getAll() { // readonly 트랜잭션의 대상인 get으로 시작하는 메소드를 오버라이드.
+      for (User user : super.getAll()) {
+        super.update(user); // 강제로 쓰기 시도를 해보자. read-only 속성으로 인한 예외가 발생해야만 함.
+      }
+
+      return null;
     }
   }
 
@@ -235,7 +244,11 @@ public class UserServiceTest {
   @Test
   public void advisorAutoProxyCreator() {
     assertEquals(testUserService.getClass(), java.lang.reflect.Proxy.class); // com.sun.proxy.$Proxy11 타입.
+  }
 
+  @Test(expected = TransientDataAccessResourceException.class) // TODO: transactionAdvice의 `get*` method는 read-only 설정이 걸려있는데, TestUserService.getAll()내부의 update치는 것에서 에러가 안난다..
+  public void readOnlyTransactionAttribute() {
+    testUserService.getAll(); // 트랜잭션 속성이 제대로 적용됐다면 여기서 읽기전용 속성을 위반했기 때문에 예외가 발생해야 함.
   }
 
   private void checkLevelUpgraded(User user, boolean upgraded) {
