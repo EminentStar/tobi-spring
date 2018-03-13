@@ -268,21 +268,25 @@ public class UserServiceTest {
    * 이런 트랜잭션 동기화는 데이터 액세스 추상화를 적용한 DAO에도 동일한 영향을 미침.
    */
   // TODO: 원래 reaonly가 적용되어 에러가 발생해야만 함...?
-  @Test(expected = TransientDataAccessResourceException.class)
+  //  @Test(expected = TransientDataAccessResourceException.class)
+  @Test
   public void transactionSync() {
+    // 트랜잭션을 롤백했을 때 돌아갈 초기 상태를 만들기 위해 트랜잭션 시작 전에 초기화를 해둔다.
+    userService.deleteAll();
+    assertThat(userDao.getCount(), is(0));
+
     DefaultTransactionDefinition txDefinition = new DefaultTransactionDefinition();
-    txDefinition.setReadOnly(true);
     // 트랜잭션 매니저에게 트랜잭션을 요청한다. 기존에 시작된 트랜잭션이 없으니 새로운 트랜잭션을 시작시키고 트랜잭션 정보를 돌려준다.
     // 동시에 만들어진 트랜잭션을 다른 곳에서도 사용할 수 있도록 동기화한다.
     TransactionStatus txStatus = transactionManager.getTransaction(txDefinition);
 
-    userService.deleteAll(); // 테스트 코드에서 시작한 트랜잭션에 참여한다면 읽기전용 속성을 위반했으니 예외가 발생해야만 함.
-//    userDao.deleteAll(); // JdbcTemplate을 통해 이미 사작된 트랜잭션이 있다면 자동으로 참여함.
-
     userService.add(users.get(0));
     userService.add(users.get(1));
+    assertThat(userDao.getCount(), is(2));
 
-    transactionManager.commit(txStatus);
+    transactionManager.rollback(txStatus); // 강제 롤백. 트랜잭션 시작 전 상태로 돌아가야함.
+
+    assertThat(userDao.getCount(), is(0));
   }
 
   private void checkLevelUpgraded(User user, boolean upgraded) {
