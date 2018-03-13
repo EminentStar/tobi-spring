@@ -25,6 +25,8 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import springbook.user.dao.UserDao;
 import springbook.user.domain.Level;
@@ -259,13 +261,23 @@ public class UserServiceTest {
    * 이 테스트가 수행되는 동안 3개의 트랜잭션이 만들어짐. UserService의 모든 메소드에 트랜잭션을 적용했기 때문. 모두 독립적인 트랜잭션 안에서 실행이 됨.
    *
    * 테스트에서 각 메소드를 실행시킬 때 기존에 진행 중인 트랜잭션이 없고 트랜잭션 전파 속성은 REQUIRED이니 새로운 트랜잭션이 실행됨.
+   *
+   * 세 개의 메소드 모두 트랜잭션 전파 속성이 REQUIRED이니 이 메소드들이 호출되기 전에 트랜잭션이 시작되게만 한다면 트랜잭션을 묶는 것이 가능함.
+   * 또한 UserService에 메소드를 만들고 그 안에서 3개의 메소드를 호출하면 트랜잭션으로 묶는 것도 가능함.
    */
   @Test
   public void transactionSync() {
+    DefaultTransactionDefinition txDefinition = new DefaultTransactionDefinition();
+    // 트랜잭션 매니저에게 트랜잭션을 요청한다. 기존에 시작된 트랜잭션이 없으니 새로운 트랜잭션을 시작시키고 트랜잭션 정보를 돌려준다.
+    // 동시에 만들어진 트랜잭션을 다른 곳에서도 사용할 수 있도록 동기화한다.
+    TransactionStatus txStatus = transactionManager.getTransaction(txDefinition);
+
     userService.deleteAll();
 
     userService.add(users.get(0));
     userService.add(users.get(1));
+
+    transactionManager.commit(txStatus);
   }
 
   private void checkLevelUpgraded(User user, boolean upgraded) {
