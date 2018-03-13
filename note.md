@@ -770,3 +770,44 @@ TransactionDefinition은 트랜잭션의 동작방식에 영향을 줄 수 있�
       1. 스프링 API를 이용해 프록시 오브젝트에 대한 레퍼런스를 가져온 뒤에 같은 오브젝트의 메소드 호출도 프록시를 이용하도록 강제하는 방법(스프링 api와 프록시 호출코드로 복잡성 증가;별로 추천X)
       2. AspectJ와 같은 타깃의 바이트코드를 직접 조작하는 방식의 AOP 기술을 적용하는 것.
         - 스프링은 프록시 기반의 AOP를 기본적으로 사용하고 있지만 필요하다면 AspectJ 방식으로 변경가능.
+
+
+### 6.8.3 테스트를 위한 트랜잭션 애노테이션
+#### @Transactional
+- 테스트 클래스 또는 메소드에 @Transactional 애노테이션을 부여해주면 마치 타깃 클래스나 인터페이스에 적용된 것 처럼 테스트 메소드에 트랜잭션 경계가 자동으로 설정됨.(목적은 AOP를 위한 것은 아니지만, 트랜잭션을 부여해주는 용도로 쓰임.)
+- @Transactional을 이용한 테스트용 트랜잭션은 테스트가 끝나면 자동으로 롤백됨.
+
+
+#### @Rollback
+- 롤백 여부를 지정하는 값을 갖고 있음.(default는 true)
+- 메소드 레벨에만 적용가능
+```java
+// 아래와 같이 설정해주면 테스트 전체에 걸쳐 하나의 트랜잭션이 만들어지고 예외가 발생하지 않는 한 트랜잭션은 커밋됨.
+@Test
+@Transactional
+@Rollback(false)
+public void transactionSync() {
+  
+}
+```
+
+
+#### @TransactionConfiguration
+- 롤백에 대한 공통 속성을 지정
+
+```java
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = "/test-applicationContext.xml")
+@Transactional
+@TransactionConfiguration(defaultRollback=false)
+public class UserServiceTest {
+  
+}
+```
+
+#### Propagation.NEVER
+- @Transactional(propagation=Propagation.NEVER)
+  - 메소드의 트랜잭션을 시작하지 않음.
+
+
+
