@@ -24,6 +24,7 @@ import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import springbook.user.dao.UserDao;
 import springbook.user.domain.Level;
@@ -147,6 +148,8 @@ public class UserServiceTest {
   }
 
   @Autowired
+  PlatformTransactionManager transactionManager;
+  @Autowired
   UserService userService;
   @Autowired
   UserService testUserService;
@@ -246,9 +249,23 @@ public class UserServiceTest {
     assertEquals(testUserService.getClass(), java.lang.reflect.Proxy.class); // com.sun.proxy.$Proxy11 타입.
   }
 
-  @Test(expected = TransientDataAccessResourceException.class) // TODO: transactionAdvice의 `get*` method는 read-only 설정이 걸려있는데, TestUserService.getAll()내부의 update치는 것에서 에러가 안난다..
+  @Test(expected = TransientDataAccessResourceException.class)
+  // TODO: transactionAdvice의 `get*` method는 read-only 설정이 걸려있는데, TestUserService.getAll()내부의 update치는 것에서 에러가 안난다..
   public void readOnlyTransactionAttribute() {
     testUserService.getAll(); // 트랜잭션 속성이 제대로 적용됐다면 여기서 읽기전용 속성을 위반했기 때문에 예외가 발생해야 함.
+  }
+
+  /**
+   * 이 테스트가 수행되는 동안 3개의 트랜잭션이 만들어짐. UserService의 모든 메소드에 트랜잭션을 적용했기 때문. 모두 독립적인 트랜잭션 안에서 실행이 됨.
+   *
+   * 테스트에서 각 메소드를 실행시킬 때 기존에 진행 중인 트랜잭션이 없고 트랜잭션 전파 속성은 REQUIRED이니 새로운 트랜잭션이 실행됨.
+   */
+  @Test
+  public void transactionSync() {
+    userService.deleteAll();
+
+    userService.add(users.get(0));
+    userService.add(users.get(1));
   }
 
   private void checkLevelUpgraded(User user, boolean upgraded) {
