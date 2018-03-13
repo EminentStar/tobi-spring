@@ -64,10 +64,6 @@ aop 스키마에 정의된 태그를 사용하려면 설정파일에 aop 네임�
 
   <!-- 이 태그에 의해 TransactionInterceptor 빈이 등록 -->
   <tx:advice id="transactionAdvice"> <!-- TODO: 이 transactionAdvice 라는 id가 tx namespace에 존재하는 것인가?-->
-    <tx:attributes>
-      <tx:method name="get*" read-only="true"/>
-      <tx:method name="*"/> <!-- 디폴트 값이 스키마에 정의되어 있으므로 REQUIRED라면 아예 생략도 가능 -->
-    </tx:attributes>
   </tx:advice>
 
   <!-- aop:config, aop:pointcut, aop:advisor 세 가지 태그를 정의해두면 그에 따라 세 개의 빈이 자동으로 등록됨. -->

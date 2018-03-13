@@ -4,11 +4,13 @@ import java.util.List;
 
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
+import org.springframework.transaction.annotation.Transactional;
 
 import springbook.user.dao.UserDao;
 import springbook.user.domain.Level;
 import springbook.user.domain.User;
 
+@Transactional
 public class UserServiceImpl implements UserService {
   public static final int MIN_LOGCOUNT_FOR_SILVER = 50;
   public static final int MIN_RECOMMEND_FOR_GOLD = 30;
