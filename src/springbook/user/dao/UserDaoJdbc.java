@@ -11,6 +11,8 @@ import springbook.user.domain.Level;
 import springbook.user.domain.User;
 
 public class UserDaoJdbc implements UserDao {
+  private String sqlAdd;
+
   // RowMapper 콜백 오브젝트에는 상태정보가 없음. 따라서 하나의 콜백 오브젝트를 멀티 스레드에서 동시에 사용해도 문제가 되지 않음.
   private RowMapper<User> userMapper =
     new RowMapper<User>() {
@@ -43,14 +45,18 @@ public class UserDaoJdbc implements UserDao {
     this.jdbcTemplate = jdbcTemplate;
   }
 
+  public void setSqlAdd(String sqlAdd) {
+    this.sqlAdd = sqlAdd;
+  }
+
   /**
    *  내부 클래스에서 외부의 변수를 사용할 때는 외부 변수는 반드시 final로 선언해줘야 함.
    */
 
   @Override
   public void add(final User user) {
-    this.jdbcTemplate.update("INSERT INTO users(id, name, password, level, login, recommend, email) "
-        + "VALUES(?,?,?,?,?,?, ?)",
+    this.jdbcTemplate.update(
+      this.sqlAdd,
       user.getId(), user.getName(), user.getPassword(), user.getLevel().intValue(), user.getLogin(),
       user.getRecommend(), user.getEmail());
   }

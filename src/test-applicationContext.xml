@@ -29,9 +29,13 @@ aop 스키마에 정의된 태그를 사용하려면 설정파일에 aop 네임�
     <property name="dataSource" ref="dataSource"/>
   </bean>
 
+
   <bean id="userDao" class="springbook.user.dao.UserDaoJdbc">
     <!--<property name="dataSource" ref="dataSource"/>-->
     <property name="jdbcTemplate" ref="jdbcTemplate"/>
+    <property name="sqlAdd" value="INSERT INTO users(id, name, password,
+      level, login, recommend, email) VALUES(?,?,?,?,?,?,?)">
+    </property>
   </bean>
 
   <!-- DefaultAdvisorAutoProxyCreator로 인해 더이상 명시적인 프록시 팩토리 빈이 필요하지 않음. -->
