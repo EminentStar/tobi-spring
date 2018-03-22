@@ -34,8 +34,13 @@ aop 스키마에 정의된 태그를 사용하려면 설정파일에 aop 네임�
     <!--<property name="dataSource" ref="dataSource"/>-->
     <property name="jdbcTemplate" ref="jdbcTemplate"/>
     <property name="sqlAdd" value="INSERT INTO users(id, name, password,
-      level, login, recommend, email) VALUES(?,?,?,?,?,?,?)">
-    </property>
+      level, login, recommend, email) VALUES(?,?,?,?,?,?,?)"/>
+    <property name="sqlGet" value="SELECT * FROM users WHERE id = ?"/>
+    <property name="sqlGetAll" value="SELECT * FROM users ORDER BY id"/>
+    <property name="sqlGetCount" value="SELECT COUNT(*) FROM users"/>
+    <property name="sqlUpdate" value="UPDATE users SET name = ?, password = ?, level = ?, login = ?, recommend = ?, email = ? where id = ?"/>
+    <property name="sqlDelete" value="DELETE FROM users WHERE id = ?"/>
+    <property name="sqlDeleteAll" value="DELETE FROM users"/>
   </bean>
 
   <!-- DefaultAdvisorAutoProxyCreator로 인해 더이상 명시적인 프록시 팩토리 빈이 필요하지 않음. -->

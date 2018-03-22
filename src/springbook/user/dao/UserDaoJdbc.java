@@ -12,6 +12,12 @@ import springbook.user.domain.User;
 
 public class UserDaoJdbc implements UserDao {
   private String sqlAdd;
+  private String sqlGet;
+  private String sqlGetAll;
+  private String sqlGetCount;
+  private String sqlUpdate;
+  private String sqlDelete;
+  private String sqlDeleteAll;
 
   // RowMapper 콜백 오브젝트에는 상태정보가 없음. 따라서 하나의 콜백 오브젝트를 멀티 스레드에서 동시에 사용해도 문제가 되지 않음.
   private RowMapper<User> userMapper =
@@ -49,6 +55,30 @@ public class UserDaoJdbc implements UserDao {
     this.sqlAdd = sqlAdd;
   }
 
+  public void setSqlGet(String sqlGet) {
+    this.sqlGet = sqlGet;
+  }
+
+  public void setSqlGetAll(String sqlGetAll) {
+    this.sqlGetAll = sqlGetAll;
+  }
+
+  public void setSqlGetCount(String sqlGetCount) {
+    this.sqlGetCount = sqlGetCount;
+  }
+
+  public void setSqlUpdate(String sqlUpdate) {
+    this.sqlUpdate = sqlUpdate;
+  }
+
+  public void setSqlDelete(String sqlDelete) {
+    this.sqlDelete = sqlDelete;
+  }
+
+  public void setSqlDeleteAll(String sqlDeleteAll) {
+    this.sqlDeleteAll = sqlDeleteAll;
+  }
+
   /**
    *  내부 클래스에서 외부의 변수를 사용할 때는 외부 변수는 반드시 final로 선언해줘야 함.
    */
@@ -64,61 +94,41 @@ public class UserDaoJdbc implements UserDao {
   @Override
   public User get(String id) {
     // queryForObject() 는 SQL을 실행하면 한 개의 로우만 얻을 것이라 기대
-    return this.jdbcTemplate.queryForObject("SELECT * FROM users WHERE id = ?",
+    return this.jdbcTemplate.queryForObject(
+      //      "SELECT * FROM users WHERE id = ?",
+      this.sqlGet,
       new Object[] {id}, // SQL에 바인딩할 파라미터 값. 가변인자 대신 배열을 사용
       userMapper);
   }
 
   @Override
   public List<User> getAll() {
-    return this.jdbcTemplate.query("SELECT * FROM users ORDER BY id", userMapper);
+    return this.jdbcTemplate.query(
+      this.sqlGetAll,
+      userMapper);
   }
 
   @Override
   public int getCount() {
-    return this.jdbcTemplate.queryForInt("SELECT COUNT(*) FROM users");
-    // 아래의 콜벡 오브젝트 코드를 재사용하여 위의 코드를 만들 수 있음.
-    //    return this.jdbcTemplate.query(new PreparedStatementCreator() { // 첫번째 콜백. Statement 생성
-    //      @Override
-    //      public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
-    //        return con.prepareStatement("SELECT COUNT(*) FROM users");
-    //      }
-    //    }, new ResultSetExtractor<Integer>() { // 두번쨰 콜백. ResultSet으로부터 값 추출
-    //      // ResultSet에서 추출할 수 있는 값의 타입은 다양학 때문에 제네릭스 타입파라미터를 사용.
-    //      @Override
-    //      public Integer extractData(ResultSet rs) throws SQLException {// ,DataAccessException {
-    //        rs.next();
-    //        return rs.getInt(1);
-    //      }
-    //    });
+    return this.jdbcTemplate.queryForInt(this.sqlGetCount);
   }
 
   @Override
   public void update(User user) {
     this.jdbcTemplate.update(
-      "UPDATE users SET name = ?, password = ?, level = ?, login = ?, " +
-        "recommend = ?, email = ? where id = ?", user.getName(), user.getPassword(),
-      user.getLevel().intValue(), user.getLogin(), user.getRecommend(), user.getEmail(), user.getId());
+      this.sqlUpdate,
+      user.getName(), user.getPassword(), user.getLevel().intValue(), user.getLogin(),
+      user.getRecommend(), user.getEmail(), user.getId());
   }
 
   @Override
   public void delete(String id) {
-    this.jdbcTemplate.update("DELETE FROM users WHERE id = ?", id);
+    this.jdbcTemplate.update(this.sqlDelete, id);
   }
 
   @Override
   public void deleteAll() {
-    this.jdbcTemplate.update("DELETE FROM users");
-    // 아래와 같이 콜백을 넘겨주는 형태로도 가능 (JdbcTemplate의 콜백은 PreparedStatementCreator 인터페이스의
-    // createPreparedStatement() 임.
-    //    this.jdbcTemplate.update(
-    //      new PreparedStatementCreator() {
-    //        @Override
-    //        public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
-    //          return con.prepareStatement("DELETE FROM users");
-    //        }
-    //      }
-    //    );
+    this.jdbcTemplate.update(this.sqlDeleteAll);
   }
 
   /**
