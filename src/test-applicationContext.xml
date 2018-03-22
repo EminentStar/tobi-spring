@@ -33,14 +33,22 @@ aop 스키마에 정의된 태그를 사용하려면 설정파일에 aop 네임�
   <bean id="userDao" class="springbook.user.dao.UserDaoJdbc">
     <!--<property name="dataSource" ref="dataSource"/>-->
     <property name="jdbcTemplate" ref="jdbcTemplate"/>
-    <property name="sqlAdd" value="INSERT INTO users(id, name, password,
+    <property name="sqlService" ref="sqlService"/>
+  </bean>
+
+  <bean id="sqlService" class="springbook.user.sqlservice.SimpleSqlService">
+    <property name="sqlMap">
+      <map>
+        <entry key="userAdd" value="INSERT INTO users(id, name, password,
       level, login, recommend, email) VALUES(?,?,?,?,?,?,?)"/>
-    <property name="sqlGet" value="SELECT * FROM users WHERE id = ?"/>
-    <property name="sqlGetAll" value="SELECT * FROM users ORDER BY id"/>
-    <property name="sqlGetCount" value="SELECT COUNT(*) FROM users"/>
-    <property name="sqlUpdate" value="UPDATE users SET name = ?, password = ?, level = ?, login = ?, recommend = ?, email = ? where id = ?"/>
-    <property name="sqlDelete" value="DELETE FROM users WHERE id = ?"/>
-    <property name="sqlDeleteAll" value="DELETE FROM users"/>
+        <entry key="userGet" value="SELECT * FROM users WHERE id = ?"/>
+        <entry key="userGetAll" value="SELECT * FROM users ORDER BY id"/>
+        <entry key="userGetCount" value="SELECT COUNT(*) FROM users"/>
+        <entry key="userUpdate" value="UPDATE users SET name = ?, password = ?, level = ?, login = ?, recommend = ?, email = ? where id = ?"/>
+        <entry key="userDelete" value="DELETE FROM users WHERE id = ?"/>
+        <entry key="userDeleteAll" value="DELETE FROM users"/>
+      </map>
+    </property>
   </bean>
 
   <!-- DefaultAdvisorAutoProxyCreator로 인해 더이상 명시적인 프록시 팩토리 빈이 필요하지 않음. -->

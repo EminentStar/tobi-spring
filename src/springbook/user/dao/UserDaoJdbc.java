@@ -9,15 +9,13 @@ import org.springframework.jdbc.core.RowMapper;
 
 import springbook.user.domain.Level;
 import springbook.user.domain.User;
+import springbook.user.sqlservice.SqlService;
 
 public class UserDaoJdbc implements UserDao {
-  private String sqlAdd;
-  private String sqlGet;
-  private String sqlGetAll;
-  private String sqlGetCount;
-  private String sqlUpdate;
-  private String sqlDelete;
-  private String sqlDeleteAll;
+  /**
+   * UserDaoJdbc는 SqlService 인터페이스를 통해 필요한 SQL을 가져와 사용할 수 있게 만듬.
+   */
+  private SqlService sqlService;
 
   // RowMapper 콜백 오브젝트에는 상태정보가 없음. 따라서 하나의 콜백 오브젝트를 멀티 스레드에서 동시에 사용해도 문제가 되지 않음.
   private RowMapper<User> userMapper =
@@ -51,32 +49,11 @@ public class UserDaoJdbc implements UserDao {
     this.jdbcTemplate = jdbcTemplate;
   }
 
-  public void setSqlAdd(String sqlAdd) {
-    this.sqlAdd = sqlAdd;
-  }
-
-  public void setSqlGet(String sqlGet) {
-    this.sqlGet = sqlGet;
-  }
-
-  public void setSqlGetAll(String sqlGetAll) {
-    this.sqlGetAll = sqlGetAll;
-  }
-
-  public void setSqlGetCount(String sqlGetCount) {
-    this.sqlGetCount = sqlGetCount;
-  }
-
-  public void setSqlUpdate(String sqlUpdate) {
-    this.sqlUpdate = sqlUpdate;
-  }
-
-  public void setSqlDelete(String sqlDelete) {
-    this.sqlDelete = sqlDelete;
-  }
-
-  public void setSqlDeleteAll(String sqlDeleteAll) {
-    this.sqlDeleteAll = sqlDeleteAll;
+  /**
+   * UseDaoJdbc는 SqlService 인터페이스를 통해 필요한 SQL을 가져와 사용할 수 있게 만듬.
+   */
+  public void setSqlService(SqlService sqlService) {
+    this.sqlService = sqlService;
   }
 
   /**
@@ -86,7 +63,7 @@ public class UserDaoJdbc implements UserDao {
   @Override
   public void add(final User user) {
     this.jdbcTemplate.update(
-      this.sqlAdd,
+      this.sqlService.getSql("userAdd"),
       user.getId(), user.getName(), user.getPassword(), user.getLevel().intValue(), user.getLogin(),
       user.getRecommend(), user.getEmail());
   }
@@ -95,8 +72,7 @@ public class UserDaoJdbc implements UserDao {
   public User get(String id) {
     // queryForObject() 는 SQL을 실행하면 한 개의 로우만 얻을 것이라 기대
     return this.jdbcTemplate.queryForObject(
-      //      "SELECT * FROM users WHERE id = ?",
-      this.sqlGet,
+      this.sqlService.getSql("userGet"),
       new Object[] {id}, // SQL에 바인딩할 파라미터 값. 가변인자 대신 배열을 사용
       userMapper);
   }
@@ -104,31 +80,37 @@ public class UserDaoJdbc implements UserDao {
   @Override
   public List<User> getAll() {
     return this.jdbcTemplate.query(
-      this.sqlGetAll,
+      this.sqlService.getSql("userGetAll"),
       userMapper);
   }
 
   @Override
   public int getCount() {
-    return this.jdbcTemplate.queryForInt(this.sqlGetCount);
+    return this.jdbcTemplate.queryForInt(
+      this.sqlService.getSql("userGetCount")
+    );
   }
 
   @Override
   public void update(User user) {
     this.jdbcTemplate.update(
-      this.sqlUpdate,
+      this.sqlService.getSql("userUpdate"),
       user.getName(), user.getPassword(), user.getLevel().intValue(), user.getLogin(),
       user.getRecommend(), user.getEmail(), user.getId());
   }
 
   @Override
   public void delete(String id) {
-    this.jdbcTemplate.update(this.sqlDelete, id);
+    this.jdbcTemplate.update(
+      this.sqlService.getSql("userDelete"),
+      id);
   }
 
   @Override
   public void deleteAll() {
-    this.jdbcTemplate.update(this.sqlDeleteAll);
+    this.jdbcTemplate.update(
+      this.sqlService.getSql("userDeleteAll")
+    );
   }
 
   /**

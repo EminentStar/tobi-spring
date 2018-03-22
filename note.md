@@ -810,4 +810,9 @@ public class UserServiceTest {
   - 메소드의 트랜잭션을 시작하지 않음.
 
 
+# Chap 07: 스프링 핵심 기술의 응용
+## 7.1. SQL과 DAO의 분리
+* 라이브러리 추가 필요
+  - org.apache.commons.lang3.jar
+
 
