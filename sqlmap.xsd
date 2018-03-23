@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema"
+  targetNamespace="http://www.epril.com/sqlmap"
+  xmlns:tns="http://www.epril.com/sqlmap" elementFormDefault="qualified">
+
+  <element name="sqlmap">
+    <complexType>
+      <sequence>
+        <element name="sql" maxOccurs="unbounded" type="tns:sqlType"/>
+      </sequence>
+    </complexType>
+  </element>
+
+  <complexType name="sqlType"> <!-- <sql>에 대한 정의를 시작 -->
+    <simpleContent>
+      <extension base="string"> <!-- sql 문장을 넣을 스틀이 타입을 정의함 -->
+        <attribute name="key" use="required" type="string"/> <!-- 검색을 위한 키 값은 <sql>의 key 애트리뷰트에 넣음. 반드시 입력해야 하는 필수 값. -->
+      </extension>
+    </simpleContent>
+  </complexType>
+
+</schema>

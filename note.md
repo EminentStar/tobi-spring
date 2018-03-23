@@ -815,4 +815,8 @@ public class UserServiceTest {
 * 라이브러리 추가 필요
   - org.apache.commons.lang3.jar
 
-
+## 7.2 인터페이스의 분리와 자기참조 빈
+### 7.2.1 XML 파일 매핑
+* unmarshalling: XML 문서를 읽어서 자바의 오브젝트로 변환하는 것을 JAXB에서는 unmarshalling이라 부름
+* marshalling: 바인딩오브젝트를 XML 문서로 변환하는 것.
+(Java object를 byte stream으로 바꾸는 걸 Serialization이라고 부르는 것과 비슷함.)
