@@ -839,4 +839,5 @@ public class UserServiceTest {
 
 * 라이브러리 추가 필요
   - org.springframework.oxm-3.0.7.RELEASE.jar
+  - com.springsource.org.castor-1.2.0.jar
 
