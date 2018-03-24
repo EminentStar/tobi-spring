@@ -831,3 +831,12 @@ public class UserServiceTest {
 
 ### 7.2.6. 디폴트 의존관계
 * 디폴트 의존관계: 외부에서 DI 받지 않는 경우 기본적으로 자동 적용되는 의존관계를 말함.
+
+
+## 7.3. 서비스 추상화 적용
+### 7.3.1. OXM 서비스 추상화
+- OXM(Object-XML Mapping): XML과 Java object를 매핑해서 상호 변환해주는 기술
+
+* 라이브러리 추가 필요
+  - org.springframework.oxm-3.0.7.RELEASE.jar
+
