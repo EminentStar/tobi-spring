@@ -15,13 +15,24 @@ import springbook.user.dao.UserDao;
 import springbook.user.sqlservice.jaxb.SqlType;
 import springbook.user.sqlservice.jaxb.Sqlmap;
 
-public class XmlSqlService implements SqlService {
+public class XmlSqlService implements SqlService, SqlRegistry, SqlReader {
+  private SqlReader sqlReader;
+  private SqlRegistry sqlRegistry; // 의존 오브젝트를 DI 받을 수 있도록 인터페이스 타입의 프로퍼티로 선언해둠.
+
   private Map<String, String> sqlMap = new HashMap<String, String>();
 
   private String sqlmapFile;
 
   public void setSqlmapFile(String sqlmapFile) {
     this.sqlmapFile = sqlmapFile;
+  }
+
+  public void setSqlReader(SqlReader sqlReader) {
+    this.sqlReader = sqlReader;
+  }
+
+  public void setSqlRegistry(SqlRegistry sqlRegistry) {
+    this.sqlRegistry = sqlRegistry;
   }
 
   public XmlSqlService() {
@@ -35,6 +46,36 @@ public class XmlSqlService implements SqlService {
    */
   @PostConstruct // 빈의 초기화 메소드로 지정함.
   public void loadSql() {
+    this.sqlReader.read(this.sqlRegistry);
+  }
+
+  @Override
+  public String getSql(String key) throws SqlRetrievalFailureException {
+    try {
+      return this.sqlRegistry.findSql(key);
+    } catch (RuntimeException e) {
+      throw new SqlRetrievalFailureException(e.getMessage());
+    }
+  }
+
+  @Override
+  public String findSql(String key) throws RuntimeException {
+    String sql = sqlMap.get(key);
+
+    if (StringUtils.isBlank(sql)) {
+      throw new RuntimeException(key + "를 이용해서 SQL을 찾을 수 없습니다.");
+    } else {
+      return sql;
+    }
+  }
+
+  @Override
+  public void registerSql(String key, String sql) {
+    sqlMap.put(key, sql);
+  }
+
+  @Override
+  public void read(SqlRegistry sqlRegistry) { // loadSql()에 있던 코드를 SqlReader 메소드로 가져온다. 초기화를 위해 무엇을 할 것인가와 SQL을 어떻게 읽는지를 분리.
     String contextPath = Sqlmap.class.getPackage().getName();
 
     try {
@@ -44,23 +85,11 @@ public class XmlSqlService implements SqlService {
       Sqlmap sqlmap = (Sqlmap)unmarshaller.unmarshal(is);
 
       for (SqlType sql : sqlmap.getSql()) {
-        sqlMap.put(sql.getKey(), sql.getValue());
+        sqlRegistry.registerSql(sql.getKey(), sql.getValue()); // SQL 저장 로직 구현에 독립적인 인터페이스 메소드를 통해 읽어들인 SQL과 키를 전달.
       }
 
     } catch (JAXBException e) {
       throw new RuntimeException(e);
-    }
-
-  }
-
-  @Override
-  public String getSql(String key) throws SqlRetrievalFailureException {
-    String sql = sqlMap.get(key);
-
-    if (StringUtils.isBlank(sql)) {
-      throw new SqlRetrievalFailureException(key + "를 이용해서 SQL을 찾을 수 없습니다.");
-    } else {
-      return sql;
     }
   }
 }
