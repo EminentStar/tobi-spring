@@ -6,5 +6,5 @@ package springbook.user.sqlservice;
 public interface SqlRegistry {
   void registerSql(String key, String sql); // SQL을 키와 함께 등록
 
-  String findSql(String key) throws RuntimeException; // 키로 SQL을 검색. 검색이 실패하면 예외를 던짐.
+  String findSql(String key) throws SqlNotFoundException; // 키로 SQL을 검색. 검색이 실패하면 예외를 던짐.
 }

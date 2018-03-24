@@ -53,17 +53,17 @@ public class XmlSqlService implements SqlService, SqlRegistry, SqlReader {
   public String getSql(String key) throws SqlRetrievalFailureException {
     try {
       return this.sqlRegistry.findSql(key);
-    } catch (RuntimeException e) {
+    } catch (SqlNotFoundException e) {
       throw new SqlRetrievalFailureException(e.getMessage());
     }
   }
 
   @Override
-  public String findSql(String key) throws RuntimeException {
+  public String findSql(String key) throws SqlNotFoundException {
     String sql = sqlMap.get(key);
 
     if (StringUtils.isBlank(sql)) {
-      throw new RuntimeException(key + "를 이용해서 SQL을 찾을 수 없습니다.");
+      throw new SqlNotFoundException(key + "를 이용해서 SQL을 찾을 수 없습니다.");
     } else {
       return sql;
     }
