@@ -828,3 +828,6 @@ public class UserServiceTest {
 2. 빈의 오브젝트를 생성한다. (`<bean id=".." class="ClassName">`)
 3. 프로퍼티에 의존 오브젝트 또는 값을 주입한다. (`<property name=".." value="xyz"/> <property name=".." ref="beanId"/>`)
 4. 빈이나 태그로 등록된 후처리기를 동작시킴. [코드에 달린 애노테이션에 대한 부가작업 진행] (`@PostContruct public void init() {...}`)
+
+### 7.2.6. 디폴트 의존관계
+* 디폴트 의존관계: 외부에서 DI 받지 않는 경우 기본적으로 자동 적용되는 의존관계를 말함.

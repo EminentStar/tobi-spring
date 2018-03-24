@@ -11,8 +11,13 @@ import springbook.user.sqlservice.jaxb.SqlType;
 import springbook.user.sqlservice.jaxb.Sqlmap;
 
 public class JaxbXmlSqlReader implements SqlReader {
-  private String sqlmapFile; // sqlmapFile은 SqlReader의 특정 구현 방법에 종속되는 프로퍼티가 됨.
+  private static final String DEFAULT_SQLMAP_FILE = "sqlmap.xml";
 
+  private String sqlmapFile = DEFAULT_SQLMAP_FILE;
+
+  /**
+   * sqlmapFile 프로퍼티를 지정하면 지정된 파일이 사용되고, 아니라면 디폴트로 넣은 파일이 사용됨.
+   */
   public void setSqlmapFile(String sqlmapFile) {
     this.sqlmapFile = sqlmapFile;
   }
