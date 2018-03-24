@@ -820,3 +820,11 @@ public class UserServiceTest {
 * unmarshalling: XML 문서를 읽어서 자바의 오브젝트로 변환하는 것을 JAXB에서는 unmarshalling이라 부름
 * marshalling: 바인딩오브젝트를 XML 문서로 변환하는 것.
 (Java object를 byte stream으로 바꾸는 걸 Serialization이라고 부르는 것과 비슷함.)
+
+
+### 7.2.3. 빈의 초기화 작업 
+#### 스프링 컨테이너인 애플리케이션 컨텍스트가 xml 설정파일을 읽고 진행하는 작업의 순서
+1. XML 빈 설정을 읽는다. (applicationContext.xml)
+2. 빈의 오브젝트를 생성한다. (`<bean id=".." class="ClassName">`)
+3. 프로퍼티에 의존 오브젝트 또는 값을 주입한다. (`<property name=".." value="xyz"/> <property name=".." ref="beanId"/>`)
+4. 빈이나 태그로 등록된 후처리기를 동작시킴. [코드에 달린 애노테이션에 대한 부가작업 진행] (`@PostContruct public void init() {...}`)
