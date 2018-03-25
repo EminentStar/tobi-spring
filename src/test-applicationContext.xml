@@ -46,6 +46,9 @@ context 스키마에 정의된 태그를 context 네임스페이스를 통해 �
 
   <bean id="sqlService" class="springbook.user.sqlservice.OxmSqlService">
     <property name="unmarsaller" ref="unmarshaller"/>
+    <property name="sqlmap" value="classpath:springbook/user/dao/sqlmap.xml"/> <!-- "classpath:" 는 디폴트이므로 생략가능. 클래스패스 위치를 지정할 때는 클래스패스 루트부터 절대위치를 적어야함. -->
+    <!--<property name="sqlmapFile" value="file:/opt/resources/sqlmap.xml"/> &lt;!&ndash; 파일 시스템의 특정 위치에 있는 파일을 읽어오고 싶다면 다음과 같이 하면 됨. &ndash;&gt;-->
+    <!--<property name="sqlmapHttp" value="http://www.epril.com/reousrces/sqlmap.xml"/> &lt;!&ndash; http 프로토콜로 접근 가능한 웹 리소스를 가져올 때 &ndash;&gt;-->
   </bean>
 
   <bean id="unmarshaller" class="org.springframework.oxm.jaxb.Jaxb2Marshaller">

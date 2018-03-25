@@ -6,6 +6,8 @@ import javax.annotation.PostConstruct;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.oxm.Unmarshaller;
 
 import springbook.user.dao.UserDao;
@@ -42,8 +44,8 @@ public class OxmSqlService implements SqlService {
     this.oxmSqlReader.setUnmarshaller(unmarsaller);
   }
 
-  public void setSqlmapFile(String sqlmapFile) {
-    this.oxmSqlReader.setSqlmapFile(sqlmapFile);
+  public void setSqlmap(Resource sqlmap) {
+    this.oxmSqlReader.setSqlmap(sqlmap);
   }
 
   /**
@@ -66,32 +68,51 @@ public class OxmSqlService implements SqlService {
    * private 멤버 클래스로 정의. top level class인 OxmSqlService만이 사용가능.
    */
   private class OxmSqlReader implements SqlReader {
-    private final static String DEFAULT_SQLMAP_FILE = "sqlmap.xml";
-
     private Unmarshaller unmarshaller;
-    private String sqlmapFile = DEFAULT_SQLMAP_FILE;
+    private Resource sqlmap = new ClassPathResource("sqlmap.xml", UserDao.class);
 
     public void setUnmarshaller(Unmarshaller unmarshaller) {
       this.unmarshaller = unmarshaller;
     }
 
-    public void setSqlmapFile(String sqlmapFile) {
-      this.sqlmapFile = sqlmapFile;
+    public void setSqlmap(Resource sqlmap) {
+      this.sqlmap = sqlmap;
     }
 
+    /**
+     * 클래스패스로부터 리소스를 가져오기 위해 ClassLoader 클래스의 getResourceAsStream() 메소드를 사용.
+     *
+     * - 파일 시스템이나 웹상의 HTTP를 통해 접근 가능한 파일로 바꾸려면 URL 클래스를 사용하도록 코드를 변경해야함.
+     * - 서블릿 컨텍스트 내의 리소스를 가져오려면 ServletContext의 getResourceAsStream()을 사용해야 함.
+     *
+     * 위와 같이 목적은 동일하지만 사용법이 각기 다른 여러 가지 기술이 존재한다고 볼 수 있음.
+     *
+     * -> 스프링은 자바에 존재하는 일관성 없는 리소스 접근 API를 추상화해서 Resource라는 추상화 인터페이스를 정의.
+     * 애플리케이션 컨텍스트가 사용할 설정정보 파일을 지정하는 것 부터 시작해서 스프링의 거의 모든 API는
+     * 외부의 리소스 정보가 필요할 때 항상 이 Resource 추상화를 이용.
+     *
+     * Resource는 스프링에서 Bean이 아니라 값으로 취금됨.
+     *
+     * 문자열로 정의된 리소스를 Resource 타입 오브젝트로 변환해주는 ResourceLoader를 제공함.
+     * ResourceLoader의 대표적인 예가 스프링의 애플리케이션 컨텍스트.(ResourceLoader를 상속함.)
+     *
+     * Resource 타입은 빈으로 등록하지 않고 <property> 태그의 value를 사용해 문자열로 값을 넣는데,
+     * 이 문자열로 된 리소스 정보를 Resource 오브젝트로 변환해서 프로퍼티에 주입할 때도 애플리케이션 컨텍스트 자신이 리소스 로더로서 변환과 로딩 기능을 담당함.
+     *
+     * Resource 오브젝트가 실제 리소스는 아니라는 점을 주의; 단지 리소스에 접근할 수 있는 추상화된 핸들러.
+     */
     @Override
     public void read(SqlRegistry sqlRegistry) {
 
       try {
-        Source source = new StreamSource(
-          UserDao.class.getResourceAsStream(this.sqlmapFile));
+        Source source = new StreamSource(sqlmap.getInputStream()); // 리소스의 종류에 상관없이 스트림으로 가져올 수 있음.
         Sqlmap sqlmap = (Sqlmap)this.unmarshaller.unmarshal(source);
 
         for (SqlType sql : sqlmap.getSql()) {
           sqlRegistry.registerSql(sql.getKey(), sql.getValue());
         }
       } catch (IOException e) {
-        throw new IllegalArgumentException(this.sqlmapFile + "을 가져올 수 없습니다.", e);
+        throw new IllegalArgumentException(this.sqlmap.getFilename() + "을 가져올 수 없습니다.", e);
       }
     }
   }
