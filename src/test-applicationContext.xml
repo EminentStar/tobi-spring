@@ -44,9 +44,12 @@ context 스키마에 정의된 태그를 context 네임스페이스를 통해 �
     <property name="sqlService" ref="sqlService"/>
   </bean>
 
-  <bean id="sqlService" class="springbook.user.sqlservice.DefaultSqlService">
-    <!--<property name="sqlReader" ref="sqlReader"/> &lt;!&ndash; 프로퍼티는 자기 자신을 참조할 수 있음. 수정자 메소드로 주입만 가능하면 됨. &ndash;&gt;-->
-    <!--<property name="sqlRegistry" ref="sqlRegistry"/>-->
+  <bean id="sqlService" class="springbook.user.sqlservice.OxmSqlService">
+    <property name="unmarsaller" ref="unmarshaller"/>
+  </bean>
+
+  <bean id="unmarshaller" class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+    <property name="contextPath" value="springbook.user.sqlservice.jaxb"/>
   </bean>
 
   <bean id="sqlReader" class="springbook.user.sqlservice.JaxbXmlSqlReader">
