@@ -7,9 +7,9 @@ import org.apache.commons.lang3.StringUtils;
 
 import springbook.user.sqlservice.SqlNotFoundException;
 import springbook.user.sqlservice.SqlUpdateFailureException;
-import springbook.user.sqlservice.UpdatableRegistry;
+import springbook.user.sqlservice.UpdatableSqlRegistry;
 
-public class ConcurrentHashMapSqlRegistry implements UpdatableRegistry {
+public class ConcurrentHashMapSqlRegistry implements UpdatableSqlRegistry {
   private Map<String, String> sqlMap = new ConcurrentHashMap<String, String>();
 
   @Override

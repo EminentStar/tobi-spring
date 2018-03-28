@@ -11,10 +11,10 @@ import org.junit.Test;
 
 import springbook.user.sqlservice.SqlNotFoundException;
 import springbook.user.sqlservice.SqlUpdateFailureException;
-import springbook.user.sqlservice.UpdatableRegistry;
+import springbook.user.sqlservice.UpdatableSqlRegistry;
 
 public class ConcurrentHashMapSqlRegistryTest {
-  UpdatableRegistry sqlRegistry;
+  UpdatableSqlRegistry sqlRegistry;
 
   @Before
   public void setUp() {
