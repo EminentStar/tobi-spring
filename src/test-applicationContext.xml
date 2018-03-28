@@ -12,6 +12,7 @@ context 스키마에 정의된 태그를 context 네임스페이스를 통해 �
   xmlns:aop="http://www.springframework.org/schema/aop"
   xmlns:context="http://www.springframework.org/schema/context"
   xmlns:tx="http://www.springframework.org/schema/tx"
+  xmlns:jdbc="http://www.springframework.org/schema/jdbc"
   xsi:schemaLocation="http://www.springframework.org/schema/beans
            http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
            http://www.springframework.org/schema/aop
@@ -19,10 +20,17 @@ context 스키마에 정의된 태그를 context 네임스페이스를 통해 �
            http://www.springframework.org/schema/context
            http://www.springframework.org/schema/context/spring-context-3.0.xsd
            http://www.springframework.org/schema/tx
-           http://www.springframework.org/schema/tx/spring-tx-2.5.xsd">
+           http://www.springframework.org/schema/tx/spring-tx-2.5.xsd
+           http://www.springframework.org/schema/jdbc
+           http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd">
+
+  <jdbc:embedded-database id="embeddedDatabase" type="HSQL">
+    <jdbc:script location="classpath:springbook/user/sqlservice/updatable/sqlRegistrySchema.sql"/>
+  </jdbc:embedded-database>
 
   <tx:annotation-driven/> <!-- @Transactional이 붙은 타입과 메소드에 트랜잭션 부가기능을 담은 프록시를 추가하도록 만들어주는 후처리기 등록 -->
   <context:annotation-config/> <!-- 코드의 애노테이션을 이용해서 부가적인 빈 설정 또는 초기화 작업을 해주는 후처리기를 등록 -->
+
 
   <bean id="dataSource" class="org.springframework.jdbc.datasource.SimpleDriverDataSource">
     <!-- XML을 이용한 DB 연결정보 설정 -->
@@ -60,7 +68,8 @@ context 스키마에 정의된 태그를 context 네임스페이스를 통해 �
     <property name="sqlmapFile" value="sqlmap.xml"/>
   </bean>
 
-  <bean id="sqlRegistry" class="springbook.user.sqlservice.updatable.ConcurrentHashMapSqlRegistry">
+  <bean id="sqlRegistry" class="springbook.user.sqlservice.updatable.EmbeddedDbSqlRegistry">
+    <property name="dataSource" ref="embeddedDatabase"/>
   </bean>
 
   <!-- DefaultAdvisorAutoProxyCreator로 인해 더이상 명시적인 프록시 팩토리 빈이 필요하지 않음. -->
