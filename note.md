@@ -841,3 +841,8 @@ public class UserServiceTest {
   - org.springframework.oxm-3.0.7.RELEASE.jar
   - com.springsource.org.castor-1.2.0.jar
 
+
+
+## 7.5. DI를 이용해 다양한 구현 방법 적용하기
+* 라이브러리 추가 필요
+  - com.springsource.org.hsqldb-1.8.0.9.jar
