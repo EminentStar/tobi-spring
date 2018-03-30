@@ -29,7 +29,6 @@ context 스키마에 정의된 태그를 context 네임스페이스를 통해 �
   </jdbc:embedded-database>
 
   <tx:annotation-driven/> <!-- @Transactional이 붙은 타입과 메소드에 트랜잭션 부가기능을 담은 프록시를 추가하도록 만들어주는 후처리기 등록 -->
-  <context:annotation-config/> <!-- 코드의 애노테이션을 이용해서 부가적인 빈 설정 또는 초기화 작업을 해주는 후처리기를 등록 -->
 
 
   <bean id="dataSource" class="org.springframework.jdbc.datasource.SimpleDriverDataSource">

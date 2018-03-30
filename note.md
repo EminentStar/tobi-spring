@@ -884,3 +884,16 @@ public class MyClass {
   - 스프링 3.1은 그런 면에서 완성도가 높음.
   - XML을 전혀 사용하지 않고도 스프링 애플리케이션을 만들 수 있다는 점이 스프링이 공개된 이후로 가장 큰 변화.
 
+
+
+## 7.6.1. 자바 코드를 이용한 빈 설정
+
+- `<context:annotation-config />`: 
+  - @PostConstruct를 붙인 메소드가빈이 초기화 된 후에 자동으로 실행되도록 사용했음.
+  - annotation-config에 의해 등록되는 빈후처리기가 @PostConstruct같은 표준 애노테이션을 인식해서 자동으로 메소드를 실행해줌.
+  - XML에 담긴 DI 정보를 이용하는 스프링 컨테이너를 사용하는 경우에는 
+    @PostConstruct와 같은 애노테이션의 기능이 필요하면 반드시 `<context:annotation-config/>`를 포함시켜서 필요한 빈 후처리기가 등록되게 만들어야 함.
+  - @Configuration이 붙은 설정 클래스를 사용하는 컨테이너가 사용되면 더이상 `<context:annotation-config />`를 넣을 필요가 없음.
+    - 컨테이너가 직접 @PostConstruct 애노테이션을 처리하는 빈후처리기를 등록해주기 때문.
+  
+  
