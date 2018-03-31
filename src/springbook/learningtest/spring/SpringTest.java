@@ -5,7 +5,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /***
- * 학습테스트 예정
+ * TODO: 학습테스트 예정
  *
  * - 스프링이 정말 싱글톤 방식으로 빈 오브젝트를 생성하는가?
  * - 스프링 테스트 컨텍스트에서 @Autowired로 가져온 빈 오브젝트가

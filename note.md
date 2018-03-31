@@ -921,3 +921,15 @@ public class MyClass {
   - 차이점
     * @Autowired: 필드의 타입을 기준으로 빈을 찾음.
     * @Resource: 필드 이름을 기준으로 찾음.
+    
+
+##### 전용 태그
+* `<tx:annotation-driven />`은 옵션을 주지 않는다면 기본적으로 다음 네 가지 클래스를 빈으로 등록해줌.
+  1. org.springframework.aop.framework.InfrastructureAdvisorAutoProxyCreator
+  2. org.springframework.transaction.annotation.AnnotationTransactionAttributeSource
+  3. org.springframework.transaction.interceptor.TransactionInterceptor
+  4. org.springframework.transaction.interceptor.BeanFactoryTransactionAttributeSourceAdvisor
+- 이 4개의 빈을 등록하고 적절히 프로퍼티 값을 넣어주면 `<tx:annotation-driven />`을 대체할 수 있음.
+- 하지만 너무 귀찮음.
+* 스프링 3.1에서는 XML에서 자주 사용되는 전용 태그를 `@Enable`로 시작하는 애노테이션으로 대체할 수 있게 다양한 애노테이션을 제공함.
+  - 대표적으로 `@EnableTransactionManagement`

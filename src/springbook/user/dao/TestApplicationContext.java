@@ -1,19 +1,21 @@
 package springbook.user.dao;
 
-import javax.annotation.Resource;
+import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.*;
+
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.ImportResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.mail.MailSender;
 import org.springframework.oxm.Unmarshaller;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import springbook.user.service.DummyMailSender;
 import springbook.user.service.UserService;
@@ -29,7 +31,7 @@ import springbook.user.sqlservice.updatable.EmbeddedDbSqlRegistry;
  * (Chap 1.5 에서 DaoFactory 클래스를 스프링 컨테이너가 사용하는 IoC/DI 정보로 활용되게 할 때 이미 사용)
  */
 @Configuration
-@ImportResource("/test-applicationContext.xml") // 현재 이 클래스엔 아무 DI 정보도 없으니 우선 xml로부터 설정을 import
+@EnableTransactionManagement
 public class TestApplicationContext {
   // XML에서 정의한 빈을 자바 코드에서 참조하려면 클래스에 @Autowired가 붙은 필드를 선언해서 XML에 정의된 빈을 컨테이너가 주입하게 해야 함.
   @Autowired
@@ -131,15 +133,21 @@ public class TestApplicationContext {
     return unmarshaller;
   }
 
-  @Resource
-  DataSource embeddedDatabase; // embeddedDatabase 빈은 아직 자바 코드로 변환하지 않아 필드 주입.
-
   @Bean
   public SqlRegistry sqlRegistry() {
     EmbeddedDbSqlRegistry sqlRegistry = new EmbeddedDbSqlRegistry();
-    sqlRegistry.setDataSource(this.embeddedDatabase);
+    sqlRegistry.setDataSource(embeddedDatabase());
 
     return sqlRegistry;
+  }
+
+  @Bean
+  public DataSource embeddedDatabase() {
+    return new EmbeddedDatabaseBuilder() // 빌더 오브젝트 생성
+      .setName("embeddedDatabase")
+      .setType(HSQL) //EmbeddedDatabaseType의 HSQL, DERBY, H2 중에서 하나를 선택.
+      .addScript("classpath:springbook/user/sqlservice/updatable/sqlRegistrySchema.sql") // 테이블 생성과 테이블 초기화를 위해 사용할 SQL 문장을 담은 SQL 스크립트의 위치를 지정.(하나 이상 지정 가능)
+      .build(); // 주어진 조건에 맞는 내장형 DB를 준비하고 초기화 스크립트를 모두 실행한 뒤에 이에 접근할 수 있는 EmbeddedDatabase를 돌려줌.
   }
 
 }
