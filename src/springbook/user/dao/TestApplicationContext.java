@@ -4,7 +4,9 @@ import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.
 
 import javax.sql.DataSource;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -31,7 +33,11 @@ import springbook.user.sqlservice.updatable.EmbeddedDbSqlRegistry;
  */
 @Configuration
 @EnableTransactionManagement
+@ComponentScan(basePackages = "springbook.user")
 public class TestApplicationContext {
+  @Autowired
+  private UserDao userDao;
+
   /**
    * <bean>에 대응
    *   - method name: <bean>의 id
@@ -71,11 +77,6 @@ public class TestApplicationContext {
   }
 
   @Bean
-  public UserDao userDao() {
-    return new UserDaoJdbc();
-  }
-
-  @Bean
   public MailSender mailSender() {
     return new DummyMailSender();
   }
@@ -84,7 +85,7 @@ public class TestApplicationContext {
   public UserService userService() {
     UserServiceImpl userServiceImpl = new UserServiceImpl();
 
-    userServiceImpl.setUserDao(userDao());
+    userServiceImpl.setUserDao(this.userDao);
     userServiceImpl.setMailSender(mailSender());
 
     return userServiceImpl;
@@ -101,7 +102,7 @@ public class TestApplicationContext {
   @Bean
   public UserService testUserService() {
     UserServiceTest.TestUserService testUserService = new UserServiceTest.TestUserService();
-    testUserService.setUserDao(userDao());
+    testUserService.setUserDao(this.userDao);
     testUserService.setMailSender(mailSender());
     return testUserService;
   }

@@ -9,11 +9,13 @@ import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Component;
 
 import springbook.user.domain.Level;
 import springbook.user.domain.User;
 import springbook.user.sqlservice.SqlService;
 
+@Component
 public class UserDaoJdbc implements UserDao {
   /**
    * UserDaoJdbc는 SqlService 인터페이스를 통해 필요한 SQL을 가져와 사용할 수 있게 만듬.

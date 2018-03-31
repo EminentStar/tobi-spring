@@ -28,7 +28,7 @@ public class UserDaoTest {
   // 테스트 오브젝트가 만들어지고 나면 스프링 컨텍스트 테스트에 의해 자동으로 값이 주입
   private ApplicationContext context;
   @Autowired // @Autowired는 스프링의 컨텍스트 내에서 정의된 빈 중에서 인스턴스 변수에 주입 가능한 타입의 빈을 찾아줌.
-  private UserDao dao; // UserDaoJdbc TYPE의 빈을 직접 DI받음.
+  private UserDao userDao; // TODO: 필드 네임이 dao이고 UserDaoJdbc 빈의 id를 지정안했을 때(디폴트 userDaoJdbc) 왜 빈을 찾지 못할까?
 
   private User user1;
   private User user2;
@@ -60,40 +60,40 @@ public class UserDaoTest {
 
   @Test
   public void addAndGet() {
-    dao.deleteAll();
-    assertThat(dao.getCount(), is(0));
+    userDao.deleteAll();
+    assertThat(userDao.getCount(), is(0));
 
-    dao.add(user1);
-    dao.add(user2);
-    assertThat(dao.getCount(), is(2));
+    userDao.add(user1);
+    userDao.add(user2);
+    assertThat(userDao.getCount(), is(2));
 
-    User userget1 = dao.get(user1.getId());
+    User userget1 = userDao.get(user1.getId());
     checkSameUser(userget1, user1);
 
-    User userget2 = dao.get(user2.getId());
+    User userget2 = userDao.get(user2.getId());
     checkSameUser(userget2, user2);
   }
 
   @Test
   public void getAll() {
-    dao.deleteAll();
+    userDao.deleteAll();
 
-    List<User> users0 = dao.getAll();
+    List<User> users0 = userDao.getAll();
     assertThat(users0.size(), is(0));
 
-    dao.add(user1);
-    List<User> users1 = dao.getAll();
+    userDao.add(user1);
+    List<User> users1 = userDao.getAll();
     assertThat(users1.size(), is(1));
     checkSameUser(user1, users1.get(0));
 
-    dao.add(user2);
-    List<User> users2 = dao.getAll();
+    userDao.add(user2);
+    List<User> users2 = userDao.getAll();
     assertThat(users2.size(), is(2));
     checkSameUser(user1, users2.get(1));
     checkSameUser(user2, users2.get(0));
 
-    dao.add(user3);
-    List<User> users3 = dao.getAll();
+    userDao.add(user3);
+    List<User> users3 = userDao.getAll();
     assertThat(users3.size(), is(3));
     checkSameUser(user3, users3.get(0));
     checkSameUser(user1, users3.get(2));
@@ -103,76 +103,76 @@ public class UserDaoTest {
 
   @Test
   public void count() {
-    dao.deleteAll();
-    assertThat(dao.getCount(), is(0));
+    userDao.deleteAll();
+    assertThat(userDao.getCount(), is(0));
 
-    dao.add(user1);
-    assertThat(dao.getCount(), is(1));
+    userDao.add(user1);
+    assertThat(userDao.getCount(), is(1));
 
-    dao.add(user2);
-    assertThat(dao.getCount(), is(2));
+    userDao.add(user2);
+    assertThat(userDao.getCount(), is(2));
 
-    dao.add(user3);
-    assertThat(dao.getCount(), is(3));
+    userDao.add(user3);
+    assertThat(userDao.getCount(), is(3));
   }
 
   @Test(expected = EmptyResultDataAccessException.class)
   public void getUserFailure() throws SQLException {
-    dao.deleteAll();
-    assertThat(dao.getCount(), is(0));
+    userDao.deleteAll();
+    assertThat(userDao.getCount(), is(0));
 
-    dao.get("unknown_id");
+    userDao.get("unknown_id");
   }
 
   @Test
   public void delete() {
     // Given
-    dao.deleteAll();
-    dao.add(user1);
-    dao.add(user2);
-    dao.add(user3);
-    assertThat(dao.getCount(), is(3));
+    userDao.deleteAll();
+    userDao.add(user1);
+    userDao.add(user2);
+    userDao.add(user3);
+    assertThat(userDao.getCount(), is(3));
 
     // When
     // Then
-    dao.delete(user1.getId());
-    assertThat(dao.getCount(), is(2));
+    userDao.delete(user1.getId());
+    assertThat(userDao.getCount(), is(2));
 
-    dao.delete(user2.getId());
-    assertThat(dao.getCount(), is(1));
+    userDao.delete(user2.getId());
+    assertThat(userDao.getCount(), is(1));
 
-    dao.delete(user3.getId());
-    assertThat(dao.getCount(), is(0));
+    userDao.delete(user3.getId());
+    assertThat(userDao.getCount(), is(0));
   }
 
   @Test(expected = DuplicateKeyException.class)
   public void duplicateKey() {
-    dao.deleteAll();
+    userDao.deleteAll();
 
-    dao.add(user1);
-    dao.add(user1);
+    userDao.add(user1);
+    userDao.add(user1);
   }
 
   @Test
   public void update() {
     // Given
-    dao.deleteAll();
+    userDao.deleteAll();
 
     // When
-    dao.add(user1);
-    dao.add(user2);
+    userDao.add(user1);
+    userDao.add(user2);
 
     user1.setName("오민규");
     user1.setPassword("springno6");
     user1.setLevel(Level.GOLD);
     user1.setLogin(1000);
     user1.setRecommend(999);
-    dao.update(user1);
+    userDao.update(user1);
 
     // Then
-    User user1update = dao.get(user1.getId());
+    User user1update = userDao.get(user1.getId());
     checkSameUser(user1, user1update);
-    User user2same = dao.get(user2.getId());
+    User user2same = userDao.get(user2.getId());
     checkSameUser(user2, user2same);
   }
 
