@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
@@ -33,7 +34,14 @@ import springbook.user.sqlservice.updatable.EmbeddedDbSqlRegistry;
  */
 @Configuration
 @EnableTransactionManagement
-@ComponentScan(basePackages = "springbook.user")
+@ComponentScan(
+  basePackages = {
+    "springbook.user"
+  },
+  useDefaultFilters = true,
+  excludeFilters = @ComponentScan.Filter({
+  }))
+@Import(DataBaseConfig.class)
 public class TestApplicationContext {
   @Autowired
   private UserDao userDao;
