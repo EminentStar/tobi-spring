@@ -888,12 +888,22 @@ public class MyClass {
 
 ## 7.6.1. 자바 코드를 이용한 빈 설정
 
-- `<context:annotation-config />`: 
-  - @PostConstruct를 붙인 메소드가빈이 초기화 된 후에 자동으로 실행되도록 사용했음.
-  - annotation-config에 의해 등록되는 빈후처리기가 @PostConstruct같은 표준 애노테이션을 인식해서 자동으로 메소드를 실행해줌.
-  - XML에 담긴 DI 정보를 이용하는 스프링 컨테이너를 사용하는 경우에는 
-    @PostConstruct와 같은 애노테이션의 기능이 필요하면 반드시 `<context:annotation-config/>`를 포함시켜서 필요한 빈 후처리기가 등록되게 만들어야 함.
-  - @Configuration이 붙은 설정 클래스를 사용하는 컨테이너가 사용되면 더이상 `<context:annotation-config />`를 넣을 필요가 없음.
-    - 컨테이너가 직접 @PostConstruct 애노테이션을 처리하는 빈후처리기를 등록해주기 때문.
+#### <context:annotation-config />
+- @PostConstruct를 붙인 메소드가빈이 초기화 된 후에 자동으로 실행되도록 사용했음.
+- annotation-config에 의해 등록되는 빈후처리기가 @PostConstruct같은 표준 애노테이션을 인식해서 자동으로 메소드를 실행해줌.
+- XML에 담긴 DI 정보를 이용하는 스프링 컨테이너를 사용하는 경우에는 
+  @PostConstruct와 같은 애노테이션의 기능이 필요하면 반드시 `<context:annotation-config/>`를 포함시켜서 필요한 빈 후처리기가 등록되게 만들어야 함.
+- @Configuration이 붙은 설정 클래스를 사용하는 컨테이너가 사용되면 더이상 `<context:annotation-config />`를 넣을 필요가 없음.
+  - 컨테이너가 직접 @PostConstruct 애노테이션을 처리하는 빈후처리기를 등록해주기 때문.
   
-  
+
+#### <bean>
+- `<bean>`으로 정의된 DI 정보는 자바코드, 특별히 `@Bean`이 붙은 메소드와 거의 1:1로 매핑됨.
+  - `@Bean`은 @Configuration이 붙은 DI 설정용 클래스에서 주로 사용되는 것으로, 
+    메소드를 이용해서 빈 오브젝트의 생성과 의존관계 주입을 직접 자바 코드로 작성할 수 있게 해줌
+- `<bean>`은 `@Bean`이 붙은 public 메소드로 만들어주면 됨.
+- method name은 `<bean>`의 id값으로 함.
+- method's return type은 신중히 결정해야 함.
+  - class attribute의 클래스를 그대로 사용해도 상관없지만 정확히 하려면 빈을 주입받아서 사용하는 다른 빈이 어떤 타입으로 이 빈의 존재를 알고 있는지 확인할 필요가 있음.
+
+- @Configuration 자바 클래스에서 정의한 빈과 XML에서 정의한 빈은 얼마든지 서로 참조가 가능.
