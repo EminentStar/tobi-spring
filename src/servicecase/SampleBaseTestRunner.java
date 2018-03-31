@@ -1,15 +1,16 @@
 package servicecase;
 
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import springbook.user.dao.TestApplicationContext;
+import springbook.learningtest.spring.annotation.AnnotationApplicationContext;
 import springbook.user.service.Transactional;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = TestApplicationContext.class)
+@ContextConfiguration(classes = AnnotationApplicationContext.class)
 @Transactional
 public class SampleBaseTestRunner {
   @Before
@@ -18,7 +19,7 @@ public class SampleBaseTestRunner {
     System.out.println("---------------------BaseTestRunner setUp method---------------------");
   }
 
-  private void print() {
-    System.out.println("BaseTestRunner");
+  @Test
+  public void dummyTest() {
   }
 }

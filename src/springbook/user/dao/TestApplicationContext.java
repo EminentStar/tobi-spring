@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import springbook.user.service.DummyMailSender;
 import springbook.user.service.UserService;
-import springbook.user.service.UserServiceImpl;
 import springbook.user.service.UserServiceTest;
 import springbook.user.sqlservice.OxmSqlService;
 import springbook.user.sqlservice.SqlRegistry;
@@ -87,16 +86,6 @@ public class TestApplicationContext {
   @Bean
   public MailSender mailSender() {
     return new DummyMailSender();
-  }
-
-  @Bean
-  public UserService userService() {
-    UserServiceImpl userServiceImpl = new UserServiceImpl();
-
-    userServiceImpl.setUserDao(this.userDao);
-    userServiceImpl.setMailSender(mailSender());
-
-    return userServiceImpl;
   }
 
   /**
