@@ -5,7 +5,9 @@ import javax.sql.DataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportResource;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
+import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * @Configuration: DI 정보로 사용될 자바 클래스로 지정
@@ -34,5 +36,13 @@ public class TestApplicationContext {
     dataSource.setPassword("");
 
     return dataSource;
+  }
+
+  @Bean
+  public PlatformTransactionManager transactionManager() {
+    DataSourceTransactionManager transactionManager = new DataSourceTransactionManager();
+    transactionManager.setDataSource(dataSource());
+
+    return transactionManager;
   }
 }
