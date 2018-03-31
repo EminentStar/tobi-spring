@@ -4,6 +4,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
@@ -15,6 +18,14 @@ public class UserDaoJdbc implements UserDao {
   /**
    * UserDaoJdbc는 SqlService 인터페이스를 통해 필요한 SQL을 가져와 사용할 수 있게 만듬.
    */
+
+  /**
+   * 수정자 메소드를 거치지 않고 직접 필드에빈 오브젝트를 넣도록 만들어도 무방.
+   *
+   * 자바에서는 private field에 클래스 외부에서 값을 넣을 수 없게 되어 있지만, 스프링은 리플렉션 API를 이용해 제약조건을 우회해서 값을 넣어줌.
+   * 필드에 직접 값을 넣을 수 있다면 수정자 메소드는 없어도 됨.
+   */
+  @Autowired
   private SqlService sqlService;
 
   // RowMapper 콜백 오브젝트에는 상태정보가 없음. 따라서 하나의 콜백 오브젝트를 멀티 스레드에서 동시에 사용해도 문제가 되지 않음.
@@ -37,17 +48,22 @@ public class UserDaoJdbc implements UserDao {
   private JdbcTemplate jdbcTemplate;
 
   /**
+   * 주어진 오브젝트를 그대로 필드에 저장하는 대신 JdbcTemplate을 생성해서 저장해줌.
+   */
+  @Autowired
+  public void setDataSource(DataSource dataSource) {
+    this.jdbcTemplate = new JdbcTemplate(dataSource);
+  }
+
+  /**
    * JdbcTemplate: 스프링이 제공하는 JDBC 코드용 기본 템플릿.
    *
    * JdbcTemplate을 생성하면서 직접 DI 해주기 위해 필요한 DataSource를 받아야하니 setter method는 남겨놓음.
    *  - 이렇게 setter method에서 다른 오브젝트를 생성하는 경우는 종종 있으니 익숙해질 것.
    */
-  //  public void setDataSource(DataSource dataSource) {
-  //    this.jdbcTemplate = new JdbcTemplate(dataSource);
+  //  public void setJdbcTemplate(JdbcTemplate jdbcTemplate) {
+  //    this.jdbcTemplate = jdbcTemplate;
   //  }
-  public void setJdbcTemplate(JdbcTemplate jdbcTemplate) {
-    this.jdbcTemplate = jdbcTemplate;
-  }
 
   /**
    * UseDaoJdbc는 SqlService 인터페이스를 통해 필요한 SQL을 가져와 사용할 수 있게 만듬.

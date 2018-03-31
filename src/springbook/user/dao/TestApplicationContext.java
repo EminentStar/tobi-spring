@@ -4,7 +4,6 @@ import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.
 
 import javax.sql.DataSource;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -33,10 +32,6 @@ import springbook.user.sqlservice.updatable.EmbeddedDbSqlRegistry;
 @Configuration
 @EnableTransactionManagement
 public class TestApplicationContext {
-  // XML에서 정의한 빈을 자바 코드에서 참조하려면 클래스에 @Autowired가 붙은 필드를 선언해서 XML에 정의된 빈을 컨테이너가 주입하게 해야 함.
-  @Autowired
-  SqlService sqlService; // sqlService 빈 주입
-
   /**
    * <bean>에 대응
    *   - method name: <bean>의 id
@@ -77,12 +72,7 @@ public class TestApplicationContext {
 
   @Bean
   public UserDao userDao() {
-    UserDaoJdbc userDaoJdbc = new UserDaoJdbc();
-
-    userDaoJdbc.setJdbcTemplate(jdbcTemplate());
-    userDaoJdbc.setSqlService(this.sqlService);
-
-    return userDaoJdbc;
+    return new UserDaoJdbc();
   }
 
   @Bean

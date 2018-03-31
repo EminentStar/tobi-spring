@@ -17,8 +17,8 @@ public class DaoFactory {
   @Bean      // -------------------------------> <bean
   public UserDaoJdbc userDao() {       // -----> id="userDaoJdbc"
     UserDaoJdbc userDaoJdbc = new UserDaoJdbc();
-    //    userDaoJdbc.setDataSource(dataSource()); // -> <property name="connectionMaker" ref="connectionMaker/>
-    userDaoJdbc.setJdbcTemplate(jdbcTemplate()); // -> <property name="connectionMaker" ref="connectionMaker/>
+    userDaoJdbc.setDataSource(dataSource()); // -> <property name="connectionMaker" ref="connectionMaker/>
+    //    userDaoJdbc.setJdbcTemplate(jdbcTemplate()); // -> <property name="connectionMaker" ref="connectionMaker/>
     return userDaoJdbc; // ---------------------> class="springbook..UserDaoJdbc" />
   }
 
