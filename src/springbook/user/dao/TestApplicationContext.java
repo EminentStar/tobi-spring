@@ -1,5 +1,6 @@
 package springbook.user.dao;
 
+import javax.annotation.Resource;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,13 +11,18 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.mail.MailSender;
+import org.springframework.oxm.Unmarshaller;
+import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import springbook.user.service.DummyMailSender;
 import springbook.user.service.UserService;
 import springbook.user.service.UserServiceImpl;
 import springbook.user.service.UserServiceTest;
+import springbook.user.sqlservice.OxmSqlService;
+import springbook.user.sqlservice.SqlRegistry;
 import springbook.user.sqlservice.SqlService;
+import springbook.user.sqlservice.updatable.EmbeddedDbSqlRegistry;
 
 /**
  * @Configuration: DI 정보로 사용될 자바 클래스로 지정
@@ -103,11 +109,37 @@ public class TestApplicationContext {
   @Bean
   public UserService testUserService() {
     UserServiceTest.TestUserService testUserService = new UserServiceTest.TestUserService();
-
     testUserService.setUserDao(userDao());
     testUserService.setMailSender(mailSender());
-
     return testUserService;
+  }
+
+  @Bean
+  public SqlService sqlService() {
+    OxmSqlService oxmSqlService = new OxmSqlService();
+
+    oxmSqlService.setUnmarsaller(unmarshaller());
+    oxmSqlService.setSqlRegistry(sqlRegistry());
+
+    return oxmSqlService;
+  }
+
+  @Bean
+  public Unmarshaller unmarshaller() {
+    Jaxb2Marshaller unmarshaller = new Jaxb2Marshaller();
+    unmarshaller.setContextPath("springbook.user.sqlservice.jaxb");
+    return unmarshaller;
+  }
+
+  @Resource
+  DataSource embeddedDatabase; // embeddedDatabase 빈은 아직 자바 코드로 변환하지 않아 필드 주입.
+
+  @Bean
+  public SqlRegistry sqlRegistry() {
+    EmbeddedDbSqlRegistry sqlRegistry = new EmbeddedDbSqlRegistry();
+    sqlRegistry.setDataSource(this.embeddedDatabase);
+
+    return sqlRegistry;
   }
 
 }

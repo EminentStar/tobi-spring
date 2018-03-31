@@ -915,3 +915,9 @@ public class MyClass {
 - bean 클래스 내부에서도 수정자 주입을 대신해서 필드 주입으로 사용할 수도 있고
 - @Configuration 클래스에서 XML 등으로 정의된 빈을 가져올 때도 사용가능 
 - @Configuration 클래스를 하나 이상 상요하는 경우 다른 클래스의 @Bean 메소드로 정의된 빈을 참조할 때도 사용할 수 있음.
+
+##### @Resource
+- @Autowired와 유사하게 필드에 빈을 주입받을 때 사용.
+  - 차이점
+    * @Autowired: 필드의 타입을 기준으로 빈을 찾음.
+    * @Resource: 필드 이름을 기준으로 찾음.
