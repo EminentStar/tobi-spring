@@ -2,6 +2,7 @@ package springbook.user.dao;
 
 import javax.sql.DataSource;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportResource;
@@ -15,7 +16,6 @@ import springbook.user.service.DummyMailSender;
 import springbook.user.service.UserService;
 import springbook.user.service.UserServiceImpl;
 import springbook.user.service.UserServiceTest;
-import springbook.user.sqlservice.OxmSqlService;
 import springbook.user.sqlservice.SqlService;
 
 /**
@@ -25,6 +25,10 @@ import springbook.user.sqlservice.SqlService;
 @Configuration
 @ImportResource("/test-applicationContext.xml") // 현재 이 클래스엔 아무 DI 정보도 없으니 우선 xml로부터 설정을 import
 public class TestApplicationContext {
+  // XML에서 정의한 빈을 자바 코드에서 참조하려면 클래스에 @Autowired가 붙은 필드를 선언해서 XML에 정의된 빈을 컨테이너가 주입하게 해야 함.
+  @Autowired
+  SqlService sqlService; // sqlService 빈 주입
+
   /**
    * <bean>에 대응
    *   - method name: <bean>의 id
@@ -38,7 +42,7 @@ public class TestApplicationContext {
     // 1. bean object 생성 (<bean>의 class에 나와있는 클래스 오브젝트)
     SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
 
-    // XML에서는 스프링 커넽이너가 빈의 프로퍼티 타입을 보고 "org.h2.Driver" 문자열을 Class 타입의 org.h2.Driver.class로 알아서 변환해줬었음.
+    // XML에서는 스프링 컨테이너가 빈의 프로퍼티 타입을 보고 "org.h2.Driver" 문자열을 Class 타입의 org.h2.Driver.class로 알아서 변환해줬었음.
     dataSource.setDriverClass(org.h2.Driver.class);
     dataSource.setUrl("jdbc:h2:~/testdb");
     dataSource.setUsername("sa");
@@ -68,7 +72,7 @@ public class TestApplicationContext {
     UserDaoJdbc userDaoJdbc = new UserDaoJdbc();
 
     userDaoJdbc.setJdbcTemplate(jdbcTemplate());
-    userDaoJdbc.setSqlService(sqlService()); // ERROR!
+    userDaoJdbc.setSqlService(this.sqlService);
 
     return userDaoJdbc;
   }
