@@ -43,7 +43,7 @@ public class UserServiceTest {
    *
    *  특정 테스트 클래스에서만 사용되는 클래스는 스태틱 멤버 클래스로 정의하는 것이 편리함.
    */
-  static class TestUserServiceImpl extends UserServiceImpl {
+  public static class TestUserService extends UserServiceImpl {
     private String id = "madnite1";
 
     protected void upgradeLevel(User user) {

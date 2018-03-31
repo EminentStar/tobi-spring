@@ -5,9 +5,18 @@ import javax.sql.DataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportResource;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
+import org.springframework.mail.MailSender;
 import org.springframework.transaction.PlatformTransactionManager;
+
+import springbook.user.service.DummyMailSender;
+import springbook.user.service.UserService;
+import springbook.user.service.UserServiceImpl;
+import springbook.user.service.UserServiceTest;
+import springbook.user.sqlservice.OxmSqlService;
+import springbook.user.sqlservice.SqlService;
 
 /**
  * @Configuration: DI 정보로 사용될 자바 클래스로 지정
@@ -39,10 +48,62 @@ public class TestApplicationContext {
   }
 
   @Bean
+  public JdbcTemplate jdbcTemplate() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate();
+    jdbcTemplate.setDataSource(dataSource());
+
+    return jdbcTemplate;
+  }
+
+  @Bean
   public PlatformTransactionManager transactionManager() {
     DataSourceTransactionManager transactionManager = new DataSourceTransactionManager();
     transactionManager.setDataSource(dataSource());
 
     return transactionManager;
   }
+
+  @Bean
+  public UserDao userDao() {
+    UserDaoJdbc userDaoJdbc = new UserDaoJdbc();
+
+    userDaoJdbc.setJdbcTemplate(jdbcTemplate());
+    userDaoJdbc.setSqlService(sqlService()); // ERROR!
+
+    return userDaoJdbc;
+  }
+
+  @Bean
+  public MailSender mailSender() {
+    return new DummyMailSender();
+  }
+
+  @Bean
+  public UserService userService() {
+    UserServiceImpl userServiceImpl = new UserServiceImpl();
+
+    userServiceImpl.setUserDao(userDao());
+    userServiceImpl.setMailSender(mailSender());
+
+    return userServiceImpl;
+  }
+
+  /**
+   * TestUserService가 public Access Modifer를 가지고 있지 않기 때문이였음.
+   *
+   * 스프링의 <bean>에 넣는 클래스는 굳이 public이 아니어도 됨.
+   * (내부적으로 Reflection API를 이용하기 때문에 private으로 접근을 제한해도 빈의 클래스로 사용가능)
+   *
+   * 하지만 자바 코드에서 참조할 때는 패키지가다르면 public으로 접근 제한자를 바꿔줘야 함.
+   */
+  @Bean
+  public UserService testUserService() {
+    UserServiceTest.TestUserService testUserService = new UserServiceTest.TestUserService();
+
+    testUserService.setUserDao(userDao());
+    testUserService.setMailSender(mailSender());
+
+    return testUserService;
+  }
+
 }
