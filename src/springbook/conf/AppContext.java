@@ -16,8 +16,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import springbook.user.dao.UserDao;
 import springbook.user.service.DummyMailSender;
-import springbook.user.service.UserService;
-import springbook.user.service.UserServiceTest;
 
 /**
  * @Configuration: DI 정보로 사용될 자바 클래스로 지정
@@ -82,21 +80,4 @@ public class AppContext {
   public MailSender mailSender() {
     return new DummyMailSender();
   }
-
-  /**
-   * TestUserService가 public Access Modifer를 가지고 있지 않기 때문이였음.
-   *
-   * 스프링의 <bean>에 넣는 클래스는 굳이 public이 아니어도 됨.
-   * (내부적으로 Reflection API를 이용하기 때문에 private으로 접근을 제한해도 빈의 클래스로 사용가능)
-   *
-   * 하지만 자바 코드에서 참조할 때는 패키지가다르면 public으로 접근 제한자를 바꿔줘야 함.
-   */
-  @Bean
-  public UserService testUserService() {
-    UserServiceTest.TestUserService testUserService = new UserServiceTest.TestUserService();
-    testUserService.setUserDao(this.userDao);
-    testUserService.setMailSender(mailSender());
-    return testUserService;
-  }
-
 }
