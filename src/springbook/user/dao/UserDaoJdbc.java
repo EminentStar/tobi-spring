@@ -15,7 +15,7 @@ import springbook.user.domain.Level;
 import springbook.user.domain.User;
 import springbook.user.sqlservice.SqlService;
 
-@Repository
+@Repository("userDao")
 public class UserDaoJdbc implements UserDao {
   /**
    * UserDaoJdbc는 SqlService 인터페이스를 통해 필요한 SQL을 가져와 사용할 수 있게 만듬.
