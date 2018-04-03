@@ -995,3 +995,8 @@ public class MyClass {
 - 활성 프로파일이란 스프링 컨테이너를 실행할 때 추가로 지정해주는 속성. 
 
 
+### DefaultListableBeanFactory
+- 스프링 컨테이너는 모두 BeanFactory라는 인터페이스를 구현하고 있음.  
+- 대부분의 스프링 컨테이너는 DefaultListableBeanFactory(BeanFactory 구현 클래스)를 이용해 빈을 등록하고 관리함.
+
+

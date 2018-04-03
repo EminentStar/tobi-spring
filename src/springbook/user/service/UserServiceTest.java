@@ -18,6 +18,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.dao.TransientDataAccessResourceException;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailSender;
@@ -167,6 +168,9 @@ public class UserServiceTest {
 
   List<User> users; // test fixture
 
+  @Autowired
+  DefaultListableBeanFactory bf;
+
   @Before
   public void setUp() {
     users = Arrays.asList(
@@ -304,6 +308,20 @@ public class UserServiceTest {
   private void checkUserAndLevel(User updated, String expectedId, Level expectedLevel) {
     assertThat(updated.getId(), is(expectedId));
     assertThat(updated.getLevel(), is(expectedLevel));
+  }
+
+  /**
+   * @ActiveProfiles가 "test"일 경우
+   *   - mailSender 	 springbook.user.service.DummyMailSender
+   *
+   * @ActiveProfiles가 "production"일 경우
+   *   - mailSender 	 org.springframework.mail.javamail.JavaMailSenderImpl
+   */
+  @Test
+  public void beans() {
+    for (String n : bf.getBeanDefinitionNames()) {
+      System.out.println(n + " \t " + bf.getBean(n).getClass().getName());
+    }
   }
 
 }

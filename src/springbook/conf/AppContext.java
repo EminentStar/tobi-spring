@@ -10,12 +10,10 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
-import org.springframework.mail.MailSender;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import springbook.user.dao.UserDao;
-import springbook.user.service.DummyMailSender;
 
 /**
  * @Configuration: DI 정보로 사용될 자바 클래스로 지정
@@ -78,8 +76,4 @@ public class AppContext {
     return transactionManager;
   }
 
-  @Bean
-  public MailSender mailSender() {
-    return new DummyMailSender();
-  }
 }
