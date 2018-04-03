@@ -17,14 +17,13 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import springbook.conf.AppContext;
-import springbook.conf.TestAppContext;
 import springbook.user.domain.Level;
 import springbook.user.domain.User;
 
 // 스프링의 테스트 컨텍스트 프레임워크의 JUnit 확장기능 지정
 @RunWith(SpringJUnit4ClassRunner.class)
 // 테스트 컨텍스트가 자동으로 만들어줄 애플리케이션 컨텍스트의 위치 지정
-@ContextConfiguration(classes = {TestAppContext.class, AppContext.class})
+@ContextConfiguration(classes = {AppContext.class})
 public class UserDaoTest {
   @Autowired
   // 테스트 오브젝트가 만들어지고 나면 스프링 컨텍스트 테스트에 의해 자동으로 값이 주입

@@ -32,7 +32,9 @@ import springbook.user.service.DummyMailSender;
   }))
 @Import({
   DataBaseConfig.class,
-  SqlServiceContext.class
+  SqlServiceContext.class,
+  TestAppContext.class,
+  ProductionAppContext.class
 })
 public class AppContext {
   @Autowired
