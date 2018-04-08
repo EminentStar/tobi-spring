@@ -1,19 +1,20 @@
 package springbook.conf;
 
-import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.HSQL;
-
-import javax.sql.DataSource;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.oxm.Unmarshaller;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
-
+import springbook.user.dao.UserDao;
 import springbook.user.sqlservice.OxmSqlService;
 import springbook.user.sqlservice.SqlRegistry;
 import springbook.user.sqlservice.SqlService;
 import springbook.user.sqlservice.updatable.EmbeddedDbSqlRegistry;
+
+import javax.sql.DataSource;
+
+import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.HSQL;
 
 @Configuration
 public class SqlServiceContext {
@@ -23,6 +24,7 @@ public class SqlServiceContext {
 
     oxmSqlService.setUnmarsaller(unmarshaller());
     oxmSqlService.setSqlRegistry(sqlRegistry());
+    oxmSqlService.setSqlmap(new ClassPathResource("sqlmap.xml", UserDao.class));
 
     return oxmSqlService;
   }
