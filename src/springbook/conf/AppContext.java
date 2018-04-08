@@ -1,13 +1,8 @@
 package springbook.conf;
 
-import javax.sql.DataSource;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.*;
+import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
@@ -15,11 +10,11 @@ import org.springframework.mail.MailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-
-import springbook.user.dao.UserDao;
 import springbook.user.service.DummyMailSender;
 import springbook.user.service.UserService;
 import springbook.user.service.UserServiceTest;
+
+import javax.sql.DataSource;
 
 /**
  * @Configuration: DI 정보로 사용될 자바 클래스로 지정
@@ -38,9 +33,10 @@ import springbook.user.service.UserServiceTest;
   DataBaseConfig.class,
   SqlServiceContext.class
 }) // 스태틱 중첩클래스로 넣은 @Configuration 클래스는 스프링이 자동으로 포함해줌.
+@PropertySource("/database.properties")
 public class AppContext {
   @Autowired
-  private UserDao userDao;
+  Environment env;
 
   /**
    * <bean>에 대응
@@ -56,10 +52,14 @@ public class AppContext {
     SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
 
     // XML에서는 스프링 컨테이너가 빈의 프로퍼티 타입을 보고 "org.h2.Driver" 문자열을 Class 타입의 org.h2.Driver.class로 알아서 변환해줬었음.
-    dataSource.setDriverClass(org.h2.Driver.class);
-    dataSource.setUrl("jdbc:h2:~/testdb");
-    dataSource.setUsername("sa");
-    dataSource.setPassword("");
+    try {
+      dataSource.setDriverClass((Class<? extends java.sql.Driver>)Class.forName(env.getProperty("db.driverClass")));
+    } catch (ClassNotFoundException e) {
+        throw new RuntimeException(e);
+    }
+    dataSource.setUrl(env.getProperty("db.url"));
+    dataSource.setUsername(env.getProperty("db.username"));
+    dataSource.setPassword(env.getProperty("db.password"));
 
     return dataSource;
   }
