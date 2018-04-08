@@ -1,17 +1,16 @@
 package springbook.user.sqlservice.updatable;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.*;
+import org.junit.Before;
+import org.junit.Test;
+import springbook.user.sqlservice.SqlNotFoundException;
+import springbook.user.sqlservice.SqlUpdateFailureException;
+import springbook.user.sqlservice.UpdatableSqlRegistry;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import springbook.user.sqlservice.SqlNotFoundException;
-import springbook.user.sqlservice.SqlUpdateFailureException;
-import springbook.user.sqlservice.UpdatableSqlRegistry;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 public abstract class AbstractUpdatableSqlRegistryTest {
   UpdatableSqlRegistry sqlRegistry;
