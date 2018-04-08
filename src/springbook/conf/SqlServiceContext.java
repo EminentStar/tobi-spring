@@ -1,5 +1,6 @@
 package springbook.conf;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -18,13 +19,16 @@ import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.
 
 @Configuration
 public class SqlServiceContext {
+  @Autowired
+  SqlMapConfig sqlMapConfig;
+
   @Bean
   public SqlService sqlService() {
     OxmSqlService oxmSqlService = new OxmSqlService();
 
     oxmSqlService.setUnmarsaller(unmarshaller());
     oxmSqlService.setSqlRegistry(sqlRegistry());
-    oxmSqlService.setSqlmap(new ClassPathResource("sqlmap.xml", UserDao.class));
+    oxmSqlService.setSqlmap(this.sqlMapConfig.getSqlMapResource());
 
     return oxmSqlService;
   }
