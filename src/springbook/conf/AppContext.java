@@ -34,10 +34,10 @@ import java.sql.Driver;
   excludeFilters = @ComponentScan.Filter({
   }))
 @Import({
-  DataBaseConfig.class,
-  SqlServiceContext.class
+  DataBaseConfig.class
 }) // 스태틱 중첩클래스로 넣은 @Configuration 클래스는 스프링이 자동으로 포함해줌.
 @PropertySource("/database.properties")
+@EnableSqlService
 public class AppContext implements SqlMapConfig {
   @Value("${db.driverClass}")
   Class<? extends Driver> driverClass;
