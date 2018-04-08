@@ -90,6 +90,11 @@ public class AppContext {
     return transactionManager;
   }
 
+  @Bean
+  public SqlMapConfig sqlMapConfig() {
+    return new UserSqlMapConfig();
+  }
+
   @Configuration
   @Profile("production")
   public static class ProductionAppContext {
