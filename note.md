@@ -1003,8 +1003,25 @@ public class MyClass {
 스프링 3.1은 빈 설정 작업에 필요한 프로퍼티 정보를 컨테이너가 관리하고 제공해줌.  
 스프링 컨테이너가 지정된 정보 소스로부터 프로퍼티 값을 수집하고, 이를 빈 설정 작업 중에 사용할 수 있게 해줌.   
 
-* @PropertySource: 프로퍼티 파일이나 리소스의 위치를 지정해서 사용되는 프로퍼티 소스의 등록에 사용하는 애노테이션
-  - @PropertySource로 등록한 리소스로부터 가져오는 프로퍼티 값은 컨테이너가 관리하는 Environment 타입의 환경 오브젝트에 저장됨.(Environment 오브젝트의 getProperty() 메소드를 통해 프로퍼티 값을 가져올 수 있음.)
+### @PropertySource: 
+- 프로퍼티 파일이나 리소스의 위치를 지정해서 사용되는 프로퍼티 소스의 등록에 사용하는 애노테이션
+- @PropertySource로 등록한 리소스로부터 가져오는 프로퍼티 값은 컨테이너가 관리하는 Environment 타입의 환경 오브젝트에 저장됨.(Environment 오브젝트의 getProperty() 메소드를 통해 프로퍼티 값을 가져올 수 있음.)
 
 
+### PropertySourcesPlaceholderConfigurer
+- Environment 오브젝트 대신 프로퍼티 값을 직접 DI 받는 방법.
+#### @Value
+- 값을 주입받을 때 사용.
+- @Value의 사용방법은 여러 방법이 있지만 여기서는 프로퍼티 소스로부터 값을 주입받을 수 있게 치환자(placeholder)를 이용.
+  - 프로퍼티 값을 주입받을 필드를 선언하고 앞에  @Value 애노테이션을 붙여줌.
+  - @Value에 프로퍼티 네임을 `${}`안에 넣은 문자열을 디폴트 엘리먼트 값으로 지정해줌.
+- @Value에 넣은 ${db.driverClass}같은 것을 치환자라고 부르는 이유는 XML에서 property 태그의 value에 사용하는 값 치환 방식과 유사하기 때문 
+```xml
+<property name="driverClass" value="${db.driverClass}" />
+```
+- XML에서는 치환자 자리의 값을 바꿔주는데, @Value에서는 @Value가 붙은 필드의 값을 주입해주는 방식으로 동작함.
 
+* @Value와 치환자를 이용해 프로퍼티 값을 필드에 주입하려면 특별한 빈을 하나 선언해야함.
+  - 프로퍼티 소스로부터 가져온 값을 @Value 필드에 주입하는 기능을 제공해주는 **PropertySourcesPlaceholderConfigurer**를 빈으로 정의해야 함.
+
+- @Value를 이용하면 driverClass처럼 문자열을 그대로 사용하지 않고 타입 변환이 필요한 프로퍼티를 스프링이 알아서 처리해준다는 장점이 있음.
