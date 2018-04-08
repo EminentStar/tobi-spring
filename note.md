@@ -1025,3 +1025,9 @@ public class MyClass {
   - 프로퍼티 소스로부터 가져온 값을 @Value 필드에 주입하는 기능을 제공해주는 **PropertySourcesPlaceholderConfigurer**를 빈으로 정의해야 함.
 
 - @Value를 이용하면 driverClass처럼 문자열을 그대로 사용하지 않고 타입 변환이 필요한 프로퍼티를 스프링이 알아서 처리해준다는 장점이 있음.
+
+
+## 7.6.6. 빈 설정의 재사용과 @Enable*
+- @Configuration 애노테이션이 달린, 빈 설정으로 사용되는 AppContext 같은 클래스도 스프링에선 하나의 빈으로 취급됨.
+  - @Configuration은 @Component를 메타 애노테이션으로 갖고 있는 자동 빈 등록용 애노테이션이기도 함.
+  - 원한다면 @Configuration 클래스도 빈 스캐너를 통해 자동등록되게 만들 수 있음.
