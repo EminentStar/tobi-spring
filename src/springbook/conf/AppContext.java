@@ -3,6 +3,8 @@ package springbook.conf;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.*;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
@@ -10,6 +12,7 @@ import org.springframework.mail.MailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import springbook.user.dao.UserDao;
 import springbook.user.service.DummyMailSender;
 import springbook.user.service.UserService;
 import springbook.user.service.UserServiceTest;
@@ -35,7 +38,7 @@ import java.sql.Driver;
   SqlServiceContext.class
 }) // 스태틱 중첩클래스로 넣은 @Configuration 클래스는 스프링이 자동으로 포함해줌.
 @PropertySource("/database.properties")
-public class AppContext {
+public class AppContext implements SqlMapConfig {
   @Value("${db.driverClass}")
   Class<? extends Driver> driverClass;
   @Value("${db.url}")
@@ -90,9 +93,9 @@ public class AppContext {
     return transactionManager;
   }
 
-  @Bean
-  public SqlMapConfig sqlMapConfig() {
-    return new UserSqlMapConfig();
+  @Override
+  public Resource getSqlMapResource() {
+    return new ClassPathResource("sqlmap.xml", UserDao.class);
   }
 
   @Configuration
