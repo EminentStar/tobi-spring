@@ -1031,3 +1031,12 @@ public class MyClass {
 - @Configuration 애노테이션이 달린, 빈 설정으로 사용되는 AppContext 같은 클래스도 스프링에선 하나의 빈으로 취급됨.
   - @Configuration은 @Component를 메타 애노테이션으로 갖고 있는 자동 빈 등록용 애노테이션이기도 함.
   - 원한다면 @Configuration 클래스도 빈 스캐너를 통해 자동등록되게 만들 수 있음.
+
+
+### @Enable* 애노테이션
+
+
+* @Component는 빈 자동등록 대상을 지정할 때 사용하는 애노테이션인데, 많은 경우 @Component를 직접 사용하기보단 @Repository나 @Service처럼 좀 더 의미있는 이름의애노테이션을 만들어 사용함.
+
+- @Component를 메타 애노테이션으로 넣어서 애노테이션을 정의해주면 @Component와 동일한 빈 등록기능이 적용되면서 자동등록되는 빈의 종류나 계층이 무엇인지 나타낼 수 있고,
+- AOP를 이용해 특정 애노테이션이 달린 빈만 선정해 부가 기능을 제공하게 만들 수도 있음.
