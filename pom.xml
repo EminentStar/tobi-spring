@@ -17,9 +17,23 @@
   <dependencies>
     <dependency>
       <groupId>org.springframework</groupId>
-      <artifactId>spring-core</artifactId>
+      <artifactId>org.springframework.core</artifactId>
       <version>3.1.1.RELEASE</version>
     </dependency>
   </dependencies>
+
+  <repositories>
+    <repository>
+      <id>com.springsource.bundles.release</id>
+      <name>SpringSource Enterprise Bundle Repository - SpringSource Bundle Releases</name>
+      <url>http://repository.springsource.com/maven/bundles/release</url>
+    </repository>
+
+    <repository>
+      <id>com.springsource.bundles.external</id>
+      <name>SpringSource Enterprise Bundle Repository - External Bundle Releases</name>
+      <url>http://repository.springsource.com/maven/bundles/external</url>
+    </repository>
+  </repositories>
 
 </project>

@@ -1063,3 +1063,51 @@ public class MyClass {
 - 스프링의 각 모듈이 필요로 하는 라이브러리중에 필수는 몇개 되지 않음.
   - 선택 라이브러리는 Maven의 전이적 의존 라이브러리 추적 기능의 적용을 받지 못함.(참고는 할 수 있으되 사용하려면 명시적으로 POM에 선언해줘야 한다는 뜻.)
 
+
+#### 스프링 모듈의 두 가지 이름과 리포지토리
+스프링 모듈의 jar파일의 이름을 살펴보면 두 가지 종류가 있음.
+> spring-core-3.0.7.RELEASE.jar
+> org.springframework.core-3.0.7.RELEASE.jar
+위의 두 파일은 동일한 파일임. 단지 배포되는 기술에 따라서 관례적으로 다른 이름을 사용할 뿐임.   
+
+- **spring-core-3.0.7.RELEASE.jar**
+  - Maven에서 사용하는 명명 규칙을 따른 것.
+  - Maven은 `groupId, artifactId, version` 이 세 가지로 라이브러리를 정의하는데 
+  - 그중에서 artifactId와 version을 조합해서 파일 이름으로 사용함.
+  - 예시
+```xml
+<dependency>
+  <groupId>org.springframework</groupId>
+  <artifactId>spring-core</artifactId>
+  <version>3.0.7.RELEASE</version>
+</dependency>
+```
+
+- **org.springframework.core-3.0.7.RELEASE.jar**
+  - OSGi의 모듈 명명 규칙을 따른 것
+  - 스프링의 모든 모듈은 OSGi 호환 모듈로 만들어져 있음.
+  - 그리고 OSGi 플랫폼에서 사용되지 않는다고 할지라도 OSGi 스타일의 모듈 이름을 사용하도록 권장.
+  - OSGi 호환 이름을 갖는 스프링 모듈을 사용할 경우에는 Maven의 표준 리포지토리 대신
+    스프링소스가 제공하는 엔터프라이즈 번들 리포지토리를 사용해야 함.
+```xml
+<repository>
+  <id>com.springsource.bundles.release</id>
+  <name>SpringSource Enterprise Bundle Repository - SpringSource Bundle Releases</name>
+  <url>http://repository.springsource.com/maven/bundles/release</url>
+</repository>
+
+<repository>
+  <id>com.springsource.bundles.external</id>
+  <name>SpringSource Enterprise Bundle Repository - External Bundle Releases</name>
+  <url>http://repository.springsource.com/maven/bundles/external</url>
+</repository>
+```
+- 리포지토리를 지정했다면 스프링의 표준 모듈 이름을 따라서 다음과 같이 의존 라이브러리를 선언할 수 있음.
+
+```xml
+<dependency>
+  <groupId>org.springframework</groupId>
+  <artifactId>org.springframework.core</artifactId>
+  <version>3.0.7.RELEASE</version>
+</dependency>
+```
