@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <!-- TODO: 부모 POM 만들어서 계층 POM 적용하기 -->
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>springbook.user</groupId>
+  <artifactId>tobi-spring</artifactId>
+  <version>20180409</version>
+  <packaging>war</packaging>
+
+  <properties>
+    <!-- maven이 자바 컴파일러를 1.5로 default로 지정하기에 Java Compiler 지정 -->
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-core</artifactId>
+      <version>3.1.1.RELEASE</version>
+    </dependency>
+  </dependencies>
+
+</project>
