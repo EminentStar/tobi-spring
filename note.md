@@ -999,4 +999,115 @@ public class MyClass {
 - 스프링 컨테이너는 모두 BeanFactory라는 인터페이스를 구현하고 있음.  
 - 대부분의 스프링 컨테이너는 DefaultListableBeanFactory(BeanFactory 구현 클래스)를 이용해 빈을 등록하고 관리함.
 
+## 7.6.5. 프로퍼티 소스
+스프링 3.1은 빈 설정 작업에 필요한 프로퍼티 정보를 컨테이너가 관리하고 제공해줌.  
+스프링 컨테이너가 지정된 정보 소스로부터 프로퍼티 값을 수집하고, 이를 빈 설정 작업 중에 사용할 수 있게 해줌.   
 
+### @PropertySource: 
+- 프로퍼티 파일이나 리소스의 위치를 지정해서 사용되는 프로퍼티 소스의 등록에 사용하는 애노테이션
+- @PropertySource로 등록한 리소스로부터 가져오는 프로퍼티 값은 컨테이너가 관리하는 Environment 타입의 환경 오브젝트에 저장됨.(Environment 오브젝트의 getProperty() 메소드를 통해 프로퍼티 값을 가져올 수 있음.)
+
+
+### PropertySourcesPlaceholderConfigurer
+- Environment 오브젝트 대신 프로퍼티 값을 직접 DI 받는 방법.
+#### @Value
+- 값을 주입받을 때 사용.
+- @Value의 사용방법은 여러 방법이 있지만 여기서는 프로퍼티 소스로부터 값을 주입받을 수 있게 치환자(placeholder)를 이용.
+  - 프로퍼티 값을 주입받을 필드를 선언하고 앞에  @Value 애노테이션을 붙여줌.
+  - @Value에 프로퍼티 네임을 `${}`안에 넣은 문자열을 디폴트 엘리먼트 값으로 지정해줌.
+- @Value에 넣은 ${db.driverClass}같은 것을 치환자라고 부르는 이유는 XML에서 property 태그의 value에 사용하는 값 치환 방식과 유사하기 때문 
+```xml
+<property name="driverClass" value="${db.driverClass}" />
+```
+- XML에서는 치환자 자리의 값을 바꿔주는데, @Value에서는 @Value가 붙은 필드의 값을 주입해주는 방식으로 동작함.
+
+* @Value와 치환자를 이용해 프로퍼티 값을 필드에 주입하려면 특별한 빈을 하나 선언해야함.
+  - 프로퍼티 소스로부터 가져온 값을 @Value 필드에 주입하는 기능을 제공해주는 **PropertySourcesPlaceholderConfigurer**를 빈으로 정의해야 함.
+
+- @Value를 이용하면 driverClass처럼 문자열을 그대로 사용하지 않고 타입 변환이 필요한 프로퍼티를 스프링이 알아서 처리해준다는 장점이 있음.
+
+
+## 7.6.6. 빈 설정의 재사용과 @Enable*
+- @Configuration 애노테이션이 달린, 빈 설정으로 사용되는 AppContext 같은 클래스도 스프링에선 하나의 빈으로 취급됨.
+  - @Configuration은 @Component를 메타 애노테이션으로 갖고 있는 자동 빈 등록용 애노테이션이기도 함.
+  - 원한다면 @Configuration 클래스도 빈 스캐너를 통해 자동등록되게 만들 수 있음.
+
+
+### @Enable* 애노테이션
+
+
+* @Component는 빈 자동등록 대상을 지정할 때 사용하는 애노테이션인데, 많은 경우 @Component를 직접 사용하기보단 @Repository나 @Service처럼 좀 더 의미있는 이름의애노테이션을 만들어 사용함.
+
+- @Component를 메타 애노테이션으로 넣어서 애노테이션을 정의해주면 @Component와 동일한 빈 등록기능이 적용되면서 자동등록되는 빈의 종류나 계층이 무엇인지 나타낼 수 있고,
+- AOP를 이용해 특정 애노테이션이 달린 빈만 선정해 부가 기능을 제공하게 만들 수도 있음.
+
+
+# Chap 09: 스프링 프로젝트 시작하기
+
+### 9.2.4. 라이브러리 관리와 빌드 툴
+
+#### 빌드 툴과 라이브러리 관리
+
+##### Maven
+- Maven은 단순 빌드 툴을 넘어서 개발 과정에서 필요한 빌드, 테스트, 배치, 문서화, 리포팅 등의 다양한 작업을 지원하는 종합 프로젝트 관리 툴의 성격을 띠고 있음.
+- Maven의 특징은 `POM`이라는 프로젝트 모델 정보를 이용한다는 점.
+  - 절차적인 스크립트와 구조가 비슷한 ANT와 달리 선언적임.
+* 프로젝트의 주요한 구조와 특징, 필요한 정보를 POM의 프로젝트 모델 정보로 만들어두면, 이를 참조해서 Maven에 미리 정해진 절차에 따라 빌드 또는 프로젝트 관리 작업을 진행할 수 있음.
+* Maven POM이 가진 독특한 특징 중의 하나는 애플리케이션이 필요로 하는 의존 라이브러리를 선언해두기만 하면 원격 서버에서 이를 자동으로 다운로드 받아서 사용할 수 있게 해주는 것.
+  - Maven으로 빌드할 때 필요한 라이브러리가 개발 PC의 공통 저장소에 있는지 확인하고 없으면 Maven의 원격 서버에서 자동으로 다운로드 받아서 설치해줌.
+* 또한 Maven의 의존 라이브러리 관리 기능은 `전이적인 의존 라이브러리 추적 기능`을 제공함. 
+  - POM의 의존정보에 하나의 라이브러리를 지정하면, 지정된 라이브러리가 동작하는데 필요한 여타 라이브러리까지 함께 다운로드해줌
+    - 이런 과정은 모든 라이브러리에 재귀적으로 적용됨. 
+    
+- 스프링의 모든 모듈은 POM 정보를 갖고 있음.
+- 스프링의 각 모듈이 필요로 하는 라이브러리중에 필수는 몇개 되지 않음.
+  - 선택 라이브러리는 Maven의 전이적 의존 라이브러리 추적 기능의 적용을 받지 못함.(참고는 할 수 있으되 사용하려면 명시적으로 POM에 선언해줘야 한다는 뜻.)
+
+
+#### 스프링 모듈의 두 가지 이름과 리포지토리
+스프링 모듈의 jar파일의 이름을 살펴보면 두 가지 종류가 있음.
+> spring-core-3.0.7.RELEASE.jar
+> org.springframework.core-3.0.7.RELEASE.jar
+위의 두 파일은 동일한 파일임. 단지 배포되는 기술에 따라서 관례적으로 다른 이름을 사용할 뿐임.   
+
+- **spring-core-3.0.7.RELEASE.jar**
+  - Maven에서 사용하는 명명 규칙을 따른 것.
+  - Maven은 `groupId, artifactId, version` 이 세 가지로 라이브러리를 정의하는데 
+  - 그중에서 artifactId와 version을 조합해서 파일 이름으로 사용함.
+  - 예시
+```xml
+<dependency>
+  <groupId>org.springframework</groupId>
+  <artifactId>spring-core</artifactId>
+  <version>3.0.7.RELEASE</version>
+</dependency>
+```
+
+- **org.springframework.core-3.0.7.RELEASE.jar**
+  - OSGi의 모듈 명명 규칙을 따른 것
+  - 스프링의 모든 모듈은 OSGi 호환 모듈로 만들어져 있음.
+  - 그리고 OSGi 플랫폼에서 사용되지 않는다고 할지라도 OSGi 스타일의 모듈 이름을 사용하도록 권장.
+  - OSGi 호환 이름을 갖는 스프링 모듈을 사용할 경우에는 Maven의 표준 리포지토리 대신
+    스프링소스가 제공하는 엔터프라이즈 번들 리포지토리를 사용해야 함.
+```xml
+<repository>
+  <id>com.springsource.bundles.release</id>
+  <name>SpringSource Enterprise Bundle Repository - SpringSource Bundle Releases</name>
+  <url>http://repository.springsource.com/maven/bundles/release</url>
+</repository>
+
+<repository>
+  <id>com.springsource.bundles.external</id>
+  <name>SpringSource Enterprise Bundle Repository - External Bundle Releases</name>
+  <url>http://repository.springsource.com/maven/bundles/external</url>
+</repository>
+```
+- 리포지토리를 지정했다면 스프링의 표준 모듈 이름을 따라서 다음과 같이 의존 라이브러리를 선언할 수 있음.
+
+```xml
+<dependency>
+  <groupId>org.springframework</groupId>
+  <artifactId>org.springframework.core</artifactId>
+  <version>3.0.7.RELEASE</version>
+</dependency>
+```

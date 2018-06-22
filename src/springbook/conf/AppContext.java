@@ -1,13 +1,10 @@
 package springbook.conf;
 
-import javax.sql.DataSource;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Profile;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.*;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
@@ -15,11 +12,13 @@ import org.springframework.mail.MailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-
 import springbook.user.dao.UserDao;
 import springbook.user.service.DummyMailSender;
 import springbook.user.service.UserService;
 import springbook.user.service.UserServiceTest;
+
+import javax.sql.DataSource;
+import java.sql.Driver;
 
 /**
  * @Configuration: DI 정보로 사용될 자바 클래스로 지정
@@ -35,12 +34,27 @@ import springbook.user.service.UserServiceTest;
   excludeFilters = @ComponentScan.Filter({
   }))
 @Import({
-  DataBaseConfig.class,
-  SqlServiceContext.class
+  DataBaseConfig.class
 }) // 스태틱 중첩클래스로 넣은 @Configuration 클래스는 스프링이 자동으로 포함해줌.
-public class AppContext {
-  @Autowired
-  private UserDao userDao;
+@PropertySource("/database.properties")
+@EnableSqlService
+public class AppContext implements SqlMapConfig {
+  @Value("${db.driverClass}")
+  Class<? extends Driver> driverClass;
+  @Value("${db.url}")
+  String url;
+  @Value("${db.username}")
+  String username;
+  @Value("${db.password}")
+  String password;
+
+  /**
+   * 빈 팩토리 후처리기로 사용되는 빈을 정의해주는 것인데 이 빈 설정 메소드는 반드시 스태틱 메소드로 선언해야 함
+   */
+  @Bean
+  public static PropertySourcesPlaceholderConfigurer placeholderConfigurer() {
+      return new PropertySourcesPlaceholderConfigurer();
+  }
 
   /**
    * <bean>에 대응
@@ -55,11 +69,10 @@ public class AppContext {
     // 1. bean object 생성 (<bean>의 class에 나와있는 클래스 오브젝트)
     SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
 
-    // XML에서는 스프링 컨테이너가 빈의 프로퍼티 타입을 보고 "org.h2.Driver" 문자열을 Class 타입의 org.h2.Driver.class로 알아서 변환해줬었음.
-    dataSource.setDriverClass(org.h2.Driver.class);
-    dataSource.setUrl("jdbc:h2:~/testdb");
-    dataSource.setUsername("sa");
-    dataSource.setPassword("");
+    dataSource.setDriverClass(this.driverClass);
+    dataSource.setUrl(this.url);
+    dataSource.setUsername(this.username);
+    dataSource.setPassword(this.password);
 
     return dataSource;
   }
@@ -78,6 +91,11 @@ public class AppContext {
     transactionManager.setDataSource(dataSource());
 
     return transactionManager;
+  }
+
+  @Override
+  public Resource getSqlMapResource() {
+    return new ClassPathResource("sqlmap.xml", UserDao.class);
   }
 
   @Configuration
