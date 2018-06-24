@@ -775,39 +775,64 @@ TransactionDefinition은 트랜잭션의 동작방식에 영향을 줄 수 있�
 ### 6.8.3 테스트를 위한 트랜잭션 애노테이션
 #### @Transactional
 - 테스트 클래스 또는 메소드에 @Transactional 애노테이션을 부여해주면 마치 타깃 클래스나 인터페이스에 적용된 것 처럼 테스트 메소드에 트랜잭션 경계가 자동으로 설정됨.(목적은 AOP를 위한 것은 아니지만, 트랜잭션을 부여해주는 용도로 쓰임.)
-- @Transactional을 이용한 테스트용 트랜잭션은 테스트가 끝나면 자동으로 롤백됨.
+- 클래스 레벨에 부여할 경우 -> 이경우 클래스 내의 모든 메소드에 transaction이 적용됨.
+- 각 메소드에 @Transactional을 지정 -> 클래스의 공통 트랜잭션과는 다른 속성 지정가능.
+  - 메소드의 트랜잭션 속성이 클래스의 속성보다 우선.
+- @Transactional을 이용한 테스트용 트랜잭션은 **테스트가 끝나면 자동으로 롤백**됨.(그외에는 일반 클래스와의 디폴트 속성은 동일.)
 
 
 #### @Rollback
+> @Transactional을 테스트에 사용했을 때의 문제점
+> @Transactional은 기본적으로 테스트에서 사용할 용도로 만든 게 아니라서 롤백 테스트에 대한 설정을 담을 수 없음.(무조건 자동 롤백)
+> 이런 경우 테스트에서 작업들을 한 트랜잭션을 묶고는 싶지만 롤백을 원하지 않을 때 @Transactional로만은 부족함.
+
 - 롤백 여부를 지정하는 값을 갖고 있음.(default는 true)
 - 메소드 레벨에만 적용가능
 ```java
-// 아래와 같이 설정해주면 테스트 전체에 걸쳐 하나의 트랜잭션이 만들어지고 예외가 발생하지 않는 한 트랜잭션은 커밋됨.
+// 아래와 같이 설정해주면 테스트메소드 전체에 걸쳐 하나의 트랜잭션이 만들어지고 예외가 발생하지 않는 한 트랜잭션은 커밋됨.
 @Test
 @Transactional
 @Rollback(false)
 public void transactionSync() {
-  
 }
 ```
 
-
 #### @TransactionConfiguration
-- 롤백에 대한 공통 속성을 지정
+> @Rollback의 문제점 
+> @Transactional과 달리 @Rollback은 메소드 레벨에만 적용가능.
+
+- 클래스 레벨에 롤백에 대한 공통 속성을 지정할 수 있음.
 
 ```java
+/**
+* 클래스 레벨의 공통 롤백 속성은 false로 두면서 일부 테스트에만 롤백을 적용하고 싶은 경우 아래와 같이 사용가능
+*/
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = "/test-applicationContext.xml")
 @Transactional
 @TransactionConfiguration(defaultRollback=false)
 public class UserServiceTest {
-  
+  @Test
+  @Rollback
+  public void add() throws SQLException {...}
+
+  @Test
+  public void subtract() throws SQLException {...}
 }
 ```
 
 #### Propagation.NEVER
 - @Transactional(propagation=Propagation.NEVER)
   - 메소드의 트랜잭션을 시작하지 않음.
+
+
+#### DB Test(DB 테스트)
+- d일반적으로 의존, 협력 오브젝트를 사용하지 않고 고립된 상태에서 테스트를 진행하는 단위 테스트와, DB 같은 외부의 리소스나 여러 계층의 클래스가 참여하는 통합 테스트는 아예 클래스를 구분해서 따로 만드는게 좋음.
+- DB 테스트는 가능한 롤백테스트로 만드는게 좋음.
+- 롤백 테스트로 되어 있다면 테스트 사이에 서로 영향을 주지 않으므로 독립적이고 자동화된 테스트로 만들기가 매우 편함 
+- 테스트는 어떤 경우에도 서로 의존하면 안됨.(현재 spl suitetest의 문제점?)
+- 테스트가 진행되는 순서나 앞의 테스트의 성공여부에 따라서 다음 테스트의 결과가 달라지는 테스트를 만들 면 안됨.
+- 코드가 바뀌지 않는 한 어떤 순서로 진행되더라도 테스트는 일정한 결과를 내야함.
 
 
 # Chap 07: 스프링 핵심 기술의 응용
