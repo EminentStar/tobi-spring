@@ -745,6 +745,9 @@ TransactionDefinition은 트랜잭션의 동작방식에 영향을 줄 수 있�
 - readonly로 설정해두면 트랜잭션 내에서 데이터를 조작하는 시도를 막아줄 수 있음.
 - 또한 데이터 액세스 기술에 따라 성능이 향상될 수도 있음.
 
+#### 5. Transaction Rollback Exception
+
+#### 6. transaction Commit Exception
 
 * **트랜잭션 정의를 바꾸고 싶다면 DefaultTransactionDefinition을 사용하는 대신 외부에서 정의된 TransactionDefinition 오브젝트를 DI받아서 사용하도록 하면 됨.**
 
@@ -772,6 +775,43 @@ TransactionDefinition은 트랜잭션의 동작방식에 영향을 줄 수 있�
         - 스프링은 프록시 기반의 AOP를 기본적으로 사용하고 있지만 필요하다면 AspectJ 방식으로 변경가능.
 
 
+## 6.7 애노테이션 트랜잭션 속성과 포인트컷
+##### @Transactional
+* 내가 이해한 것.
+  - 문제점: 하나의 트랜잭션으로 묶을 필요가 있는 로직들을 코드로 경계를 묶기 위해서는 **DB와 관련된 선후작업(Connection 열고, DB 액세스, Connection 닫기와 같은)이 똑같이 반복**되고, **DB 관련 파라미터(Connection와 같은)들을 메소드를 트래킹시 중복해서 달고다녀야**하는 복잡함이 있음.
+<br>
+- 위의 문제점을 해결하기 위해 AOP를 활용하여 일련의 코드를 하나의 트랜잭션으로 묶을 수 있게 하는데(Declarative Transaction이라고 부른다고함.) 사용되는 애노테이션이 @Transactional
+
+###### @Transactional 기능: 트랜잭션 속성 정의 + 포인트컷의 자동등록에 사용
+- 스프링은 @Transactional이 부여된 모든 오브젝트를 자동으로 타깃 오브젝트로 인식.(TransactionAttributeSourcePointcut이 사용됨.)
+- TransactionInterceptor(트랜잭션 경계설정 advice로 사용)는 AnnotationTransactionAttributeSource(@Transactional의 엘러먼트에서 트랜잭션 속성을 가져오는 역할) 사용.
+
+![...](https://dhsim86.github.io/static/assets/img/blog/web/2017-09-14-toby_spring_06_aop_3/02.png)
+
+###### @Transactional fallback 정책
+* 우선순위에 따라 가장 먼저 나오는 @Transactional의 속성정보를 이용함.
+###### 우선 순위
+타깃 메소드 > 타깃 클래스 > 선언(타깃 클래스가 구현한 인터페이스) 메소드 > 선언 타입
+
+```java
+[1]
+public interface Service {
+    [2]
+    void method1();
+    [3]
+    void method2();
+}
+[4]
+public class ServiceImpl implements Service {
+    [5]
+    public void method1() {}
+    [6]
+    public void method2() {}
+} // 우선순위: {[5], [6]} > [4] > {[2], [3]} > [1]
+```
+
+
+
 ### 6.8.3 테스트를 위한 트랜잭션 애노테이션
 #### @Transactional
 - 테스트 클래스 또는 메소드에 @Transactional 애노테이션을 부여해주면 마치 타깃 클래스나 인터페이스에 적용된 것 처럼 테스트 메소드에 트랜잭션 경계가 자동으로 설정됨.(목적은 AOP를 위한 것은 아니지만, 트랜잭션을 부여해주는 용도로 쓰임.)
@@ -787,7 +827,7 @@ TransactionDefinition은 트랜잭션의 동작방식에 영향을 줄 수 있�
 > 이런 경우 테스트에서 작업들을 한 트랜잭션을 묶고는 싶지만 롤백을 원하지 않을 때 @Transactional로만은 부족함.
 
 - 롤백 여부를 지정하는 값을 갖고 있음.(default는 true)
-- 메소드 레벨에만 적용가능
+- 메소드 레벨에만 적용가능  -> spring 2.5 이후로 클래스에도 적용가능해진걸로 확인.
 ```java
 // 아래와 같이 설정해주면 테스트메소드 전체에 걸쳐 하나의 트랜잭션이 만들어지고 예외가 발생하지 않는 한 트랜잭션은 커밋됨.
 @Test
