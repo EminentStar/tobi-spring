@@ -139,3 +139,14 @@
     * jsp 실행시 예외 메시지: 다양한 문제가 있을 수도(주로 발생하는 문제는 적절한 스프링 모듈과 라이브러리 파일이 추가되지 않는 경우.)
     * 빈 생성/초기화 작업 시 예외: applicationContext.xml파일에 오류.
     * 그외: 복잡..
+
+#### 서블릿 웹 애플리케이션 컨텍스트 등록
+- web.xml에 DispatcherServlet 서블릿 추가
+- DispatcherServlet 서블릿 등록시 담당할 HTTP 요청의 URL 패턴을 지정해야 함.
+    - 구분 방법 3가지 
+        1. 확장자로 구분(e.g. *.do / *.action)
+        2. 특정 URL 폴더로 구분 (e.g. /app/*)
+        3. 모든 요청 받기(/*)
+- DispatcherServlet은 초기화시 서블릿 레벨의 웹 애플리케이션 컨텍스트를 생성해줌. 
+    - 디폴트 이름은 `?-servlet.xml`
+    - 디폴트로 WEBROOT/WEB-INF 하위에 생성해주자.
