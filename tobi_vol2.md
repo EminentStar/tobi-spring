@@ -150,3 +150,45 @@
 - DispatcherServlet은 초기화시 서블릿 레벨의 웹 애플리케이션 컨텍스트를 생성해줌. 
     - 디폴트 이름은 `?-servlet.xml`
     - 디폴트로 WEBROOT/WEB-INF 하위에 생성해주자.
+
+#### 스프링 웹 프로젝트 검증 
+스프링 MVC를 사용하려면 먼저 DispatcherServlet의 전략을 사용해야함.  
+여기선 디폴트 전략들을 사용해보겠음.
+
+#### Handler Adapter
+* 컨트롤러는 핸들러 어댑터가 지원하는 타입으로 만들어야함.
+
+* SimpleControllerHandlerAdapter
+    - 해당 어댑터가 컨트롤러를 지원하려면 Controller interface를 상속받아야함.
+
+- 컨트롤러는 서블릿 애플리케이션 컨텍스트 안에 빈이 등록되기에 DI 이용가능.
+    - 자식 컨텍스트(서블릿 애플리케이션 컨텍스트)는 부모 컨텍스트(루트 컨텍스트)의 빈을 참조할 수 있음.
+
+#### Handler Mapping
+URL과 이를 담당하는 핸들러를 매핑하는 일을 담당함.
+
+* BeamNameUrlHandlerMapping
+    - 컨트롤러를 빈으로 등록할 때 빈의 이름에 매핑할 URL을 넣어주는 것.
+
+-     컨트롤러가 리턴한 뷰 이름을 참고해서 InternalResourceView를 돌려줌.
+
+#### View Resolver
+DispatcherServlet은 뷰 리졸버를 이용해서 컨트롤러가 리턴한 뷰 이름에 해당하는 뷰 오브젝트를 가저옴. 가져온 뷰 오브젝트를 이용해서 최종 HTTP Response를 만들어냄.  
+
+* InternalResourceViewResolver
+    - 컨트롤러가 리턴한 뷰 이름을 참고해서 JSP와 서블릿을 템플릿으로 사용하는 InternalResourceView를 돌려줌.
+
+- JSP EL은 컨트롤러에서 생성되어 DispatcherServlet을 거쳐 JSP 뷰로 전달된 모델로부터 특정 이름의 오브젝트를 가져와 표현식 대신 넣어줌.
+
+- JSP파일을 url을 통해 직접 실행시키지 못하게 하기 위해 직접 접근이 불가능한 `WEB_ROOT/WEB-INF/` 하위에 JSP 파일을 두는 게 좋음.
+    - InternalResourceView는 내부적으로 WEB-INF아래에 있는 JSP도 실행가능.
+
+>  뷰와 뷰(View), 뷰 이름, JSP 뷰(템플릿)
+> * MVC의 한 축으로써의 뷰 컴포넌트 
+>   - 모델을 이용해 사용자에게 보여줄 내용을 만들어내는 역할을 통틀어 말함.
+> * View 오브젝트.
+>   - 스프링 MVC에서는 View 인터페이스를 구현해서 뷰 기능을 담당하는 다양한 클래스를 만들어 사용함. 
+>   - 그래서 View는 DispatcherServlet이 직접 사용하는 오브젝트를 가리키는 말이기도 함. 
+> * JSP 뷰
+>   - JSP는 뷰 오브젝트가 활용하는 템플릿 파일일 뿐이지만, InternalResourceView는 실제 JSP에 모든 뷰 작업을 위임하기 때문에 JSP가 사실상 모델로부터 최종 내용을 생성하는 뷰의 역할을 담당한다고 봄.
+> * 사용자가 보는 화면 또는 내용 
