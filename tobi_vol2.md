@@ -192,3 +192,17 @@ DispatcherServlet은 뷰 리졸버를 이용해서 컨트롤러가 리턴한 뷰
 > * JSP 뷰
 >   - JSP는 뷰 오브젝트가 활용하는 템플릿 파일일 뿐이지만, InternalResourceView는 실제 JSP에 모든 뷰 작업을 위임하기 때문에 JSP가 사실상 모델로부터 최종 내용을 생성하는 뷰의 역할을 담당한다고 봄.
 > * 사용자가 보는 화면 또는 내용 
+
+### 3.2.2. 스프링 웹 학습 테스트
+* MockHttpServletRequest
+* MockHttpServletResponse
+* MockHttpSession
+* MockServletConfig, MockServletContext
+    - 스프링의 루트 웹 애플리케이션 컨텍스트는 서블릿 컨텍스트 안에 저장되는데, 모델 1 서블릿에서 루트 컨텍스트를 가져오는 경우를 테스트하려면 MockServletContext를 생성해서 스프링 루트 컨텍스트 넣어주면 됨.
+    - 이렇게 생성된 MockServletContext는 MockHttpSession이나 MockHttpServletRequest에 넣어서 서블릿에 전달됨. 
+    - 무슨 말이지?????
+
+
+
+
+
