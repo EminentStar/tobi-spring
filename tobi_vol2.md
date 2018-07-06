@@ -148,7 +148,7 @@
         2. 특정 URL 폴더로 구분 (e.g. /app/*)
         3. 모든 요청 받기(/*)
 - DispatcherServlet은 초기화시 서블릿 레벨의 웹 애플리케이션 컨텍스트를 생성해줌. 
-    - 디폴트 이름은 `?-servlet.xml`
+    - 디폴트 이름은 `서블릿이름-servlet.xml`
     - 디폴트로 WEBROOT/WEB-INF 하위에 생성해주자.
 
 #### 스프링 웹 프로젝트 검증 
