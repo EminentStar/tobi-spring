@@ -202,7 +202,55 @@ DispatcherServlet은 뷰 리졸버를 이용해서 컨트롤러가 리턴한 뷰
     - 이렇게 생성된 MockServletContext는 MockHttpSession이나 MockHttpServletRequest에 넣어서 서블릿에 전달됨. 
     - 무슨 말이지?????
 
+## 3.3. 컨트롤러 
+- 서블릿이 넘겨주는 HTTP 요청은 HttpServletRequest 오브젝트에 담겨 있음.
+- 컨트롤러는 이 HttpServletRequest의 정보를 추출함.
+- 사용자가 바르게 요청을 보냈는지도 검증을 해야함.
+- 그후 컨트롤러는 서비스 계층의 메소드를 선정하는 것과 메소드가 필요로 하는 파라미터 타입에 맞게 요청 정보를 변환해야함.
+- 컨트롤러는 서비스 계층 메서드가 돌려준 결과를 보고 어떤 뷰를 보여줘야 하는지도 결정해야 함.
+- 뷰 선택이 끝난 후 뷰에 출력할 내용을 모델에 넣어줘야함.
 
+### 3.3.1. 컨트롤러의 종류와 핸들러 어댑터 
+- 스프링 MVC가 지원하는 컨트롤러의 종류는 4가지.(각 컨트롤러를 DispatcherServlet에 연결해주는 핸들러 어댑터도 하나씩 있어야 하므로 핸들러 어댑터도 총 4가지)   
+- SimpleServletHandlerAdapter를 제외한 세 개의 핸들러 어댑터는 DispatcherServlet에 디폴트 전략으로 설정되어 있음.
+
+#### 4가지 컨트롤러 / 핸들러 어댑터
+##### 1. `Servlet / SimpleServletHandlerAdapter`
+- `표준 서블릿`을 MVC의 컨트롤러로 사용가능함.
+- (서블릿이라면 web.xml에 등록하고 사용하면 되긴하지만,) 기존에 서블릿으로 개발된 코드를 스프링 애플리케이션에 가져와 사용하려면 일단 서블릿을 web.xml에 별도로 등록하지 말고 스프링 MVC 컨트롤러로 등록해 사용
+- 서블릿을 컨트롤러로 사용했을 때의 장점은 서블릿 코드를 그대로 유지하면서 서블릿이 스프링의 빈으로 등록된다는 점(서블릿 코드 스프링 포팅시 유용)
+- 서블릿이 컨트롤러 빈으로 등록된 경우 init(), destroy()같은 생명주기 메서드는 호출되지 않음.
+- 서블릿에서 초기화 작업을 하는 코드가 있으면 bean tag로 등록시 `init-method` attribute나 `@PostConstruct` 애노테이션을 이용해 빈 생성 후에 초기화 메소드가 실행되게 해야함 
+- SimpleServletHandlerAdapter는 XML 설정에 핸들러 어댑터를 등록해줘야함.
+- 빈이 등록되어 있으면 DispatcherServlet은 이를 자동으로 감지해 디폴트 핸들러 어댑터를 대신해 사용함.
+    - 동시에 두가지 이상의 컨트롤러를 사용할 수 있기 때문에 DispatcherServlet은 여러 개의 핸들러 어댑터를 사용하기도 함. 
+    - **핸들러 매핑에 의해 사용할 컨트롤러 빈을 찾아주면 그에 맞는 핸들러 어댑터를 이용해 컨트롤러를 호출해주는 것임.**
+- Servlet 타입 컨트롤러는 모델과 뷰를 리턴하지 않음.
+
+DispatcherServlet은 컨트롤러가 ModelAndView 타입의 오브젝트 대신 null을 리턴하면 뷰를 호출하는 과정을 생략하고 작업을 마치게 되어있음.(??)
+
+#### 2. HttpRequestHandler / HttpRequestHandlerAdapter
+- 서블릿 인터페이스와 비슷. 서블릿처럼 동작하는 컨트롤러를 만들기 위해 사용.
+- 서블릿 스펙을 준수할 필요 없이 HTTP 프로토콜 기반으로 한 전용 서비스를 만들려고 할 때 사용. 
+- 스프링은 HttpRequestHandler를 이용해서 자바의 RMI(Remote Method Invoker)를 대체할 수 있는 HTTP 기반 원격 호출 서비스인 HTTP Invoker를 제공.
+- 모델과 뷰 개념이 없는 HTTP 기반의 RMI 같은 로우레벨 서비스를 개발할 때 이용 할 수 있다는 사실만 기억하자.
+
+##### 3. Controller / SimpleControllerHandlerAdapter
+- Controller 인터페이스를 구현한 컨트롤러.
+- DispatcherServlet이 컨트롤러와 주고받는정보를 그대로 메소드의 파라미터와 리턴값으로 갖고 있음.
+- 스프링 3.0의 애노테이션과 관려를 이용한 컨트롤러가 나오기전까지 많이 사용되던 컨트롤러
+* Controller 타입 컨트롤러는 스프링 MVC를 확장해서 애플리케이션에 최적화된 전용 컨트롤러를 설계할 때 가장 유용 
+    - Controller 처럼 HttpServletRequest를 직접 받지않고, 컨트롤러 메소드 파라미터에서 생략시킴. 
+    - 프로퍼티에 지정해둔 파라미터만 request에서 추출해 이를 별도의 맵에 저장해 전달.
+    - 기반 컨트롤러에서 미리 모델을 만들어 전달해주면 그 모델안에 값만 저장되도록 구현
+
+##### 4. AnnotationMethodHandlerAdapter
+- 지원하는 컨트롤러의 타입이 정해져 있지 않음.
+- 클래스와 메소드에 붙은 몇 가지 애노테이션의 정보와 메소드 이름, 파라미터, 리턴 타입에 대한 규칙등을 종합적으로 분석해서 컨트롤러를 선별하고 호출 방식을 결정함. 
+- 컨트롤러 하나가 하나 이상의 URL에 매핑될 수 있음. 
+    - AnnotationMethodHandlerAdapter를 지원하면서 URL의 매핑을 컨트롤러 단위가 아니라 메소드 단위로 가능하게 됨.(스프링 2.5부터)
+    - 메소드 단위로 컨트롤러 로직을 넣기위해 유연한 방식으로 매핑정보등을 지정해줘야 하기 때문에 애노테이션을 필요. 
+- DefaultAnnotationHandlerMapping과 함께 사용해야 함.(동일한 애노테이션 사용)
 
 
 
