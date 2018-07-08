@@ -342,12 +342,62 @@ DispatcherServlet은 컨트롤러가 ModelAndView 타입의 오브젝트 대신 
     - 스프링 MVC는 모든 종류의 컨트롤러에 동일한 인터셉터를 적용할 수 있게 해줌
 
 
+## 3.4. 뷰 
+* View는 MVC아키텍처에서 모델이 가진 정보를 어떻게 표현해야하는가에 대한 로직을 담고있는 컴포넌트.
+* 컨트롤러가 작업을 마치고 뷰 정보를 ModelAndView 오브젝트로 담아서 DispatcherServlet에 돌려주는 방법은 두가지가 있음.
+    1. View 타입의 오브젝트를 돌려주는 방법
+    2. View 이름을 돌려주는 방법
+        - 뷰 이름으로 부터 실제 사용할 뷰를 결정할 `ViewResolver`가 필요함.
 
+### 3.4.1. 뷰
+* View 인터페이스
+    - getContentType(): 뷰 오브젝트가 생성하는 컨텐트 타입 정보 제공.
+    - render(): 모델을 전달받아 클라이언트에 돌려줄 결과물을 만들어내는 작업.
+* 뷰를 사용하는 방법
+    1. 스프링이 제공하는 기반 뷰 클래스를 확장해서 코드로 뷰를 만드는 방법(엑셀, PDF, RSS피드 같은 뷰는 컨텐트 생성하는 API를 사용해 뷰 로직 작성)
+    2. 스프링이 제공하는 뷰를 활용하되, (뷰 클래스를 상속하거나 코드를 작성하지는 않고) JSP나 프리마커 같은 템플릿 파일을 사용하거나 모델을 자동으로 뷰로 전환하는 로직을 적용.
 
+#### InternalResourceView, JstlView
+##### InternalResourceView
+- RequestDispatcher의 forward()나 include()를 이용하는 뷰.
+- forward()나 include()는 다른 서블릿을 실행해서 그 결과를 현재 서블릿의 결과로 사용하거나 추가하는 방식.
+- 서블릿을 forward() 용도로 사용하는 일은 드뭄(?).
+- 주로 JSP 서블릿을 통해 JSP 뷰를 적용할 때 사용
+- 서블릿을 웹 계층에서 만들던 때라면 서블릿안에서 RequestDispatcher를 만들어 JSP로 포워딩해주는 방식을 사용했을 것임.(뷰 역할을 하는 .jsp가 HTML페이지를 완성하는데 사용할 다이내믹한 정보는 서블릿 요청의 애트리뷰트에 담아서 전달.)
+    - 컨트롤러가 돌려준 뷰 이름을 포워딩할 JSP의 이름을 사용하고 모델 정보를 요청 애트리뷰트에 넣어주는 작업을 InternalResourceView와 DispatcherServlet이 대신 해주는 것임.
 
+##### JstlView
+- JstlView는 InternalResourceView의 서브클래스
+- 지역정보에 따라 달라지는 지역화된 메시지를 JSP 뷰에 사용할 수 있게 해줌.
 
+<br>
 
+* InternalResourceView/JstlView를 사용하려면 컨트롤러안에서 뷰 오브젝트를 직접생성하는 것보다 `뷰 리졸버를 이용하는 게 편함`.(JSP 파일의 위치를 나타내는 논리적인 뷰 이름만 넘겨주면 됨.)
+* 뷰 오브젝트 대신 뷰 이름이 ModelAndView에 전달되오면 DispatcherServlet은 디폴트 뷰 리졸버로 등록된 InternalResourceViewResolver를 통해 InternalResourceView를 가져와 사용할 것임. 
+* 뷰 리졸버는 보통 뷰 오브젝트를 캐싱하기 때문에 같은 URL의 뷰가 반복적으로 만들어지지 않게 해서 성능 면에서도 유리함.
 
+#### RedirectView
+* HttpServletResponse의 sendRedirect()를 호출해주는 기능을 가진 뷰.
+    - 뷰가 생성되는게 아니라, URL만 만들어져 다른 페이지로 리다이렉트 됨.
+    - 모델정보가 있으면 URL뒤에 파라미터로 추가됨.
+* 컨트롤러가 RedirectView 오브젝트를 직접 생성해서 리턴해도되지만, 뷰리졸버가 인식할 수 있게 `redirect:`로 시작하는 뷰이름을 사용하면 편리함.
+```java
+return new ModelAndView(new RedirectView("/main"));
+
+return new ModelAndView("redirect:/main");
+```
+* 리다이렉트에서 쓰는 url은 'http://' 혹은 '/'으로 시작할 수 있음.
+    - '/'로 시작하는 경우 서버의 루트 URL로부터 시작되야함.
+        - 웹 애플리케이션의 루트 패스가 '/'가 아니라면 생성자나 프로퍼티를 통해 contextRelative를 true로 바꿔줘야함.
+        - contextRelative가 false이면 Redirect url에 웹 컨텍스트 루트까지 써줘야함.
+    - 서블릿 패스또한 자동으로 추가되지 않음.
+#### 그외
+- VelocityView, FreeMarkerView
+- MarshallingView
+- AbstractExcelView, AbstractJExcelView, AbstractPdfView
+- AbstractAtomFeedView, AbstractRssFeedView
+- XsltView, TilesView, AbstractJasperReportsView
+- MappingJacksonJsonView
 
 
 
