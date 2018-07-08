@@ -5,6 +5,20 @@
 
   <context:annotation-config /> <!-- HelloController가 @Autowired를 통해 의존관계를 설정했기 떄문에 사용 -->
 
+  <context:component-scan base-package="org.eminentstar.learningtest.spring.controllers"/>
+
   <!-- bean tag의 name은 id와 달리 문자열의 종류에 제한이 없음. -->
   <bean name="/hello" class="org.eminentstar.temp.HelloController"/>
+
+  <bean name="simpleInterceptor" class="org.eminentstar.interceptor.SimpleInterceptor"/>
+  <bean name="secondInterceptor" class="org.eminentstar.interceptor.SecondInterceptor"/>
+
+  <bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping">
+    <property name="interceptors">
+      <list>
+        <ref bean="simpleInterceptor" />
+        <ref bean="secondInterceptor" />
+      </list>
+    </property>
+  </bean>
 </beans>

@@ -302,6 +302,51 @@ DispatcherServlet은 컨트롤러가 ModelAndView 타입의 오브젝트 대신 
     - true로 설정하면 루트 컨텍스트의 빈도 참조 대상이 되긴한데, 웹에 종속된 컨트롤러 빈은 서블릿 컨텍스트에만 두는게 바람직. 
 
 
+### 3.3.3. 핸들러 인터셉터 
+* 핸들러 매핑의 역할: URL에 매핑된 핸들러를 찾아주는 것 + `핸들러 인터셉터 적용`
+* 핸들러 인터셉터: DispatcherServlet이 컨트롤러를 호출하기 전/후에 요청과 응답을 참조하거나 가공할 수 있는 일종의 필터(서블릿 필터같은 느낌. 서블릿 필터는 뭐지?)
+
+핸들러 매핑은 DispatcherServlet으로 부터 매핑 작업을 요청받으면 그 결과로 HandlerExecutionChain을 돌려줌. 이 HandlerExecutionChain은 하나 이상의 HandlerInterceptor를 거쳐서 컨트롤러가 실행되게끔 구성되어 있음. 인터셉터가 전혀 등록되어 있지 않으면 바로 컨트롤러가 실행됨. 하나 이상의 인터셉터가 지정되었으면 순서에 따라 인터셉터를 거친 후 컨트롤러 호출됨.
+
+* 핸들러 인터셉터는 서블릿 필터와 쓰임새가 유사.
+    - HttpServletRequest/HttpServletResponse뿐만 아니라, 실행될 컨트롤러 빈 오브젝트, 컨트롤러가 돌려주는 ModelAndView, 발생한 예외등을 제공받을 수 있어 서블릿 필터보다 더 정교하게 인터셉터를 만들 수 있음.
+* 핸들러 인터셉터는 스프링 빈이기때문에 DI를 통해서 다른 빈을 활용가능함.
+
+#### HandlerInterceptor
+* HandlerInteceptor 인터페이스를 구현 
+* 3개의 메소드를 구현
+    1. boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler)
+        - 컨트롤러 호출 전 실행. 
+        - handler 파라미터는 핸들러 매핑이 찾아준 컨트롤러 빈 오브젝트 
+        - 컨트롤러 실행이전에 처리해야할 작업이 있다거나 요청정보를 가공하거나 추가하는 경우에 사용. 
+        - 리턴값이 true이면 HandlerExectionChain의 다음단계로 진행. false면 작업을 중단하고 리턴해서 컨트롤러와 남은 인터셉터는 실행되지 않음.  
+    2. void postHandle(HttpServletRequest req, HttpServletResponse res, Object handler, ModelAndView mav)
+        - 컨트롤러가 실행되고 난 다음 호출. 
+        - 일종의 후처리 작업을 진행.
+        - 컨트롤러가 돌려준 ModelAndView 타입 정보가 제공되기에 작업 결과를 참조하거나 가공가능.
+        - preHandle()에서 false를 리턴했을 경우 postHandle()은 실행되지 않음.
+    3. void afterCompletion(HttpServletRequest req, HttpServletResponse res, Object handler, Exception ex)
+        - 뷰에서 최종결과를 생성하는 등의 모든 작업이 완료된 후에 실행.
+        - 요청 처리중 사용한 리소스를 반환해주기에 적당한 메소드.
+* 핸들러 인터셉터는 하나이상 등록 가능. 
+    - preHandle()은 인터셉터가 등록된 순서대로 호출 
+    - postHandle(), afterCompletion()은 preHandle() 순서와 반대. 
+
+* 핸들러 인터셉터는 핸들러 매핑 단위로 등록. 
+* 인터셉터 자체도 하나의 독립적인 빈임.(한번만 등록해주고 각 매핑에 레퍼런스를 여러번 설정해주긴 해야함.)
+
+- 서블릿 필터는 web.xml에 별도 등록해줘야하고, 필터 자체는 스프링 빈이 아님. 하지만 웹 애플리케이션으로 들어오는 모든 요청에 적용된다는 장점. 
+
+* 컨트롤러에 공통적으로 적용할 부가 기능은 핸들러 인터셉터를 사용하는게 좋음.
+    - AOP를 통해 인터셉터의 기능처럼 컨트롤러에 공통적인 부가 기능을 부여할 수도 있긴하지만, 컨트롤러의 타입이 일정하지 않고, 호출 패턴도 정해져 있지 않기 때문에 AOP 적용은 복잡함. 
+    - 스프링 MVC는 모든 종류의 컨트롤러에 동일한 인터셉터를 적용할 수 있게 해줌
+
+
+
+
+
+
+
 
 
 
