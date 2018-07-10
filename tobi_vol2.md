@@ -399,5 +399,61 @@ return new ModelAndView("redirect:/main");
 - XsltView, TilesView, AbstractJasperReportsView
 - MappingJacksonJsonView
 
+### 3.4.2. 뷰 리졸버 
+* 뷰 리졸버는 뷰 이름으로 부터 사용할 뷰 오브젝트를 만들어줌.
+* 뷰 리졸버를 빈으로 등록하지 않으면 DispatcherServlet의 디폴트 뷰 리졸버인 InternalResourceViewResolver 가 사용됨.
+* 하나 이상의 뷰 리졸버를 빈으로 등록 가능.
+
+
+#### InternalResourceViewResolver
+* 디폴트 뷰 리졸버 
+* 단순한 예제를 만드는게 아니면 디폴트로 등록된 기본상태의  InternalResourceViewResolver를 그대로 사용하는 일은 피해야함.
+* 디폴트 상태로 사용하게 되면 뷰로 사용할 템플릿의 full path; e.g. `/WEB-INF/view/hello.jsp`를 다 적어줘야함. 
+* suffix, prefix 프로퍼티를 통해 생략가능함.(뷰리졸버를 빈으로 등록하는 설정을 해줘야함.)
+    - 이렇게 되면 뷰 리졸버가 뷰 이름을 이용해 포워딩할 때 앞뒤에 붙여주는 내용을 지정함.
+* 뷰와 관련된 DispatcherServlet 전략중에 `RequestToViewNameTranslator`라는 것이 있음.
+    - 컨트롤러가 뷰 이름을 넘겨주지 않았을 경우 URL을 이용해서 자동으로 뷰 이름을 만들어줌.
+* InternalResourceViewResolver는 JSTL 라이브러리가 클래스패스상에 존재하면 JstlView(JSTL 부가기능을 지원하는)를 사용하고, 존재하지 않으면 InternalResourceView를 사용함.
+
+#### VelocityViewResolver, FreeMarkerViewResolver
+- JSP와는 다르게 템플릿의 경로를 만들때 사용할 루트 패스를 VelocityConfigurer, FreeMarkerConfigurer로 지정해줘야 함.
+
+#### ResourceBundleViewResolver, XmlViewResolver, BeanNameViewResolver
+* ResourceBundleViewResolver, XmlViewResolver는 외부 리소스 파일에 각 뷰 이름에 해당하는 뷰 클래스와 설정을 저장하고 이를 참조함.
+
+##### ResourceBundleViewResolver
+* 기본적으로 views.properties 파일에서 뷰 이름으로 시작하는 키르 ㄹ찾아 뷰 클래스와 url등의 정보를 가져와 뷰를 생성함.
+* 장점: 독립적인 파일을 이용해 뷰를 자유롭게 매핑할 수 있다.
+* 단점: 모든 뷰를 일일이 파일에 정의해야함/뷰에서 다른 빈을 참조하는 경우 프로퍼티 파일 사용이 어려움.
+
+##### XmlViewResolver
+* xml의 빈 설정파일을 이용해 뷰를 등록(뷰 이름과 일치하는 아이디를 가진 빈을 뷰로 사용.)
+* 서블릿 컨텍스트를 부모 컨텍스트로 갖는 애플리케이션 컨텍스트로 만들어짐. 
+* 빈 설정을 사용하기 때문에 DI를 자유롭게 이용할 수 있음.
+
+##### BeanNameViewResolver
+* 뷰 이름과 동일한 빈 이름을 가진 빈을 찾아서 뷰로 사용하게 해줌.
+* 서블릿 컨텍스트의 빈을 사용함.
+
+
+> 템플릿 파일을 사용하는 뷰가 아닌 경우 컨트롤러에서 뷰 오브젝트를 직접 리턴하는 방법과 설정 파일을 이용해서 뷰를 매핑해주는 방법 중에 한가지를 선택해 사용하면 됨.
+
+#### ContentNegotiatingViewResolver
+* 뷰 이름으로부터 직접 뷰 오브젝트를 찾아주지 않음.
+* 미디어 타입을 이용해서 다른 뷰 리졸버에게 뷰 찾는 일을 위임한후에 적절한 뷰를 선정해서 돌려줌.
+* ContentNegotiatingViewResolver의 뷰 결정 과정 
+    1. 미디어 타입 결정
+        - 요청정보로부터 사용자가 요청할 미디어 타입정보 추출
+        - 4가지 방법(URL 확장자 이용/파라미터 이용/Accept 헤더 이용/디폴트 이용)
+    2. 뷰 리졸버 위임을 통한 후보 뷰 선정
+        - 컨트롤러가 돌려준 뷰 이름을 모든 후보 뷰 리졸버에 보내 사용 가능한 뷰를 확인
+        - ContentNegotiatingViewResolver를 사용하는 경우에는 다른 뷰 리졸버를 독립적으로 사용하지 않음. 
+        - defaultVeiws 프로퍼티를 이용해서 디폴트 뷰를 등록해주면 디폴트 뷰는 뷰 리졸버의 조회 결과에 상관없이 무조건 후보 뷰로 추가됨.
+    3. 미디어 타입 비교를 통한 최종 뷰 선정
+        - 요청정보의 미디어 타입과 뷰 리졸버에서 찾은 후보 뷰 리스트를 비교해 사용할 뷰 선정.
+
+
+> InternalResourceViewResolver는 `new JstlView("/WEB-INF/jsp/content.jsp")`와 같이 생성된 뷰를 돌려줄 것임.
+> 그렇다면 모든 url에 대해 요청이 한번씩은 들어왔다고 가정한다면 ViewResolver는 각 JSP템플릿을 이용한 JstlView 오브젝트를 하나씩 생성해서 캐싱하고 있다고 보면 될라나?
 
 

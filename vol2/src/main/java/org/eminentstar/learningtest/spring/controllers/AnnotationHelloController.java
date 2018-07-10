@@ -11,6 +11,16 @@ public class AnnotationHelloController {
   @RequestMapping("/hello")
   public String hello(@RequestParam(defaultValue = "default") String name, ModelMap map) {
     map.put("message", "Hello " + name);
-    return "/WEB-INF/view/hello.jsp";
+    return "hello";
   }
+
+  /**
+   * 뷰와 관련된 DispatcherServlet 전략중에 `RequestToViewNameTranslator`라는 것이 있음.
+   * 컨트롤러가 뷰 이름을 넘겨주지 않았을 경우 URL을 이용해서 자동으로 뷰 이름을 만들어줌.
+   */
+  @RequestMapping("/translator")
+  public void translator(@RequestParam(defaultValue = "default") String name, ModelMap map) {
+    map.put("message", "Hello " + name);
+  }
+
 }
