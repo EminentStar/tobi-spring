@@ -457,3 +457,31 @@ return new ModelAndView("redirect:/main");
 > 그렇다면 모든 url에 대해 요청이 한번씩은 들어왔다고 가정한다면 ViewResolver는 각 JSP템플릿을 이용한 JstlView 오브젝트를 하나씩 생성해서 캐싱하고 있다고 보면 될라나?
 
 
+## 3.5. 기타 전략
+### 3.5.1. 핸들러 예외 리졸버
+* 컨트롤러의 작업중에 발생한 예외를 어떻게 처리할지 결정하는 전략.
+* 보통 컨트롤러/그 밑 레이어에서 예외가 던져지면 DispatcherServlet이 전달받아 서블릿 밖으로 던져서 서블릿 컨테이너가 처리하게 됨.
+    - 좀 더 친절하게 web.xml에 `<error-page>`를 지정해서 예외가 발생했을 때 JSP 안내 페이지를 보여줄 수도 있음.
+* HandlerExceptionResolver가 등록되있으면 DispatcherServlet은 예외 발생시 먼저 HandlerExceptionResolver에게 처리할 수 있는지 확인.
+    - 처리할 수 있다면 예외를 DispatcherServlet 밖으로 던지지 않고 해당 HandlerExceptionResolver가 처리함.
+
+#### AnnotationMethodExceptionHandler
+* 예외가 발생한 `컨트롤러 내의 메소드 중`에서 `@ExceptionHandler` 애노테이션이 붙은 메소드를 찾아 예외처리를 맡겨주는 핸들러 예외 리졸버
+* 특정 예외 클래스를 애노테이션에 지정할 수 있음.
+* ExceptionHandler에서 ModelAndView를 리턴하게 되면 DispatcherServlet에서 컨트롤러가 ModelAndView를 리턴한 것 처럼 뷰를 통해 결과를 만들어줌.
+
+#### ResponseStatusExceptionHandler
+* 예외를 특정 HTTP 응답 상태코드로 전환해주는 것.(좀 더 의미있는 HTTP 상태로)
+* ResponseStatusExceptionHandler는 발생한 예외의 클래스에 @ResponseStatus가 있는지 확인하고, 만약 있다면 애노테이션에 지정해둔 HTTP 응답 상태코드를 클라이언트에 전달함. 
+* 단점: @ResponseStatus를 붙일 수 있는 예외 클래스를 만들어 사용해야함. 
+
+#### DefaultHandlerExceptionResolver
+* 위 두가지 ExceptionResolver에서 처리하지 못한 예외를 다루는 마지막 ExceptionHandler
+* 스프링 내부적으로 발생하는 주요 예외를 처리해주는 표준 예외처리 로직을 담고 있음.
+* 스프링 MVC 내부에서 발생하는 예외를 다루는 것이므로 신경쓰지 않아도 됨.
+
+#### SimpleMappingExceptionHandler
+* web.xml의 `<error-page>`와 유사하게 예외를 처리할 뷰를 지정할 수 있음.
+* 디포트 빈이 아니기에 직접 빈등록 해야함.
+* 모든 컨트롤러에서 발생하는 예외에 일괄적용 가능
+> 예외 발생시 로그 기록/알람 같은 경우는 HandlerInterceptor의 afterCompletion()에서 처리하는 게 좋음.
