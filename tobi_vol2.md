@@ -485,3 +485,21 @@ return new ModelAndView("redirect:/main");
 * 디포트 빈이 아니기에 직접 빈등록 해야함.
 * 모든 컨트롤러에서 발생하는 예외에 일괄적용 가능
 > 예외 발생시 로그 기록/알람 같은 경우는 HandlerInterceptor의 afterCompletion()에서 처리하는 게 좋음.
+
+### 3.5.2. 지역정보 리졸버
+* LocaleResolver는 애플리케이션에서 사용하는 지역정보를 결정하는 전략. 
+* AcceptHeaderLocaleResolver: HTTP 헤더의 지역정보를 그대로 활용. 
+    - 브라우저 설정을 따름.
+* 브라우저 설정을 따르지 않고 사용자가 직접 변경하도록 만드려면 SessionLocaleResolver/CookieLocaleResovler를 사용하는 것이 편리
+    - HTTP 세션이나 쿠키에 들어 있는 값을 확인해 애플리케이션의 지역정보를 결정.
+
+### 3.5.3. 멀티파트 리졸버 
+* 멀티파트 포맷의 요청정보를 처리하는 전략 설정. 
+* DispatcherServlet은 멀티파트 요청을 받으면 MultipartResolver에게 요청해서 HttpServletRequest를 MultipartHttpServletRequest로 전환함.
+
+### RequestToViewNameTranslator
+* 컨트롤러가 Dispatcher에게 뷰 이름이나 뷰 오브젝트를 전달하지 않았을 경우 HTTP 요청정보를 참고해서 뷰 이름을 생성해주는 로직를 담음.
+* 디폴트로 DefaultRequestToViewNameTranslator 전략 등록. 
+    - URL을 기준으로 뷰 이름 결정 
+    - 기본 URL에서 확장자를 제거한 것을 뷰 이름으로 사용함.
+
