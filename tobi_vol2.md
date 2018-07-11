@@ -515,7 +515,7 @@ return new ModelAndView("redirect:/main");
     - 다음 요청에서 한번 사용되고 바로 제거됨
     - 주로 Post/Redirect/Get 패턴을 사용하는 경우 Post 요청에서의 작업 결과 메시지를 redirect되는 페이지로 전달할 때 주로 사용함.
 * **Post/Redirect/Get 패턴**
-    -  POST 요청의 결과로 뷰를 보여주게 되면, 이때 나오는 웹페이지는 POST 요청의 결과이기 때문에 브라우저에서 새로고침을 하게 되면 동일한 POST 요청으로 폼 결과가 재전송되기에 사용자 정보가 중복되어 저장될 위험이 있음.
+    -  POST 요청의 결과로 뷰를 보여주게 되면, 이때 나오는 웹페이지는 POST 요청의 결과이기 때문에 브라우저에서 새로고침을 하게 되면 동일한 POST 요청으로 폼 결과가 재전'/송되기에 사용자 정보가 중복되어 저장될 위험이 있음.
     - 그래서 POST의 작업을 마친 후에 `RedirectView`를 이용해서 아예 다른 URL을 가진 페이지로 이동시키는 것이 권장됨.
 * 새로운 페이지로 리다이렉트하는 경우 HTTP 요청이 바뀌기에 컨트롤러가 모델을 이용해서 다음 요청의 뷰로 정보를 전달할 수 없음.
     - 리다이렉트 하는 url에 파라미터로 담거나, 세션을 사용해야함.
@@ -525,8 +525,48 @@ return new ModelAndView("redirect:/main");
 * ajax와 같이 액션없이 서버에 수시로 요청을 보내는 기능을 가진 웹 페이지에선 POST/Redirect 사이에 다른 요청이 끼어들 위험도 있음
     - 특정 페이지의 요청에서만 처리하도록 지정할 수 있음. 
 
+#### 플래시 맵 매니저 
+* 플래시 맵을 저장/유지/조회/제거 하는 등의 작업을 담당하는 오브젝트.
 
+#### 플래시 맵 매니저 전략 
+* 플래시맵을 저장하는 방법은 세션이나, 디비등에 가능.
 
 ### 3.6.2. WebApplicationInitializer를 통한 컨텍스트 등록
+* 서블릿 3.0은 이전까지 웹 애플리케이션 구성에 web.xml 파일만 단독으로 사용하던 것을 벗어나, 설정 방식을 모듈화해서 관리하는 방법을 도입.
+* 프레임워크 모듈에서 직접 서블릿 컨텍스트를 초기화할 수 있게 도와주는 ServletContainerInitializer 같은 API가 제공됨.
+    - `서블릿 컨테이너를 초기화한다는 것은 web.xml에서 했던 주요한 설정 작업들, 대표적으로 서블릿 등록과 매핑, 리스너 등록, 필터 등록 같은 작업을 말함`
+* 스프링 3.1에서는 ServletContainerInitializer를 이용하면 스프링 컨텍스트 설정과 등록 작업에 자바 코드를 이용할 수 있다. 
+    - 스프링의 웹 모듈 내에 ServletContainerInitializer를 구현한 클래스가 포함되어 있음.
+    - WebApplicationInitializer 인터페이스를 구현한 클래스를 찾아 컨텍스트의 초기화 작업을 위임.
+
+* **WebApplicationInitializer를 구현한 클래스를 만들어두면 웹 애플리케이션이 시작될 때 onStartup() 메소드가 자동으로 실행됨.**
+    - 이때 메소드 파라미터로 ServletContext 오브젝트가 전달되는데, 이를 이용해 필요한 컨텍스트 등록 작업을 수행하면 됨.
+    - `이 방법을 이용하면 기존에 web.xml내에 <listener>나 <servlet>을 이용해 등록했던 루트 컨텍스트나 서블릿 컨텍스트를 자바 코드에서 직접 등록하고 생성할 수 있음.`
+
+#### 루트 웹 컨텍스트 등록 
+* 기존에 루트 컨텍스트는 web.xml에서 서블릿 컨텍스트 리스너 형태로 등록.
+* 리스너로 등록되는 **ContextLoaderListener**는 기본적으로 `/WEB-INF/applicationContext.xml`를 설정파일로 사용하는 XmlWebApplicationContext 타입의 애플리케이션 컨텍스트를 생성하고, 생성된 컨텍스트를 서블릿 컨텍스트의 애트리뷰트로 등록해서 다른 곳에서 손쉽게 가져다 사용할 수 있게 해줌.
+    - (`서블릿의 리스너에 대해서 한번 공부를 또 해봐야할 듯.`)
+```xml
+  <!-- (리스너를 이용한) 루트 웹 애플리케이션 컨텍스트 생성. -->
+  <listener>
+    <display-name>ContextLoader</display-name>
+    <listener-class>
+      org.springframework.web.context.ContextLoaderListener
+    </listener-class>
+  </listener>
+```
+
+* 리스너란 서블릿 컨텍스트가 생성하는 이벤트를 전달받도록 만들어진 것.(이벤트 리스너)
+    - 서블릿 컨텍스트가 만드는 이벤트는 `컨텍스트 초기화/종료 이벤트`. 웹 애플리케이션이 시작되고 종료되는 시점에 이벤트가 발생하고, 리스너를 만들어두면 두가지 이벤트를 전달받게 됨.
+    - **스프링이 리스너를 이용해 루트 애플리케이션 컨텍스트를 생성하는 이유는 루트 컨텍스트의 생명주기가 서블릿 컨텍스트와 일치하기 때문.**(서블릿 컨텍스트가 초기화/종료될 때 루트 컨텍스트도 초기화/종료 될 필요가 있음.)
+    - 이렇게 웹 애플리케이션과 같은 범위 동안 유지되는 서비스를 관리하기 위해 리스너가 사용됨.
+* WebApplicationInitializer를 구현한 코드는 서블릿 컨텍스트가 초기화 될 때 자동으로 실행되니 초기화 시점을 고려할 필요는 없음.
+    - 하지만 서블릿 컨텍스트 종료 시점은 파악할 수 없기때문에, WebApplicationInitializer를 사용하더라도 루트 컨텍스트는 리스너를 이용해 관리하는게 좋음.
+
+* 기존 루트 컨텍스트를 web.xml에서 리스너를 등록해서 생성하는 방법에서, 디폴트 루트 컨텍스트인 XmlWebApplicationContext 대신 AnnotationConfigWebApplicationContext가 사용되게 한다거나, 디폴트 XML 설정파일인 /WEB-INF/applicationContext.xml 외의 파일을 추가하고 싶다면 ContextLoaderListener가 참고 할 수 있게 컨텍스트 클래스와 설정파일 위치 정보를 별도로 제공해야함.
+    - 컨텍스트 초기화 파라미터를 이용해서 전달 가능.
+
+
 
 ## 3.7. 정리
