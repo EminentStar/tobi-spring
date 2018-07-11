@@ -6,21 +6,21 @@ import javax.servlet.ServletException;
 
 import org.springframework.web.WebApplicationInitializer;
 import org.springframework.web.context.ContextLoaderListener;
+import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 
 public class ServletInitializer implements WebApplicationInitializer {
   @Override
   public void onStartup(ServletContext servletContext) throws ServletException {
-    /*
-     * 서블릿 컨텍스트 종료 시점은 파악할 수 없기때문에,
-     * WebApplicationInitializer를 사용하더라도 루트 컨텍스트는 리스너를 이용해 관리하는게 좋음.
-     * */
-    ServletContextListener listener = new ContextLoaderListener();
-    servletContext.addListener(listener);
+    // 직접 컨텍스트 오브젝트 생성
+    AnnotationConfigWebApplicationContext ac = new AnnotationConfigWebApplicationContext();
 
-    /*
-    * web.xml에서의 컨텍스트 파라미터 설정 부분
-    * */
-    servletContext.setInitParameter("contextClass", "org.springframework.web.context.support.AnnotationConfigWebApplicationContext");
-    servletContext.setInitParameter("contextConfigLocation", "org.eminentstar.conf");
+    // @Configuration 클래스 정보 등록
+    ac.scan("org.eminentstar.conf");
+    // register()를 통해서 @Configuration 클래스 하나만 등록할 수도 있음.
+//    ac.register(ApiConfig.class);
+
+    // 컨텍스트 오브젝트를 ContextLoaderListener의 생성자 파라미터로 전달해서 리스너를 만들어 등록
+    ServletContextListener listener = new ContextLoaderListener(ac);
+    servletContext.addListener(listener);
   }
 }
