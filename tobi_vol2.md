@@ -580,8 +580,29 @@ return new ModelAndView("redirect:/main");
 
 > **여기까지 했다면 초기화 작업까지 마친 루트 컨텍스트 오브젝트를 리스너에 담아서 서블릿 컨텍스트에 추가해주면 루트 컨텍스트 등록 부분은 마무리가 됨.**
 
-
 #### 서블릿 컨텍스트 등록
+* 서블릿 컨텍스트는 서블릿 안에서 초기화되고 서블릿이 종료될 때 같이 종료됨.
+    - 이때 사용되는 서블릿이 DispatcherServlet
+* 서블릿 컨텍스트를 만드는 XML에서 서블릿 등록시 `서블릿 이름/클래스/서블릿 로딩 조건/매핑 URL 패턴`이 담겨져 있음.
+* 서블릿 컨텍스트를 DispatcherServlet의 디폴트 설정과 다르게 만드려면 `<init-param>`을 사용.
+    - ServletRegistration.Dynamic 오브젝트의 setInitParameter()를 통해 등록가능.
 
+* 서블릿 컨텍스트를 직접만들고 초기화해서 DispatcherServlet의 생성자로 전달해도 됨.
+
+> WebApplicationInitializer 인터페이스를 구현한 클래스를 넣어두면 스프링과 관려된 모든 설정을 web.xml에서 제거할 수 있음.
+> web.xml과 WebApplicationInitializer를 같이 사용하는 경우 web.xml의 `<web-app>` 루트 엘리먼트 버전이 반드시 3.0이어야함.
+
+* **web.xml 및 xml 설정정보를 WebApplicationInitializer를 이용하도록 했을 때 처음에 안됬던 이유(디버깅)**
+    - 우선 web.xml을 deployment descriptor로 사용하던 것에서 web.xml을 제거하는 방식으로 변경했을 때 인텔리제이 프로젝트의 proejct structure에서 module의 Web의 Deployment Descriptor가 web.xml.bak에 레퍼런스로 박혀잇던걸 제거하니 우선 해당 이슈는 넘어가고 웹앱이 잘 떴음.
+    - 근데 또 CGLIB가 없어서 @Configuration 클래스를 읽을 수 없었음. pom에 cglib추가하니 되긴 했는데, 이게 왜 이런건지 파악이 필요함.
+        - (이런 이슈가 뜨는데, 이게 일어나는 이유와 CGLIB가 하는일들, 그리고 @Configuration을 진행하는데 왜 CGLIB가 필요한지를 파악해보자.)
 
 ## 3.7. 정리
+* 스프링 MVC의 핵심엔진인 `DispatcherServlet`은 7가지 종류의 전략을 제공함. 
+    - 각 전략은 빈으로 등록하고 설정할 수 있음. 직접하지 않으면 디폴트 전략 구성을 활용.
+* DispatcherServlet은 컨트롤러를 직접 호출하지 않고 핸들러 어댑터를 통해 호출함. 
+* 핸들러 매핑은 다양한 전략을 통해 요청정보와 이를 처리하는 컨트롤러를 연결 
+* 핸들러 인터셉터는 컨트롤러 수행 전/후에 적용할 부가기능을 만들때 사용 
+* 뷰 리졸버는 컨트롤러가 리터하는 논리적인 뷰 이름을 이용해 뷰 오브젝트를 찾아줌.
+* 핸들러 예외 리졸버를 통해 애플리케이션에서 발생한 예외를 처리하는 방법 지정
+* 스프링 3.1에서는 플래시 맵 매니저 전략이 추가됐고, WebApplicationInitializer를 이용해 컨텍스트 생성과 등록을 위한 초기화 코드를 작성할 수 있음.

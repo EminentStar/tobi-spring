@@ -35,7 +35,7 @@
     <param-value>org.eminentstar.conf</param-value>
   </context-param>
 
-  <!-- 서블릿 웹 애플리케이션 컨텍스트 설정 -->
+  <!--(서블릿 컨텍스트 설정을 위한 서블릿 항목) 서블릿 웹 애플리케이션 컨텍스트 설정 -->
   <servlet>
     <servlet-name>spring</servlet-name>
     <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
@@ -46,5 +46,12 @@
     <servlet-name>spring</servlet-name>
     <url-pattern>/app/*</url-pattern>
   </servlet-mapping>
+  <!--
+  위의 서블릿 컨텍스트 설정을 자바코드로 바꾸면,
+
+  ServletRegistration.Dynamic dispatcher = servletContext.addServlet("spring", new DispatcherServlet());
+  dispatcher.setLoadOnStartup(1);
+  dispatcher.addMapping("/app/*");
+  -->
 
 </web-app>
