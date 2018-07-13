@@ -16,6 +16,7 @@
    - `REQUIRES_NEW`와는 다름.
    - 중첩 트랜잭션은 자신의 부모의 커밋/롤백엔 영향을 받으나 중첩 트랜잭션 자신의 커밋/롤백은 부모 트랜잭션에 영향을 주지 못함.
 
+<hr>
 
 # Chap 03: 스프링 웹 기술과 스프링 MVC
 * 웹 프레젠테이션 계층: 엔터프라이즈 애플리케이션의 가장 앞단에서 사용자 또는 클라이언트 시스템과 연동하는 책임을 맡고 있음.
@@ -606,3 +607,148 @@ return new ModelAndView("redirect:/main");
 * 뷰 리졸버는 컨트롤러가 리터하는 논리적인 뷰 이름을 이용해 뷰 오브젝트를 찾아줌.
 * 핸들러 예외 리졸버를 통해 애플리케이션에서 발생한 예외를 처리하는 방법 지정
 * 스프링 3.1에서는 플래시 맵 매니저 전략이 추가됐고, WebApplicationInitializer를 이용해 컨텍스트 생성과 등록을 위한 초기화 코드를 작성할 수 있음.
+
+<hr>
+
+# Chap 04: 스프링 @MVC
+애노테이션 중심의 새로운 MVC 확장기능은 @MVC라는 별칭으로 부르기도 함.(애노테이션 기반 MVC)
+
+## 4.1. @RequestMapping 핸들러 매핑
+* @MVC의 가장 큰특징은 핸들러 매핑과 핸들러 어댑터의 대상이 오브젝트가 아니라 `메소드`
+* @MVC에선 모든 것이 메소드 레벨로 세분화 
+    - 애노테이션은 타입(클래스, 인터페이스) 레벨 뿐만 아니라 메소드 레벨에도 적용이 가능 
+* 애노테이션은 부여되는 대상의 타입이나 코드에는 영향을 주지 않는 메타 정보이기에 유연하게 컨트롤러를 구성할 수 있음. 
+* @MVC 핸들러 매핑을 위해선 `DefaultAnnotationHandlerMapping`이 필요. 
+
+### 4.1.1. 클래스/메소드 결합 매핑정보 
+* DefaultAnnotationHandlerMapping의 핵심은 `매핑정보로 @RequestMapping 애노테이션`을 활용한다는 점.
+* @RequestMapping은 타입레벨 뿐만 아니라 메소드 레벨에도 붙일 수 있음.
+    - 스프링은 이 두 위치에 붙은 @RequestMapping 정보를 결합해서 최종 매핑정보를 생성.
+* 기본적인 결합방법은 타입 레벨의 @RequestMapping정보를 기준으로 삼고, 메소드 레벨의 @RequestMapping 정보는 타입 레벨의 매핑을 좀 더 세분화하는데 사용.
+
+#### @RequestMapping 애노테이션
+##### String[] values(): URL 패턴 
+* URL 패턴을 지정.
+* 와일드카드를 사용할 수도 있음. 
+```java
+@RequestMapping("/hello")
+@RequestMapping("/main*")
+@RequestMapping("/view.*")
+@RequestMapping("/admin/**/user")
+```
+* {}를 사용하는 URL템플릿을 사용할 수도 있음.
+    - {}위치에 해당하는 내용을 컨트롤러 메소드에서 파라미터로 전달 받을 수 있음.
+    - {}에 들어가는 이름은 `path variable`이라 불리고, 하나이상 등록 가능.
+```java
+@RequestMapping("/user/{userid}")
+```
+* 하나 이상의 URL 패턴 정의 가능.
+```java
+@RequestMapping({"/hello", "/hi"})
+```
+
+* **default suffix pattern**이 적용됨.
+```java
+@RequestMapping("/hello") // 이 URL을 지정했다고 하면
+// 아래와 같은 3개의 URL 패턴을 적용했을 때와 동일한 결과가 나옴.
+@RequestMapping({"/hello", "/hello/", "/hello.*"})
+// "/hello"라고 정의하면 "/hello.do", "/hello.html"과 같이 확장자가 붙은 URL이나, "/hello/"처럼 끝에 /가 붙은 URL도 자동 매핑됨.
+```
+##### RequestMethod[] method(): HTTP 요청 메소드 
+* 같은 URL이더라도 요청 http 메소드에 따라 다른 컨트롤러 메소드에 매핑해줄 수 있음.
+
+> HTML의 폼에서는 GET과 POST만 지원하기 때문에 PUT, DELETE 같은 요청 메소드를 사용하기가 쉽지 않음. 
+> 이런 요청 메소드를 사용하려면 js나, 스프링이 지원하는 커스텀 태그인 `<form:form>`을 이용해서 히든 필드를 통해 HTTP 메소드를 전달하는 방법이 있음. 
+
+##### String[] params(): 요청 파라미터 
+* 요청 파라미터와 그 값을 비교해서 매핑해주는 것.
+* 같은 URL을 사용하더라도 http 요청 파라미터에 따라 별도 작ㅇ버을 해주고 싶을 때가 있음.
+    - 코드에서 파라미터 체크 후 기능 분리하는 대신 @RequestMapping에 매핑을 위한 요청 파라미터를 지정해줄 수 있음. 
+```java
+@RequestMapping(value="/user/edit", params="type=admin")
+@RequestMapping(value="/user/edit", params="type=member")
+@RequestMapping(value="/user/edit")
+```
+* URL구분이 좀 더 상세한 쪽이 선택됨.
+* 폼에서 POST로 전송한 폼 파라미터도 비교 대상임.
+* 특정파라미터가 존재하지 않아야 한다는 조건을 지정할 수도 있음.
+```java
+@RequestMapping(value="/user/edit", params="!type")
+```
+
+##### String[] headers(): HTTP 헤더
+```java
+@RequestMapping(value="/view", headers="content-type=text/*")
+```
+
+#### 타입 레벨 매핑과 메소드 레벨 매핑의 결합 
+* 타입(클래스/인터페이스) 레벨에 붙은 @RequestMapping은 타입 내의 모든 매핑용 메소드의 공통 조건을 지정할 때 사용.
+    - 그후 메소드 레벨에서 조건을 세분화해줌.
+```java
+@RequestMapping("/user")
+public class UserController {
+    @RequestMapping("/add")
+    public String add(...) {}
+    @RequestMapping("/edit")
+    public String edit(...) {}
+    @RequestMapping("/delete")
+    public String delete(...) {}
+}
+```
+* 타입 레벨 URL 패턴에 `*나 **`를 사용했을 때도 URL을 결합가능.
+    - 타입레벨에서 /user/* 를 사용했을 경우 메소드 레벨에 /add가 선언되있으면 /user/add 로 결함.
+        - 타입 레벨이 /user, /user/, /user/* 중 하나로 되어있으면 메소드레벨에 /add라 선언되있으면 /user/add로 결합가능
+    - 타입레벨에서 /user/** 를 사용했을 경우 메소드 레벨에 /add는 /user/**/add로 결합.
+
+* **타입 레벨에서 공통 매핑조건을 정의하고 각 메소드에서 세분화된 매핑조건을 추가한다는 개념만 있으면 어떤식이든 결합가능**
+
+#### 메소드 레벨 단독 매핑
+* 타입 레벨에 조건을 주지 않고 메소드 레벨에만 매핑정보를 지정할 수도 있음.
+    - 타입 레벨에는 조건이 없는 @RequestMapping을 붙이기만 하면 됨.
+    - 타입 레벨에 @RequestMapping을 주지 않게되면 클래스 자체가 매핑 대상이 되지 않아 텅빈 @RequestMapping이라도 부여해줘야함.
+    - 컨트롤러 클래스에 @Controller 애노테이션을 붙여 빈 자동스캔 방식으로 등록되게하면 @RequestMapping을 생략할 수 있음.(스프링이 @Controller 애노테이션을 보고 애노테이션 방식을 사용한 클래스라고 판단)
+
+#### 타입 레벨 단독 매핑
+* 애노테이션 영향으로 매핑 방법이 메소드까지 세분화되긴 했지만, 다른 컨트롤러와의 일관성을 위해 애노테이션 방식의 핸들러 매핑에서도 일단 오브젝트까지만 매핑하고, 최종 실행할 메소드는 핸들러 어댑터가 선정함.
+* 그래서 @RequestMapping을 타입 레벨에서 단독으로 사용해서 다른 컨트롤러에 대한 매핑을 위해 사용할 수도 있음.
+```java
+@RequestMapping("/hello")
+public class HelloController implements Controller {
+    ...
+}
+```
+* 원칙적으로 핸들러 매핑과 핸들러 어댑터는 독립적으로 조합될 수 있기 때문에 적용가능한 방식.
+
+* 클래스 레벨에선 `/*`로 끝나게하고 메소드 레벨에는 빈 @RequestMapping 애노테이션만 부여해주면 메소드 이름이 URL 대신 적용됨.
+```java
+@RequestMapping("/user/*")
+public class UserController {
+    @RequestMapping public String add(...) {} // /user/add 에 매핑
+    @RequestMapping public String edit(...) {} // /user/edit 에 매핑
+}
+```
+
+### 4.1.2. 타입 상속과 매핑
+1. @RequestMapping 정보는 상속됨.
+2. 단, 서브클래스에서 @RequestMapping을 재정의하면 슈퍼클래스의 정보는 무시됨.
+
+* 인터페이스 구현에 의한 @RequestMapping 정보 상속은 클래스 상속과 약간 차이가 있음. 주의.
+
+#### 매핑정보 상속의 종류
+1. 상위 타입과 메소드의 @RequestMapping 상속
+2. 상의 타입의 @RequestMapping과 하위 타입 메소드의 @RequestMapping 결합 
+3. 상위 타입 메소드의 @RequestMapping과 하위 타입의 @RequestMapping 결합 
+    - 인터페이스를 구현하는 메소드에 URL이 없는 빈 @RequestMapping을 부이면 인터페이스 메소드의 매핑정보가 무시됨. 주의.
+    - 제네릭스와 결합하면 매우 편리하게 활용할 수 있는 추상 클래스 만들 수 있음.
+4. 하위 타입과 메소드의 @RequestMapping 재정의 
+5. 서브클래스 메소드의 URL 패턴 없는 @RequestMapping 재정의
+    - 클래스 상속에서 오버라이드한 하위 메소드에 한해 URL 조건이 없는 @RequestMapping을 붙였을 경우 상위 메소드의 @RequestMapping의 URL 조건이 그대로 상속됨.
+
+#### 제네릭스와 매핑정보 상속을 이용한 컨트롤러 작성
+* 타입만 달라지는 중복코드이면 제네릭스의 타입 파라미터를 가진 슈퍼클래스로 공통코드를 뽑아내는 것이 좋음. 
+    - 동시에 매핑정보의 일부, 즉 URL의 일부가 중복되는 것도 슈퍼 클래스에 미리 정의해둘 수 있음.
+* CRUD성 컨트롤러의 코드는 도메인 오브젝트만 바뀐채로 반복될 것임.
+* 컨트롤러의 역할에서 파라미터 파싱, 요청 정보 검증, 뷰 선택 로직 등은 모두 컨트롤러 밖으로 분리할 수 있음.(이부분 이해 못햇음.)
+
+
+
