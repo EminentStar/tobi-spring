@@ -782,4 +782,43 @@ public class UserController {
 * 스프링은 메소드의 파라미터와 리턴값이 어떻게 선언됬는지 보고,이를 이용해 적절한 파라미터 값을 준비해서 호출함. 리턴 값도 타입에 따라 적절한 방식으로 사용.
 
 
+### 4.2.1. 메소드 파라미터의 종류 
+* HttpServletRequest,HttpServletResponse
+    - 주의: HttpServletResponse를 파라미터에 추가하면 핸들러 리턴타입이 void일 떄 RequestToViewNameTranslator가 적용이 안됨.
+* HttpSession
+    - HttpSession은 HttpServletRequest를 통해 가져 올 수 있긴 하지만 세션만 필요한 경우라면 위의 파라미터 선언.
+    - 서버에 따라 멀티스레딩 환경에서 안전성이 보장되지 않음 (why?)
+* WebRequest, NativeWebRequest
+    - HttpServletRequest의 요청정보를 대부분 그대로 가지고 있는 서블릿 API에 종속적이지 않은 오브젝트 타입.
+* Locale
+    - DispatcherServlet의 Locale Resolver가 결정한 Locale 오브젝트를 받을 수 있음.
+* InputStream, Reader
+    - HttpServletRequest의 getInputStream()을 통해 받을 수 있은 콘텐트 스트림 혹은 Reader타입 오브젝트 제공받을 수 있음.
+* OutputStream, Writer
+    - HttpServletResponse의 getOutputStream()을 통해 가져올 수 있는 출력용 콘텐트 스트림 또는 Writer 타입 오브젝트를 받을 수 있음.
+* `@PathVariable`
+    - @RequestMapping의 URL에 {}로 들어가는 path variable을 받음.
+    - 요청 파라미터를 쿼리 스트링 대신 url 패스로 풀어 쓰는 방식을 쓸 때 유용
+    - URL의 `{}`에는 패스 변수를 넣고, 이 이름을 `@PathVariable`  애노테이션의 값으로 넣어서 메소드 파라미터에 부여.
+    - 여러개를 선언할 수도 있음. 
+    - 타입이 맞지 않으면 400 에러
+* `@RequestParam`
+    - 단일 HTTP 요청 파라미터를 메소드 파라미터에 넣어주는 애노테이션
+    - 요청 파라미터의 이름을 @RequestParam의 기본 값으로 지정해주면 됨.
+    - 하나 이상의 파라미터에 적용가능.
+    - 스프링 내장 변환기가 다룰 수 있는 모든 타입을 지원.
+    - @RequestParam에 파라미터 이름을 지정하지 않고 `Map<String, String> 타입으로 선언하면 모든 요청 파라미터를 담은 맵을 받을 수 있음.`
+    - @RequestParam을 사용했다면 해당 파라미터가 반드시 있어야만 함.
+        - 없으면 400 에러 
+        - 파라미터를 필수가 아니라 선택적으로 받게 하고 싶으면 `required` element를 false로 하면 됨.
+    - 디폴트 값 지정 가능.
+    - 요청 파라미터의 이름과 컨트롤러 파라미터의 이름이 같다면 @RequestParam의 이름을 생략가능.
+    - String, int  같은 단순 타입은 @RequestParam생략가능.
+        - 비추천
+* @CookieValue
+    - HTTP 요청의 쿠키 값을 파라미터에 넣어줌.
+    - 애노테이션 기본값에 쿠키의 이름 지정
+    - 메소드 파라미터 이름과 쿠키 값이 동일하다면 쿠키 이름 생략가능.
+    - @RequestParam과 마찬가지로 무조건 값이 있어야하고, 필수가 아니면 required=false, 디폴트 값을 넣고싶으면 defaultValue를 지정.
+
 <hr>
