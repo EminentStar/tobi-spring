@@ -751,4 +751,35 @@ public class UserController {
 * 컨트롤러의 역할에서 파라미터 파싱, 요청 정보 검증, 뷰 선택 로직 등은 모두 컨트롤러 밖으로 분리할 수 있음.(이부분 이해 못햇음.)
 
 
+## 4.2. @Controller
+* Controller interface를 구현하는 핸들러의 경우 호출될 메서드가 정해져있고 파라미터/리턴 타입이 결정되어있기때문에 핸들러 어댑터 입장에서 핸들러를 호출할 때 간단히 할 수 있음.
+* @MVC의 컨트롤러는 특정 인터페이스를 구현하지도 않고, 메소드 이름, 파라미터 종류 및 갯수, 리턴타입이 정해져 있지 않음.
+    - AnnotationMethodHandlerAdapter가 어떻게 이런 핸들러 메소드를 사용할 수 있을까?
 
+> 컨트롤러가 DispatcherServlet으로부터 실행되는 과정.
+> 
+> DispatcherServlet이 HTTP 요청 정보를 이용해 HandlerMapping에게 매핑된 HandlerAdapter를 찾음.
+> DispatcherServlet은 HttpServletRequest, HttpServletResponse를 HandlerAdapter에게 전달함.
+> 그럼 HandlerAdapter는 전달받은 HttpServletRequest/Response를 컨트롤러가 사용할 수 있는 형태로 변환한 후에 제공함.
+> 컨트롤러 호출 후 HandlerAdatper는 컨트롤러가 돌려준 결과를 ModelAndView에 담아서 DispatcherServlet에게 돌려줌.
+
+* Controller 인터페이스의 경우 파라미터로 HttpServletRequest, HttpServletResponse를 전달받고 리턴타입으로 ModelAndView를 반환함.
+    - 그래서 Controller 인터페이스를 구현한 핸들러를 담당하는 HandlerAdapter는 해줄일이 거의 없음.
+    - DispatcherServlet으로부터 HttpServletRequest, HttpServletResponse 전달받은 걸 그대로 컨트롤러 호출시 넘기고, 컨트롤러 리턴값인 ModelAndView를 그대로 DispatcherServlet에게 리턴하면 되기 때문.
+
+* 앞서 3장에서 구현한 커스텀 컨트롤러(SimpleController)를 위한 핸들러 어댑터가 DispatcherServlet에서 받은 파라미터를 조작 후 컨트롤러에게 넘겨줌. 또한 컨트롤러 호출시 모델을 담을 객체도 생성해서 컨트롤러로 던져줌.(컨트롤러에서 직접 Model을 만들지 않아도됨.)
+    - 이렇게 편하기는 하지만, 문제는 DispatcherServlet에서 넘겨준 HttpServletRequest/HttpServletResponse를 컨트롤러에서 그대로 사용하고 싶은 경우임.
+    - HttpServletRequest
+        - e.g. 쿠키,HTTP 헤더 참조/멀티파트 정보 핸들링/HTTP 세션 핸들링
+    - HttpServletResponse(e.g. ModelAndView로는 넣을 수 없는 부가적인 응답정보; 어떤게 있지)
+    
+* `@Controller를 사용하면 메소드의 파라미터 개수와 타입, 리턴 타입등을 자유롭게 결정할 수 있음.`
+    - 그래서 @Controller를 담당하는 핸들러 어댑터는 상당히 복잡함.
+
+* 리턴값이 없는 핸들러 메소드이면 스프링은 비어있는 모델 오브젝트와 뷰 이름을 돌려줌.
+    - 뷰이름은 RequestToViewNameTranslator에 의해서 URL을 따라 지정될 것임. 
+
+* 스프링은 메소드의 파라미터와 리턴값이 어떻게 선언됬는지 보고,이를 이용해 적절한 파라미터 값을 준비해서 호출함. 리턴 값도 타입에 따라 적절한 방식으로 사용.
+
+
+<hr>
