@@ -54,11 +54,20 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- 얘는 뭐하는 앤지도 파악이 필요. -->
     <dependency>
       <groupId>cglib</groupId>
       <artifactId>cglib</artifactId>
       <version>2.2.2</version>
     </dependency>
+
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>1.18.0</version>
+      <scope>provided</scope>
+    </dependency>
+
 
     <!-- JSTL/Tag Libs -->
     <dependency>
@@ -67,18 +76,19 @@
       <version>3.1.0</version>
     </dependency>
 
-    <!--<dependency>-->
-      <!--<groupId>javax.servlet.jsp</groupId>-->
-      <!--<artifactId>jsp-api</artifactId>-->
-      <!--<version>2.1</version>-->
-      <!--<scope>provided</scope>-->
-    <!--</dependency>-->
+    <!-- EL 태그 적용이 안되던 이슈는 재현이안되네. xml로 컨텍스트 설정하던 때 발생했던거라 좀 찾기가 애매함. -->
+    <dependency>
+      <groupId>javax.servlet.jsp</groupId>
+      <artifactId>jsp-api</artifactId>
+      <version>2.1</version>
+      <scope>provided</scope>
+    </dependency>
 
-    <!--<dependency>-->
-      <!--<groupId>javax.servlet</groupId>-->
-      <!--<artifactId>jstl</artifactId>-->
-      <!--<version>1.2</version>-->
-    <!--</dependency>-->
+    <dependency> <!-- 이 디펜던시를 추가하지 않으면 jstl 태그 라이브러리 받아오질 못함.-->
+      <groupId>javax.servlet</groupId>
+      <artifactId>jstl</artifactId>
+      <version>1.2</version>
+    </dependency>
 
 
   </dependencies>
