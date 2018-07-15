@@ -10,7 +10,8 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
 @ComponentScan(
   basePackages = {
     "org.eminentstar.learningtest.spring.controllers",
-    "org.eminentstar.mvc.controller"
+    "org.eminentstar.mvc.controller",
+    "org.eminentstar.mvc.service"
   }
 )
 public class WebConfig {

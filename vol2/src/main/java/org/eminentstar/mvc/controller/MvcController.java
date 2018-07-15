@@ -1,13 +1,18 @@
 package org.eminentstar.mvc.controller;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.eminentstar.mvc.model.User;
 import org.eminentstar.mvc.model.UserForm;
 import org.eminentstar.mvc.model.UserSearch;
+import org.eminentstar.mvc.service.TempService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
@@ -20,10 +25,16 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.View;
+import org.springframework.web.servlet.view.JstlView;
 
 @Controller
 @RequestMapping("/mvc")
 public class MvcController {
+
+  @Autowired
+  private TempService tempService;
 
   @RequestMapping("/hello")
   public void hello() {
@@ -211,32 +222,93 @@ public class MvcController {
     return "mvc/user/result2";
   }
 
+  @RequestMapping(value = "/modelattr/method")
+  public String modelAttributeOnMethod(ModelMap model) {
+    return "mvc/modelattr";
+  }
+
+  @RequestMapping("/view")
+  public User view() {
+    User user = new User(1117, "eminent.star");
+    return user;
+  }
+
+  /**
+   * FIXME: Inner Class의 프로퍼티 접근에 대해 추후 공부하자.
+   */
+  @RequestMapping("/view/model/inner")
+  public String view2(ModelMap model) {
+    InnerUser user = new InnerUser(1117, "eminent.star");
+    model.put("user", user);
+    return "mvc/view";
+  }
+
+  @RequestMapping("/viewWithModelMap")
+  public Map viewWithModelMap() {
+    Map map = new HashMap<String, Object>();
+
+    User user = new User(1117, "eminent.star");
+    map.put("user", user);
+
+    return map;
+  }
+
+  /**
+   * FIXME: 이것도 나중에 제대로 파악해봐야할듯. 어떻게 뷰생성해서 던지지?
+   * @param model
+   * @return
+   */
+  @RequestMapping("/view/object")
+  public View returnViewObject(ModelMap model) {
+    View view = new JstlView("mvc/view");
+    model.put("user", new User(1117, "eminent.star"));
+    return view;
+  }
+
+  @RequestMapping("/responsebody")
+  @ResponseBody
+  public String responsebody() {
+    return "<html><body>Response Body!</body></html>";
+  }
+
   /*
    * TODO: @Value 사용방법은 다음에 configuration에 대한 공부를 좀 하고 완료해보자.
    */
   //  @RequestMapping("/property/v1")
-//  public String propertyIntoParameter(@Value("${os.name}") String osName, ModelMap model) {
-//    model.put("osName", osName);
-//    return "mvc/property";
-//  }
-//  @RequestMapping("/property/v2")
-//  public String propertyInMemberField(ModelMap model) {
-//    model.put("osName", osName);
-//    return "mvc/property";
-//  }
+  //  public String propertyIntoParameter(@Value("${os.name}") String osName, ModelMap model) {
+  //    model.put("osName", osName);
+  //    return "mvc/property";
+  //  }
+  //  @RequestMapping("/property/v2")
+  //  public String propertyInMemberField(ModelMap model) {
+  //    model.put("osName", osName);
+  //    return "mvc/property";
+  //  }
 
-  class User {
+  @ModelAttribute("ids")
+  public List<Integer> getIds() {
+    return tempService.getIds();
+  }
+
+  /**
+   * FIXME: inner class로 지정하니 왜 jsp에서 field가 출력이 안될까?
+   * */
+  class InnerUser {
     int id;
     String name;
 
-    public User(int id, String name) {
+    public InnerUser(int id, String name) {
       this.id = id;
       this.name = name;
     }
 
-    //    public int getId() {
-    //      return id;
-    //    }
+    public int getId() {
+      return id;
+    }
+
+    public String getName() {
+      return name;
+    }
   }
 
 }
