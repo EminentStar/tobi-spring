@@ -873,7 +873,50 @@ public class UserController {
     - _이 파라미터들은 반드시 @ModelAttribute 파라미터 뒤에 나와야함._
         - 자신의 바로 앞에 있는 @ModelAttribute 파라미터의 검증 작업에서 발생한 오류만 전달해줌.
 
+* SessionStatus
+    - 모델 오브젝트를 세션에 저장해두고 다음 페이지에서 다시 활용할 수 있게하는 기능이 있는데, 이 기능을 사용중 더이상 사용하던 모델 오브젝트가 필요가 없을 때 직접 작업 완료 메소드를 호출해서 세션 안의 오브젝트를 제거해줘야함.
+        - 이때 사용하는게 SessionStatus 오브젝트
+* @RequestBody
+    - 이 애노테이션이 붙은 파라미터에는 http 요청의 body 부분이 그대로 전달됨.
+    - 일반적인 GET/POST 요청에선 잘 사용할 일이 없고, XML이나 JSON 기반의 메시지를 사용하는 요청의 경우 유용.
+    - AnnotationMethodHandlerAdaptor엔 HttpMessageConverter 타입의 메시지 변환기가 여러 개 등록되어 있음. 
+        - @RequestBody가 붙은 파라미터가 있으면 http 요청의 미디어 타입과 파라미터의 타입을 먼저 확인.
+        - 메시지 변환기 중에서 해당 미디어 타입과 파라미터 타입을 처리할 수 있는 것이 있으면 HTTP 요청의 본문 부분을 통째로 변환해서 지정된 메소드 파라미터에 전달.
+        * 변환기 종류 
+            - StringHttpMessageConverter: 스트링 타입의 파라미터와 모든 종류의 미디어 타입 처리
+            - MarshallingHttpMessageConverter: XML 본문을 가지고 들어오는 요청을 XML이 변환된 오브젝트로 전달 받을 수 있게 함. 
+            - MappingJacksonHttpMessageConverter: JSON 타입 메시지의 경우 사용.
+    - @RequestBody는 보통 @ResponseBody와 함꼐 사용됨.
 
+> Q: `@Autowired`는 어떻게 동작하는가?
 
+* @Value
+    - 빈의 값 주입에 사용하던 @Value애노테이션을 컨트롤러 메소드의 파라미터에 부여할 수 있음.
+    - 사용방법은 동일.
+    - 주로 시스템 프로퍼티나 다른 빈의 프로퍼티, 똔느 복잡한 SpEL을 이용해 클래스의 상수를 읽어오거나 특정 메소드를 호출한 결과 값, 조건식등을 넣을 수 있음.
+    - 컨트롤러도 일반적인 스프링 빈이기 때문에 @Value를 메소드 파라미터 대신 멤버필드에 DI해주는 것이 가능.
+```java
+// 컨트롤러 메소드 파라미터에 전달
+@RequestMapping(...)
+public String hello(@Value("#{systemProperties['os.name']}") String osName) {...}
+
+// 멤버에 DI
+public class HelloController {
+    @Value("#{systemProperties['os.name']}") 
+    String osName;
+
+    @RequestMapping(...)
+    public String hello() {
+        String osName = this.osName;
+    }
+```
+
+* @Valid
+    - JSR-303의 빈 검증기를 통해 모델 오브젝트를 검증하도록 지시하는 지시자.
+    - 모델 오브젝트의 검증 방법을 지정하는데 사용. 
+    - 보통 @ModelAttribute와 함께 사용.
 
 <hr>
+
+
+

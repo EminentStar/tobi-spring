@@ -211,6 +211,20 @@ public class MvcController {
     return "mvc/user/result2";
   }
 
+  /*
+   * TODO: @Value 사용방법은 다음에 configuration에 대한 공부를 좀 하고 완료해보자.
+   */
+  //  @RequestMapping("/property/v1")
+//  public String propertyIntoParameter(@Value("${os.name}") String osName, ModelMap model) {
+//    model.put("osName", osName);
+//    return "mvc/property";
+//  }
+//  @RequestMapping("/property/v2")
+//  public String propertyInMemberField(ModelMap model) {
+//    model.put("osName", osName);
+//    return "mvc/property";
+//  }
+
   class User {
     int id;
     String name;
