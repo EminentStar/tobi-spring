@@ -965,8 +965,44 @@ public class HelloController {
     - 리턴 타입이 String이면 스트링 타입을 지원하는 메시지 컨버터가 이를 변환해서 HttpServletResponse의 출력스트림으로 넣어버림.
     - @ResponseBody가 적용된 컨트롤러는 리턴 값이 단일 모델 오브젝트이고 메시지 컨버터가 뷰와 같은 식으로 작동한다고 보면 됨.
     - 근본적으로 @RequestBody, @ResponseBody는 XML이나 JSON과 같은 메시지 기반의 커뮤니케이션을 위해 사용됨.
-* 
-    - 
+
+### 4.2.3. @SessionAttributes와 SessionStatus
+* HTTP 요청에 의해 동작하는 서블릿은 기본적으로 상태를 유지하지 않음.
+    - 그래서 매요청이 독립적으로 처리됨.
+    - 하나의 HTTP 요청을 처리한 후에는 사용했던 모든 리소스를 정리해버림.
+
+
+#### @SessionAttributes
+스프링의 세션기능은 기본적으로 HTTP세션을 사용
+
+* @SessionAttributes의 기능 
+    1. 컨트롤러 메소드가 생성하는 모델정보중에서 @SessionAttributes에 지정한 이름과 동일한 것이 있다면 이를 세션에 저장해줌.
+        - @SessionAttributes는 모델정보에 담긴 오브젝트 중에서 세션 애트리뷰트라고 지정한 모델이 있으면 이를 자동으로 세션에 저장해줌.
+    2. @ModelAttribute가 지정된 파라미터가 있을 때 이 파라미터에 전달해줄 오브젝트를 세션에서 가져옴.
+        - 원래 파라미터에 @ModelAttribute가 있으면 해당 타입의 새 오브젝트를 생성한 후에 요청 파라미터 값을 프로퍼티에 바인딩해줌.
+        - @SessionAttributes에 선언된 이름과 @ModelAttribute의 모델 이름이 동일하면, 그때는 먼제 세션에 같은 이름의 오브젝트가 있는지 확인함.
+        - 존재한다면 모델 오브젝트를 만드는 대신 세션에 있는 오브젝트를 가져와서 @ModelAttribute 파라미터로 전달할 오브젝트로 사용함.
+        - @ModelAttribute는 폼에서 전달된 필드정보를 모델 오브젝트의 프로퍼티에 넣어줌.
+* @SessionAttributes의 설정은 클래스의 모든 메소드에 적용됨.
+* @SessionAttributes의 기본 구현인 HTTP세션을 이용하는 저장소는 기본적으로 모델의 이름을 세션의 attribute로 사용함.
+    - 이름 충돌에 주의
+
+#### @SessionStatus
+* @SessionAttributes를 더이상 사용하지 않는다면 코드 레벨에서 직접 제거해줘야함.(스프링은 직접 지워주지않음.)
+* SessionStatus 오브젝트의 setComplete() 메소드를 호출해서 세션의 오브젝ㄷ트를 제거해줘야함.
+```java
+@RequestMapping(value="/user/edit", method=RequestMethod.POST)
+public String submit(@ModelAttribute User user, SessionStatus sessionStatus) {
+    ...
+    sessionStatus.setComplete();
+    ...
+}
+```
+
+#### 등록 폼을 위한 @SessionAttributes 사용 
+* 스프링의 폼 태크는 등록/수정 화면에 상관없이 뷰에 노출할 때 폼의 내용을 담을 모델 오브젝트를 필요로 함.
+    - 뷰 노출시 빈 오브젝트라도 던져줘야함.
+
 
 <hr>
 
