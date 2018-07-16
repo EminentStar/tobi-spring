@@ -1071,6 +1071,40 @@ dataBinder.registerCustomEditor(Level.class, new LevelPropertyEditor());
 
 * 프로토타입 빈을 등록하고 이를 싱글톤 빈에서 사용하는 방법에 대해서는 여러 방법이 있지만 예제애선 그중 Provider를 이용.
 
+### 4.3.2. Converter와 Formatter
+> PropertyEditor는 매번 요청이 들어올 때마다 새로운 오브젝트를 만들어야 한다는 단점이 있음.
+수* PropertyEditor와는 달리 Converter는 호출과정에서 메소드가 한번만 호출됨.
+    - 상태를 가지고 있지 않음.
+        - 멀티스레드 환경에서도 안전하게 공유해서 사용가능.
+        - 싱글톤 스프링 빈으로 등록해서 필요한 오브젝트에서 DI 받아 사용가능.
+
+#### Converter
+* PropertyEditor와 다르게 소스 타입에서 타깃 타입으로 단방향 변환만 지원.
+* 소스/타깃 타입을 임의로 지정가능.(제네릭스를 이용해 미리 지정)
+
+#### ConversionService
+* Converter 오브젝트는 PropertyEditor와 처럼 개별적으로 추가하는 대신 ConversionService 타입 오브젝트를 통해 WebDataBinder에 추가해줘야함.
+* ConversionService는 여러 Converter 종류를 이용해서 하나 이상의 타입 변환 서비스를 제공해주는 오브젝트를 만들때 사용하는 인터페이스
+* 스프링 3.0의 새로운 타입 변환 오브젝트는 Converter외에도 GenericConverter와 ConverterFactory를 통해 만들 수 있음.
+* GenericConverter
+    - GenericConverter를 이용하면 하나 이상의 소스-타킷 변환을 처리할 수 있는 컨버터를 만들 수 있음.
+    - 또 필드 컨텍스트를 제공받을 수 있음.
+        - 필드 컨텍스트란 모델의 프로퍼티에 대한 바인딩 작업시 제공받을 수 있는 메타정보
+        - 이 메타정보는 오브젝트 타입 뿐만 아니라 클래스의 필드에 부여된 애노테이션, 제네릭스 파라미터, 메소드 파라미터 정보등을 말함.
+        - 따라서 GenericConverter를 이용하는 단순 타입 종류 뿐만 아니라 메타정보의 부가정보를 활용한 변환 로직을 작성할 수 있음.
+* GenericConversionService는 일반적으로 빈으로 등록하고 필요한 컨트롤러에서 DI 받은 후 @InitBinder를 통해 WebDataBinder 에 설정하는 방식으로 사용함.
+
+* WebDataBinder에 GenericConversionService 설정방법
+    1. @InitBinder를 통한 수동 등록
+        - 일부 컨트롤러에만 적용하고 싶거나 하나 이상의 ConversionService를 만들고 컨트롤러에서 선택해 사용하고 싶을 때 컨트롤러에서 원하는 ConversionService를 @InitBinder를 통해 등록 
+        - GenericConversionService에 변환 오브젝트를 추가하는 방법 두가지 
+            1. GenericConversionService를 상속해서 새로운 클래스를만들고 생성자에서 addConverter()로 추가할 컨버털들 등록
+            2. GenericConversionServiceFactoryBean을 이용해서 프로퍼티로 DI받은 Converter로 구성된 GenericConversionService를 가져오는 방법
+        * WebDataBinder에는 하나의 ConversionService 오브젝트만 허용함.
+    2. ConfigurableWebBindingInitializer를 이용한 일괄 등록
+        - WebBindingInitialzer를 통해 모든 컨트롤러에 한번에 적용
+        - WebBindingInitialzer를 구현한 클래스를 만들고 빈으로 등록해도 되지만 ConfigurableWebBindingInitializer를 사용하면 편리함.(빈설정 만으로 WebBindingInitializer를 빈으로 등록할 수 있음.)
+
 
 
 <hr>
