@@ -1,4 +1,4 @@
-package org.eminentstar.propertyeditor;
+package org.eminentstar.modelbinding.propertyeditor;
 
 import java.beans.PropertyEditorSupport;
 

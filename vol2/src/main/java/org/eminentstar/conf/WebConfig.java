@@ -13,7 +13,7 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
     "org.eminentstar.learningtest.spring.controllers",
     "org.eminentstar.mvc.controller",
     "org.eminentstar.mvc.service",
-    "org.eminentstar.propertyeditor"
+    "org.eminentstar.modelbinding.propertyeditor"
   }
 )
 public class WebConfig {

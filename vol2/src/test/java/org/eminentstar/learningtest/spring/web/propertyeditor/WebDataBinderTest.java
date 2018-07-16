@@ -4,7 +4,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import org.eminentstar.enumeration.Level;
-import org.eminentstar.propertyeditor.LevelPropertyEditor;
+import org.eminentstar.modelbinding.propertyeditor.LevelPropertyEditor;
 import org.junit.Test;
 import org.springframework.web.bind.WebDataBinder;
 
