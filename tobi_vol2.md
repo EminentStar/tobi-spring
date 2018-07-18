@@ -1105,6 +1105,123 @@ dataBinder.registerCustomEditor(Level.class, new LevelPropertyEditor());
         - WebBindingInitialzer를 통해 모든 컨트롤러에 한번에 적용
         - WebBindingInitialzer를 구현한 클래스를 만들고 빈으로 등록해도 되지만 ConfigurableWebBindingInitializer를 사용하면 편리함.(빈설정 만으로 WebBindingInitializer를 빈으로 등록할 수 있음.)
 
+#### Formatter와 FormattingConversionService
+* Formatter는 Converter와 달리 양방향 적용 가능.(두개 메서드)
+* GenericConversionService에 직접 등록할 수 없고, Formatter 구현 오브젝트를 GenericConverter타입으로 포장해서 등록해주는 FormattingConversionService를 통해 적용 가능.
+* Formatter의 메소드에는 Locale타입 현재 지역정보도 함께 제공
+* Formatter를 본격적으로 도입하려면 필드의 애노테이션까지 참조할 수 있는 AnnotationFormatterFactory를 사용해야 함.
+
+* FormattingConversionServiceFactoryBean을 사용했을 때 자동으로 등록되는 Formatter 두 가지
+    1. @NumberFormat
+        - 문자열로 표현된 숫자를 java.lang.Number 타입의 오브젝트로 상호 변환
+    2. @DateTimeFormat
+        - 강력한 날짜/시간 정보 관리 라이브러리인 Joda Time을 이용하는 애노테이션 기반 포맷터
+        - 스타일을 style 엘리먼트를 이용해 지정할 수 있음.(S(Short), M(Medium), L(Long), F(Full))
+        - 위의 4개의 문자를 `날짜와 시간`에 대해 각각 한글자씩 사용해서 두개의 문자로 만들어 지정.(한쪽을 사용하지 않는다면 ?로 두면됨.)
+        - LocaleResolver에 의해 결정된 지역정보가 자동으로 반영되기 때문에 지역화 기능을 이용할 때 매우 편리
+        - 기본 스타일이 마음에 들지 않으면 직접 패턴을 지정해도됨.
+        ```java
+        @DateTimeFormat(pattern="yyyy/MM/dd")
+        Date orderDate;
+        ```
+
+#### 바인딩 기술의 적용 우선순위와 활용 전략
+* 사용자 정의 타입의 바인딩을 위한 일괄 적용: Converter
+    - enum같이 애플리케이션에서 정의한 타입이면서 모델에서 자주 활용된다면 Converter로 만들고 ConversionService로 묶어서 일괄적용하는 것이 편리
+* 필드와 메소드 파라미터, 애노테이션등의 메타정보를 활용하는 조건부 변환 기능: ConditionalGenericConverter
+    - 바인딩이 일어나는 필드와 메소드 파라미터 등의 조건에 따라 변환할지 말지를 결정한다거나, 이런 조건을 변환 로직에 참고할 필요가 있을 때.
+* 애노테이션 정보를 활용한 HTTP 요청과 모델 필드 바인딩: AnnotationFormatterFactory와 Formatter
+    - @NumberFormat, @DateTimeFormat처럼 필드에 부여하는 애노테이션 정보를 이용해서 변환기능을 지원하려면
+* 특정 필드에만 적용되는 변환 기능: PropertyEditor
+    - 단순 필드 조건만 판별하는 경우라면 프로퍼티 에디터로 만드는 편이 나음.
+    - 이런 경우 WedBindingInitializer를 통해 모든 컨트롤러에 일괄적용하는 건 바람직하지 못함.
+        - PropertyEditorRegister를 통해 하나 이상의 프로퍼티 에디터 등록 작업을 여러 컨트롤러에서 한번에 등록하도록 하자.
+* 커스텀 프로퍼티 에디터가 가장 우선순위가 높고, 그다음이 컨버전 서비스의 컨버터, 마지막으로 스프링 내장 디폴트 프로퍼티 에디터 순
+* WebBindingInitializer로 일괄 적용한 컨버전 서비스나 프로퍼티 에디터는 @InitBinder로 직접 등록한 프로퍼티 에디터나 컨버전 서비스보다 우선순위가 뒤진다.
+
+
+### 4.3.3. WebDataBinder
+* HTTP 요청정보를로 등로 컨트롤러 메소드의 파라미터나 모델의 프로퍼티에 바인딩할 때 사용되는 바인딩 오브젝트
+
+#### 자주 활용되는 설정 항목
+* allowedFields, disallowedFields
+    - 바인딩이 허용된/허용되지 않는 필드목록 지정
+* requiredFields
+    - 컨트롤러 자신이 필요로 하는 파라미터가 다 들어왔는지 확인 
+* fieldMarker 
+    - HTML 폼의 체크박스는 체크를 하지 않으면 아예 해당 필드의 값을 서버로 전송하지 않음.
+    - 해결책은 바인더에게 특정 필드를 체크박스라고 알려줘서, 해당 필드의 HTTP 요청 파라미터가 전달되지 않으면 체크박스를 해제했다는 것으로 판단하게 해줘야함.
+    - 스프링은 이를 위해 marker 히든 필드를 추가하는 방식 사용.
+    - 필드의 이름 앞에 붙는 언더바 같은 것을 필드마커라고 함.
+    - 스프링은 필드마커가 있는 HTTP 파라미터를 발견하면 필드마커를 제외한 이름의 필드가 존재한다고 생각함.
+        - 없으면 체크박스를 해제했다고 인식해 그 이름에 해당하는 프로퍼티 값을 리셋해줌.
+    - 스프링의 form 태그를 사용하면 checkbox를 위한 필드마커를 자동으로 추가해주므로 신경쓰지 않아도 됨.
+```html
+<input type="checkbox" name="autoLogin" />
+<input type="hidden" name="_autoLogin" value="on" /> <!-- marker 필드 -->
+```
+* fieldDefaultPrefix
+    - 히든 필드를 이용해서 체크박스에 대한 디폴트 값을 지정하는데 사용
+```html
+<input type="checkbox" name="type" value="admin" />
+<input type="hidden" name="!type" value="member" /><!-- type 체크박스가 해제되었을 떄 디폴트로 member가 들어감. -->
+```
+
+### 4.3.4. Validator와 BindingResult, Errors
+* @ModelAttribute로 지정된 모델 오브젝트의 바인딩 작업이 실패로 끝나는 경우는 두가지 
+    1. 타입 변환이 불가능한 경우
+    2. validator를 통한 검사를 통과하지 못한 경우.
+* 스프링은 검증 과정에서 사용할 수 있는 Validator라는 인터페이스 제공.
+    - Validator를 통한 검증 결과는 BindingResult를 통해 확인할 수 있음.(BindingResult는 Errors의 서브 인터페이스)
+
+
+#### Validator
+* 스프링에서 범용적으로 사용할 수 있는 오브젝트 검증기를 정의할 수 있는 API
+* Validator는 보통 미리 정해진 단순 조건을 이용해 검증하는데 사용됨.(필수 값 입력여부, 값의 범위, 길이, 형식등.)
+* Validator는 싱글톤 빈으로 등록돼서 사용할 수 있음.
+
+> `검증 로직은 어느 계층의 로직인가?`라는 논쟁
+> 여러 의견이 있지만 검증 로직은 특정 계층에 종속되기보단 도메인 오브젝트처럼 독립적으로 만드는 것이 좋음.
+
+##### 스프링의서의 Validator 적용 방법
+1. 컨트롤러 메소드 내의 코드
+    - Validator를 빈으로 등록해서 컨트롤러에서 빈 오브젝트를 주입받아 각 메소드에서 필요에 따라 직접 validate() 메소드를 호출해서 검증 작업 진행.
+2. @Valid를 이용한 자동검증(JS-303(Bean VAlidation)의 @javax.validation.Valid 이노테이션)
+    - validate()를 사용하는 대신, 바인딩 과정에서 자동으로 검증이 일어나도록.
+    - WebDataBinder에서 Validator 타입 검증용 오브젝트도 설정가능
+3. 서비스 계층 오브젝트에서의 검증 
+4. 서비스 계층을 활용하는 Validator
+    - 빈으로 등록한 Validator에서 서비스 빈을 주입받아 활용
+
+#### JSR-303 빈 검증 기능 
+* 스프링에서는 LocalValidatorFactoryBean을 이용해서 JSR-303의 검증 기능 사용 가능 
+* LocalValidatorFactoryBean은 JSR-303의 검증 기능을 스프링의 Validator처럼 사용할 수 있게 해주는 일종의 어댑터
+* JSR-303 빈검증 기술의 특징은 모델 오브젝트의 필드에 달린 제약조건 애노테이션을 이용해 검증을 진행할 수 있다는 점.
+* 제약조건 애노테이션을 통해 검증을 하려면 LocalValidatorFactoryBean을 빈으로 등록해줘야 함.
+    - 등록된 빈은 DI를 통해서 주입 받아서 validate()를 직접 호출해도되고, @InitBinder를 통해 WebDataBinder에 세팅해 자동 바인딩시 검증을 할 수 있음.
+    - e.g. @NotNull, @Size, @Min. 
+        - 이런 애노테이션같은 제약조건은 JSR-303 ConstraintValidator를 만들고 이를 애노테이션에서 이용할 수 있음.
+
+#### BindingResult와 MessageCodeResolver
+* BindingResult는 모델 바인딩 작업중 나타는 타입 변환 에러와 검증 오류 모두를 저장.
+* 스프링은 기본적으로 messages.properties와 같은 프로퍼티 파일에 담긴 메시지를 가져와 에러 메시지로 활용.
+    - 프로퍼티 파일에 영어를 제외하고는 유니코드로 변환해 넣어야함.(WHY?)
+* 에러코드가 BindingResult에 등록되면 MessageCodeResolver는 이를 확장해서 메시지 키 후보를 생성함.
+    - 그중에서 우선순위에 따라 선정.
+
+#### MessageSource
+* MessageCodeResolver를 통해 만들어진 후보 메시지 코드들은 MessageSourceResolver를 한번 더 거쳐서 최종적인 메시지로 만들어짐.
+* 스프링의 MessageSource 구현은 두가지 종류가 있음.
+    1. StaticMessageSource : 코드로 메시지를 등록할 수 있음.
+    2. ResourceBundleMessageSource : messages.properties 리소스 번들 방식을 사용.
+* MessageSource가 최종 메시지를 만들기 위해 사용하는 정보.
+    1. 코드 : BindingResult/Errors의 에러코드를 DefaultMessageCodeConverter를 이용해 필드와 오브젝트 이름의 조합으로 만들어낸 메시지 키 후보값.
+    2. 메시지 파라미터 배열 : messages.properties의 메시지에 {0}과 같은 파라미터 값을 지정.
+    3. 디폴트 메시지 : 후보 메시지 코드에서 찾을 수 없을 때 선택하는 메시지
+    4. 지역정보 : LocaleResolver에 의해 결정된 현재의 지역정보.
+        - 지역에 따른 다른 메시지 프로퍼티를 사용가능.
+        - 해당 지역에 해당하는 메시지 파일 이 없다면 디폴트인 messages.properties 가 사용됨.
+* MessageSource는 디폴트로 등록되지 않음.
 
 
 <hr>
