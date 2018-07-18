@@ -1224,6 +1224,44 @@ dataBinder.registerCustomEditor(Level.class, new LevelPropertyEditor());
 * MessageSource는 디폴트로 등록되지 않음.
 
 
+### 4.3.5. 모델의 일생
+* 모델은 MVC 아키텍쳐에서 정보를 담당하는 컴포넌트
+* HTTP 요청의 정보를 비즈니스 로직에서 사용하기 위해 담는 자바 오브젝트이며, 비즈니스 로직에서 생성된 정보를 클라이언트로 보내는 동안 유지하고 있는 오브젝트이기도 함.
+
+#### HTTP 요청으로부터 컨트롤러 메소드까지(구글 이미지 참조)
+1. @ModelAttribute 메소드 파라미터
+    - 컨트롤러 메소드의 모델 파라미터와 @ModelAttribute로부터 모델 이름, 모델 타입 정보를 가져옴.
+2. @SessionAttribute 세젼 저장 대상 모델 이름.
+    - 모델 이름과 동일한 것이 HTTP 세션에 저장되있는지 확인 후 가져옴.
+3. WebDataBinder에 등록된 프로퍼티 에디터, 컨버전 서비스
+    - WebBindingInitializer/@InitBinder를 통해 등록된 변환 기능 오브젝트를 통해 HTTP 요청 파라미터를 모델 오브젝트 프로퍼티에 맞도록 변환해서 넣어줌.
+    - 타입 변환에 실패하면 BindingResult 오브젝트에 담김.
+    - 바인딩할 HTTP 파라미터가 없다면 이 과정은 생략됨.
+4. WebDataBinder에 등록된 검증기
+    - 모델 파라미터에 @Valid가 지정되어있으면 WebBindingInitializer/@InitBinder 메소드를 통해 등록된 검증기로 모델을 검증.
+    - 검증 결과는 BindingResult에 등록됨.
+    - @Valid가 없다면 이 과정은 생략됨.
+5. MOdelAndView의 모델 맵
+    - 모델 오브젝트는 컨트롤러 메소드가 실행되기 전까지 임시 모델 맵에 저장됨.
+    - 컨트롤러 메소드 실행 뒤에 추가로 등록된 모델 오브젝트와 함께 ModelAndView 모델 맵에 담겨 DispatcherServlet으로 전달됨.
+6. 컨트롤러 메소드와 BindingResult 파라미터 
+    - 메소드 모델 파라미터 다음에 BindingResult 파라미터가 있으면 바인딩과 검증결과가 담긴 BindingResult 오브젝트가 제공됨.
+    - BindingResult는 자동으로 ModelAndView의 모델 맵에 추가됨.
+
+#### 컨트롤러 메소드로부터 뷰까지
+1. ModelAndView의 모델 맵 
+    - 컨트롤러 메소드 실행 후 최종적으로 DispatcherServlet이 전달 받는 결과 
+2. WebDataBinder에 기본적으로 등록된 MessageCodeResolver 
+    - MessageCodeResolver는 바인딩 작업 또는 검증 작업에서 등록된 에러 코드를 확장해서 메시지 코드 후보 목록을 만들어줌.
+3. 빈으로 등록된 MessageSource와 LocaleResolver
+    - LocaleResolver에 의해 결정된 지역정보와 MessageCodeResolver가 생성한 메시지 코드 후보 목록을 이용해서 MessageSource가 뷰에 출력할 최종 에러 메시지를 결정함.
+4. @SessionAttribute 세션 저장 대상 모델 이름 
+    - @SessionAttribute로 지정한 이름과 일치하는 것이 있으면 HTTP 세션에 저장.
+5. 뷰의 EL과 스프링 태그 또는 매크로 
+    - 뷰에 의해 최종 컨텐트가 생성된 때 모델 맵으로 전달된 모델 오브젝트는 뷰의 EL(Expression Language)를 통해 참조돼서 콘텐트에 포함됨.
+
+
+
 <hr>
 
 
