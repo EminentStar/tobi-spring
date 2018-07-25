@@ -1365,6 +1365,56 @@ input password 태그, textarea 태그를 생성.
 #### <form:checkbox> <form:checkboxes>
 * HTML 체크박스와 달리 필드마커가 붙은 히든 필드를 자동으로 등록해줌.
 
+
+## 4.5. 메시지 컨버터와 AJAX
+* 메시지 컨버터는 XML이나 JSON을 이용한 AJAX 기능이나 웹 서비스를 개발시 사용.
+* (http 요청 파라미터를 모델에 바인딩하고 모델을 다시 뷰를 이용해 응답할 컨텐츠로 만드는 대신) HTTP 요청 본문과 응답 본문을 통째로 메시지로 다루는 방식.
+    - @RequestBody, @ResponseBody를 이용해 사용함.
+        - GET의 경우 요청정보가 url과 쿼리스트링으로 제한되기에 @RequestBody대신 @RequestParam, @ModelAttribute사용.
+        - POST의 경우 요청정보를 본문에 실어 보내기에 @RequestBody를 사용가능.
+
+### 4.5.1. 메시지 컨버터의 종류 
+* 사용할 메시지 컨버터는 AnnotationMethodHandlerAdapter를 통해 등록함.
+    - 일반적으로 하나이상의 메시지 컨버터를 등록해두고 요청 타입이나 오브젝트 타입에 따라 선택되게 함.
+
+1. ByteArrayHttpMessageConverter
+    - 지원하는 오브젝트 타입은 byte[]
+    - 미디어 타입은 모든 종류를 다 허용함.
+2. StringHttpMessageConverter
+    - 지원하는 오브젝트는 스트링 타입.
+    - 미디어 타입은 모든 종류를 다 허용함.
+    - 가공하지 않은 본문을 직접 받아서 사용하고 싶은 경우라면 유용하게 사용 가능.
+3. FormHttpMessageConverter
+4. SourceHttpMessageConverter
+    - XML 문서를 Source 타입의 오브젝트로 전환하고 싶을 때 유용하게 사용.
+5. Jax2RootElementHttpMessageConverter
+    - XML과 오브젝트 사이 메시지 변환을 지원.
+6. MarshallingHttpMessageConverter
+    - 스프링 OXM 추상화의 Marshaller와 Unmarshaller를 이용해 XML 문서와 자바 오브젝트 사이의 변환을 지원해주는 컨버터
+7. MappingJacksonHttpMessageConverter
+    - Jackson의 ObjectMapper를 이용해서 자바 오브젝트와 JSON 문서를 자동변환해주는 메시지 컨버터.
+    - 지원 미디어 타입은 application/json.
+
+* 5,6,7 메시지 컨버터를 사용하려면 AnnotationMethodHandlerAdapter 빈을 등록하고 messageConverters 프로퍼티에 등록해줘야 함.
+    - 전략 프로퍼티를 직접 등록하면 디폴트 전략은 자동으로 추가되지 않는다는 점에 주의
+
+#### JSON을 이용한 AJAX 컨트롤러: GET + JSON
+> AJAX는 Asynchronous Javascript and XML의 약자.  
+> js를 이용해서 서버와 비동기 방식의 통신을 해서 웹 페이지를 갱신하지 않은 채로 여러 가지 작업을 수행하는 프로그래밍 모델.  
+> AJAX라 해서 주고받는 메시지 형식이 XML뿐인 건 아님. 서버 측 라이브러리 지원이 잘 되면서 JSON이 인기 메시지 포맷으로 자리잡음.
+
+* ajax 요청을 보내는 방법
+    1. GET 
+    2. POST
+        - 일반 폼 전송 
+        - JSON 메시지를 보내는 것
+
+
+* 사전에 MappingJacksonHttpMessageConverter configure해두고, 컨트롤러 메소드에 @ResponseBody를 지정해두면 리턴되는 오브젝트가 MappingJacksonHttpMessageConverter에 넘겨지고, JSON메시지로 만들어져 http response body로 client에 전달됨.
+
+#### JSON을 이용한 AJAX 컨트롤러: POST(JSON) + JSON
+* JSON으로 전달되는 요청은 MappingJacksonHttpMessageConverter를 통해 @RequestBody가 붙은 파라미터로 변환되 받을 수 있음.
+
 <hr>
 
 

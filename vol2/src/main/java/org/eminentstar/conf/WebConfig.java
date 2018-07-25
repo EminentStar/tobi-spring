@@ -11,6 +11,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ConversionServiceFactoryBean;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.web.bind.support.ConfigurableWebBindingInitializer;
 import org.springframework.web.servlet.ViewResolver;
 import org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter;
@@ -49,8 +51,9 @@ public class WebConfig {
   @Bean
   public AnnotationMethodHandlerAdapter getAnnotationMethodHandlerAdapter() {
     AnnotationMethodHandlerAdapter adapter = new AnnotationMethodHandlerAdapter();
-//    adapter.setWebBindingInitializer(getMyWebBindingInitializer());
+    //    adapter.setWebBindingInitializer(getMyWebBindingInitializer());
     adapter.setWebBindingInitializer(getConfigurableWebBindingInitializer());
+    adapter.setMessageConverters(new HttpMessageConverter[] {new MappingJacksonHttpMessageConverter()});
 
     return adapter;
   }
@@ -98,6 +101,5 @@ public class WebConfig {
 
     return conversionService;
   }
-
 
 }
