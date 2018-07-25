@@ -1261,6 +1261,109 @@ dataBinder.registerCustomEditor(Level.class, new LevelPropertyEditor());
     - 뷰에 의해 최종 컨텐트가 생성된 때 모델 맵으로 전달된 모델 오브젝트는 뷰의 EL(Expression Language)를 통해 참조돼서 콘텐트에 포함됨.
 
 
+## 4.4. JSP 뷰와 form 태그 
+### 4.4.1. EL과 spring 태그 라이브러리를 이용한 모델 출력 
+#### JSP EL 
+- 스프링은 JSP 뷰에서 모델 맵에 담긴 오브젝트를 JSP EL을 통해 접근할 수 있게 해줌.
+- 자바빈의 접근자를 가진 모델 오브젝트이면 프로퍼티 값을 출력할 수 있음.
+```java
+${user.age}
+```
+#### 스프링 SpEL
+* 스프링 3.0의 SpEL을 통해 모델을 출력할 수 도 있음. 
+* spring 태그 라이브러리를 추가해야함.
+```jsp
+<%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
+```
+* `<spring:eval>`태그를 사용해 모델 이름이 포함된 표현식을 작성하면 됨. 모델 오브젝트 직접 사용 가능.
+```jsp
+<spring:eval expression="user.name"/>
+```
+* 메소드 호출도 가능함.
+```jsp
+<spring:eval expression="user.toString()"/>
+```
+* SpEL의 장점중 하나는 컨버전 서비스를 이용할 수 있다는 점.
+    - 다양한 변환 기능과 포맷이 적용된 모델 정보를 화면에 출력가능.
+
+#### 지역화 메시지 출력
+* 화면에 출력할 메시지에서도 지역정보에 따라 메시지를 가져와 출력하려면 spring 태그 라이브러리의 message 태그를 사용하면 됨.
+```jsp
+<spring:message code="greeting">
+```
+* LocaleResolver가 결정한 지역정보가 KOREAN으로 되어 있으면 `message_ko.properties`파일에서 greeting 키에 해당하는 메시지를 찾을 수 있음.
+    - 메시지의 파라미터에 들어갈 내용을 arguments 애트리뷰트로 지정가능
+* text 애트리뷰트를 통해 디폴트 메시지 지정가능.(키가 존재하지 않을 때)
+```jsp
+<spring:message code="greeting" arguments="${user.name}" text="Hi">
+```
+
+### 4.4.2. spring 태그 라이브러리를 이용한 폼 작성
+> 페이지에서 폼이 뜰 때 JSP EL을 직접 input 태그의 value로 넣으면 폼의 정보를 세팅할 수 있기는 함.   
+> 하지만 이렇게 하면 모델 오브젝트에서 관련된 에러를 출력할 방법이 간단하지 않을 것이고, 바인딩에 실패한 값은 JSP EL을 통해 표현 할 수 없음.(값이 없을 꺼니깐,)   
+> 이를 `<spring:bind>` 태그를 통해 극복 가능함.
+
+### 4.4.3. form 태그 라이브러리 
+* 스프링의 form 태그 라이브러리를 통해 `<spring:bind>`보다 더 간결한 코드로 동일한 기능 구현 가능.
+* form태그의 단점은 `<input>, <label>, <span>` 과 같은 HTML 코드를 직접 사용하지 못한다는 점.
+* form 태그 라이브러리 사용시 JSP 파일에 선언 해줘야함.
+```jsp
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+```
+
+#### <form:form>
+* commandName, modelAttribute
+    - 폼에 적용할 모델의 이름 지정
+    - form 태그의 id값으로도 사용 
+* method 
+    - 메소드 이름 지정.(디폴트는 post)
+    - HTML의 form 태그는 get/post 두개만 지원하는데, form:form에서 다른 메서드 사용시 hidden 타입 HTTP 메소드 정보가 담긴 input 태그가 자동 추가됨.
+        - e.g. `<input type="hidden" name="_method" value="delete"/>`
+        - 서블릿 필터로 HiddenHttpMethodFilter를 설정해두면 히든 필드를 확인해서 HTTP 요청 메소드 정보를 위의 경우는 DELETE로 수정해줌.
+* action
+    - URL을 지정.
+
+#### <form:input>
+- `<input type=text">` 태그 생성.
+* path
+    - id를 따로 지정하지 않았다면 id, name에 할당됨.
+    - value 애트리뷰트에 지정할 모델의 프로퍼티 이름으로 사용됨.
+* cssClass, cssErrorClass
+    - class 애트리뷰트 값을 지정할 때 사용.
+    - 바인딩 오류가 있으면 cssErrorClass에 지정한 값이 세팅됨.
+```jsp
+<form:input path="name"/> <!-- 코드 -->
+
+<input type="text" id="name" name="name" value="Spring"> <!-- 변환 후 -->
+```
+
+#### <form:label>
+`<label>` 태그를 만들어줌.
+
+```jsp
+<!-- 코드 -->
+<form:label path="name" cssClass="label" cssErrorClass="errors"> 
+Name :
+</form:label>
+
+<!-- 변환 후(정상 케이스) -->
+<label for="name" class="label">Name : </label>
+
+<!-- 변환 후(에러 케이스) -->
+<label for="name" class="errors">Name : </label>
+```
+
+#### <form:errors>
+바인딩 에러 메시지 출력 시 사용.
+
+#### <form:hidden>
+input hidden 태그를 작성.
+
+#### <form:password> <form:textarea>
+input password 태그, textarea 태그를 생성.
+
+#### <form:checkbox> <form:checkboxes>
+* HTML 체크박스와 달리 필드마커가 붙은 히든 필드를 자동으로 등록해줌.
 
 <hr>
 
