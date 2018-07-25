@@ -1415,6 +1415,65 @@ input password 태그, textarea 태그를 생성.
 #### JSON을 이용한 AJAX 컨트롤러: POST(JSON) + JSON
 * JSON으로 전달되는 요청은 MappingJacksonHttpMessageConverter를 통해 @RequestBody가 붙은 파라미터로 변환되 받을 수 있음.
 
+
+## 4.6. MVC 네임스페이스
+스프링은 최신 @MVC의 기능을 손쉽게 등록 할 수 있도록 mvc 스키마 전용 태그를 제공.
+
+### <mvc:annotation-driven>
+> 애노테이션 방식 컨트롤러를 사용할 때 필요한 DispatcherServlet의 전략 빈을 자동으로 등록해줌.   
+> 최신 @MVC 지원 기능을 제공하는 빈도 함꼐 등록하고 전략 빈의 프로퍼티로 설정.
+
+#### <mvc:annotatino-driven>에 의해 자동으로 등록되는 빈 정보.
+* DefaultAnnotationHandlerMapping
+* AnnotationMethodHandlerAdapter
+* ConfigurableWebBindingInitializer
+    - 모든 컨트롤러 메소드에 적용되는 WebDataBinder 초기화용 빈을 등록하고 AnnotationMethodHandlerAdapter의 프로퍼티로 연결.
+* 메시지 컨버터
+    - AnnotationMethodHandlerAdapter의 messageConverters 프로퍼티로 메시지 컨버터들이 등록.
+* `<spring:eval>`을 위한 컨버전 서비스 노출용 인터셉터.
+    - spring:eval 태그가 데이터 출력을 위해 사용하는 컨버전 서비스는 ConfigurableWebBindingInitializer에 등록되는 것과 동일.
+        - 인터셉터를 잉요해서 spring:eval 태그에서 사용할 수 있도록 함.
+* validator
+    - 자동 등록되는 ConfigurableWebBindingInitializer의 validator 프로퍼티에 적용할 Validator 타입 빈 지정.
+        - 빈 확장 혹은 재구성을 원한다면 직접 빈으로 등록해줘야함.
+* conversion-service
+    - ConfigurableWebBindingInitializer의 conversionService 프로퍼티에 설정될 빈을 직접 등록.
+
+> 검증기나 컨버전 서비스를 제외하면 기본적으로 등록되는 빈의 설정을 변경할 수는 없음.   
+> 이때는 직접 필요한 빈을 등록하고 프로퍼티를 수정해줘야함.
+
+### <mvc:interceptors>
+HandlerInterceptor를 적용하는 방법은 두가지.
+1. HandlerMapping 빈의 interceptors 프로퍼티를 통해 등록.
+    - 단점:
+        - 인터셉터 등록을 위해 핸들러 매핑 빈을 명시적으로 선언해줘야함.
+        - 핸들러 매핑별로 각각 인터셉터 등록을 해줘야함.
+2. `<mvc:interceptor>`를 이용.
+    - 모든 핸들러 매핑에 일괄 적용.
+    - URL 패턴또한 지정가능.
+
+### <mvc:view-controller>
+> 컨트롤러가 하는 일이 (비즈니스 로직/모델 추가등의 일이 없이) 뷰만 지정해주는 경우가 있음.  
+> 이때 사용.
+
+
+## 4.7. @MVC 확장 포인트 
+> 애노테이션 방식의 컨트롤러를 만들때 적용되는 기능을 확장할 수 있도록 준비된 확장 포인트.
+
+### 4.7.1. AnnotationMethodHandlerAdapter
+#### SessionAttributeStore
+
+#### WebArgumentResolver
+* http 요청 파라미터를 메소드 파라미터 선언을 통해 원하는 형태로 받을 수 있는데, 이를 확장가능.
+* 애플리케이션에 특화된 컨트롤러 파라미터 타입을 추가할 수 있음.
+* WebArgumentResolver 구현 클래스를 빈으로 등록하고 AnnotationMethodHandlerAdapter의 customArgumentResolver 또는 customArgumentResolvers 프로퍼티에 설정해주면 됨.
+
+### ModelAndViewResolver
+* 컨트롤러 메소드의 리턴타입, 메소드 정보, 애노테이션 정보등을 참고해서 ModelAndView를 생성해주는 기능을 만들 수 있음.
+* 특별한 타입의 리턴 값이나 메소드 레벨의 애노테이션 등을 이용해서 ModelAndView를 생성하는 방법을 확장가능.
+
+
+
 <hr>
 
 
