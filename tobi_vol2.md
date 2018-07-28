@@ -1,3 +1,43 @@
+# Chap 01 IoC 컨테이너와 DI
+
+## 1.5. 스프링 3.1의 IoC 컨테이너와 DI
+### 1.5.1. 빈의 역할과 구분
+#### 빈의 종류 
+1. 애플리케이션 로직 빈 
+2. 애플리케이션 인프라 빈 
+3. 컨테이너 인프라 빈
+
+#### 빈의 역할 
+> 웹 환경에서 애플리케이션 컨텍스트는 web.xml의 설정에 따라 루트 애플리케이션 컨텍스트나 서블릿 컨텍스트 형태로 만들어짐.
+
+* 아래는 빈의 메타정보 오브젝트의 role 프로퍼티를 지정할 때 사용하는 상수(BeanDefinition 인터페이스에 정의)
+    - 스프링 빈을 역할에 따라 구분하면 아래와 같이 3가지로 구분 가능
+```java
+int ROLE_APPLICATION = 0;
+int ROLE_SUPPORT = 1;
+int ROLE_INFRASTRUCTURE = 2;
+```
+* 빈의 역할에 따른 구분
+    1. `ROLE_APPLICATION`
+        - (애플리케이션 로직 빈/애플리케이션 인프라 빈과 같이) 애플리케이션이 동작하는 중에 사용되는 빈.
+        - 애플리케이션을 구성하는 빈
+    2. `ROLE_SUPPORT`
+        - 복잡 구조의 빈을 정의할 때 보조적으로 사용되는 빈의 역할을 지정하기 위한 것.
+        - 거의 쓰이지 않음. 
+    3. `ROLE_INFRASTRUCTURE`
+        - `<context:annotation-config>` 같은 전용 태그에 의해 등록되는 컨테이너 인프라 빈
+* 스프링 3.1 부터 개발자가 빈을 정의할 때 @Role을 통해 직접 등록 가능.
+* 빈 메타정보의 역할 속성을 기준으로 구분
+    - 애플리케이션 빈 
+        - 애플리케이션 로직 빈: 개발자가 직접 구성 
+        - 애플리케이션 인프라 빈: 스프링이나 외부 라이브러리에서 제공하는 클래스가 주로 사용됨.
+    - 인프라 빈(컨테이너 인프라 빈)
+
+
+
+
+
+
 # Chap 02: 데이터 액세스 기술 
 
 - Declarative Transaction의 `Transaction Propagation`기능 덕분에 여러 메소드를 조합하여 하나의 트랜잭션에서 동작하게 만들 수 있는 것임.
@@ -1501,9 +1541,110 @@ HandlerInterceptor를 적용하는 방법은 두가지.
 * 디폴트 서블릿 대신 모듈화된 리소스를 다루는 별도의 서블릿을 만들어 처리.
 
 
+## 4.9. 스프링 3.1의 @MVC
+### 4.9.1. 새로운 RequestMapping 전략 
+* 스프링 3.1로 넘어오면서 @RequestMapping을 담당하는 핸들러 매핑, 핸들러 어댑터 전략 빈이 새로 교체됨.
+* DispatcherServlet 전략
+    * HandlerMapping
+        - 3.0: DefaultAnnotationHandlerMapping
+        - 3.1: `RequestMappingHandlerMapping`
+    * HandlerAdapter
+        - 3.0: AnnotationMethodHandlerAdapter
+        - 3.1: `RequestMappingHandlerAdapter`
+    * HandlerExceptionResolver
+        - 3.0: AnnotationMethodHandlerExceptionResolver
+        - 3.1: `ExceptionHandlerExceptionResolver` (@ExceptionHandler 지원)
+
+#### @RequestMapping 메소드와 핸들러 매핑 전략의 불일치
+* HandlerMapping을 구현한 핸들러 매핑 전략의 목적은 HTTP 요청을 처리할 핸들러 오브젝트를 찾아주는 데 있음.  
+    - 핸들러 매핑을 URL같은 요청정보를 기준으로 요청을 처리할 핸들러를 매핑해줌.   
+    - 결국 핸들러는 스프링 컨테이너가 관리하는 컨트롤러 빈 오브젝트임.  
+    -  핸들러 매핑 전략에서 핸들러 오브젝트를 찾은 후 이 핸들러를 실행하는 책임은 HandlerAdapter를 구현한 핸들러 어댑터 전략이 맡음. 
+* 이같이 핸들러 매핑/실행 전략을 분리함으로써 다양한 방식으로 매핑할 수 있고 핸들러 종류를 추가할 수 있도록 유연하게 설계.   
+* 그런데 @RequestMapping이 등장하면서 이 설계가 약간 맞지 않게됨.  
+    - @RequestMapping은 요청을 컨트롤러 오브젝트가 아니라 메소드에 매핑하도록 설계됨.   
+        - 매핑정보를 애노테이션에 넣고 메소드의 파라미터 구성이나 리턴 값의 종류에 따라 자유롭게 선택하고 배열 할 수 있게 만든 @RequestMapping에서는 리플렉션같은 메타 프로그래밍 API를 이용해야만 메소드 호출이 가능.
+    * `3.0에서의 핸들러 매핑은 컨트롤러 빈 오브젝트를 대상으로 매핑을 시도하는데, @RequestMapping으로 매핑된 컨트롤러 메소드는 메소드 자체라 빈이 아님.`
+    * `그래서 3.0에서는 핸들러 매핑에서 컨트롤러 메소드가 속한 컨트롤러 빈을 우선 찾고, 정확히 매핑 된 컨트롤러 메소드를 찾는 책임을 핸들러 어댑터(DefaultAnnotationHandlerAdapter)에게 넘김.`       
+    * 핸들러 매핑 전략에서는 선정된 핸들러만 가지고 정확히 어떤 메소드가 사용될 지 알 수 없기 때문에 HandlerInterceptor의 사용도 제한됨.   
+        - 핸들러인터셉터에서 실행될 핸들러 오브젝트를 받아오는데, @RequestMapping 방식에서는 이 오브젝트가 아니라 이 오브젝트 안의 핸들러 메소드가 실행되어야하는데 이를 알 방법이 없음.   
+        * 스프링 3.1 에서는 @RequestMapping을 처리하는 전략 클래스를 새롭게 설계해 문제 해결.
+        - 인터셉터 어댑터에서 핸들러 오브젝트가 아닌 HandlerMethod로 넘겨줌.
+
+#### HandlerMethod
+* HandlerMethod는 @RequestMapping이 붙은 메소드의 정보를 추상화한 오브젝트 타입.
+* 컨트롤러 오브젝트 대신 추상화된 핸들러 메소드의 정보를 담은 오브젝트를 핸들러 매핑의 결과로 돌려주고, 핸들러 어댑터에서 HandlerMethod 오브젝트의 정보를 이용해서 메소드를 실행함.
+> 보통 핸들러 어댑터는 핸들러 어댑터를 Controller 같은 특정 타입으로 캐스팅한 뒤에 직접 호출하는 방식을 사용함. 
+* HandlerMethod는 그 자체로 실행가능한 오브젝트가 아님. `메소드 실행에 필요한 참조 정보를 담고 있는 오브젝트`임.
+    - 핸들러 어댑터가 핸들러 오브젝트의 정보를 이용해 간접적으로 @RequestMapping 메소드를 실행하도록 접근 방법을 바꾼 것임.
+
+* HandlerMethod 핵심 정보
+    1. 빈 오브젝트
+    2. 메소드 메타정보
+    3. 메소드 파라미터 메타정보
+    4. 메소드 애노테이션 메타정보
+    5. 메소드 리턴 값 메타정보
+
+* 웹 요청을 HandlerMethod에 매핑하는 RequestMappingHandlerMapping은 
+    - DispatcherServlet이 시작될 때 모든 컨트롤러 빈의 메소드를 살펴 매핑 후보가 될 메소드를 추출해서 이를 HandlerMethod 형태로 저장해두고, 
+    - 실제 요청이 들어오면 저장해둔 목록에서 요청 조건에 맞는 HandlerMethod 오브젝트를 찾아 돌려줌.
+* 애플리케이션 컨텍스트가 초기화되면 RequestMappingHandlerMapping 빈에 접근해서 저장된 매핑 조건과 핸들러 메소드 목록을 가져올 수도 있음.
+    - 컨트롤러 매핑에 문제가 있어 404 에러가 날 땐 @RequestMapping 설정이 어떤 요청 조건과 핸들러 메소드 목록을 만들어내는지를 확인해보면 해결에 도움이 됨.
+
+#### @RequestMapping 전략 선택
+* `<mvc:annotation-driven/>`은 스프링 3.1에서 새로 도입된 전략 빈을 등록하는 기능이 포함되어 있음.
+* @Configuration 클래스를 사용하면 @EnableWebMvc나 WebMvcConfigurationSupport를 이용해도 HandlerMethod를 지원하는 새로운 전략 빈이 등록됨.
+
+### 4.9.2. @RequestMapping 핸들러 매핑: RequestMappingHandlerMapping
+* RequestMappingHandlerMapping의 역할은 클라이언트 요청을 @RequestMapping이 붙은 메소드로 매핑해주는 것.
+    - 매핑 결과는 @RequestMapping 메소드의 정보를 추상화한 HandlerMethod 오브젝트 
+
+* @RequestMapping에 포함된 요청 조건 
+    1. value(default): URL 패턴 
+    2. method: HTTP 요청 메소드 
+    3. params: 파라미터
+    4. headers: HTTP 헤더
+    5. consumes: Content-Type 헤더 
+    6. produces: Accept 헤더
+* RequestMappingHandlerMapping은 @RequestMapping의 6가지 조건에 확장 포인트를 통해 등록되는 커스텀 조건을 더해서 총 7가지 요청 조건을 사용함. 
+    - @RequestMapping은 타입, 메소드 레벨에 적용가능하므로 조합하면 총 14가지 조건이 사용됨.
+    - 타입-메소드 레벨의 @RequestMapping의 속성끼리 조합되는 방식이 다름.
+> 책 내용중 궁금한 것.   
+> "DispatcherServlet 내부에만 존재하는 디폴트 전략 오브젝트와 달리 `<mvc:annotation-driven>` 등을 이용해서 생성된 @MVC 전략 오브젝트는 서블릿 컨텍스트의 빈으로 등록됨."   
+> -> 여기서 빈 역할을 하는 오브젝트이지만 빈으로 등록안되고 특정 오브젝트(DispatcherServlet 같은)안에서 사용되는 오브젝트가 있다는 것... 그럼 이 디폴트 애들은 DI를 통해서 사용할 수 없는 것인가. 스프링 배치에서도 약간 인프라 오브젝트같은 느낌인데 빈으로 등록은 하지 않았던 것을 본거 같긴함. 좀 애매하다. 더 공부해봐야할듯.   
+
+#### 요청 조건의 결합 방식
+* URL 패턴
+    - URL 패턴이 하나 이상이면 OR 조건으로 연결. 
+    - 타입과 메소드 레벨에 모두 선언되어있는 경우 이 둘을 조하해서 새로운 경로 조건을 만듬.
+    - 한쪽에만 있으면 그 패턴만 사용. 
+    * 2가지 프로퍼티 
+        - useSuffixPatternMatch: URL 패턴 조건에 `.*`를 포함시킬지를 결정(디폴트 true)
+            - URL 패턴을 "/hello"라고 했으면 "/hello.html", "/hello.do", "/hello.world"가 모두 만족됨.
+        - useTrailingSlashMatch: URL 패턴 조건에 `/`가 붙는 경우를 포함시킬지 결정(디폴트 true)
+        * 해당 프로퍼티를 지정하려면 RequestMappingHandlerMapping을 빈으로 직접 등록해야함.
+* HTTP 요청 방법
+    - 타입과 메소드에 지정된 모든 요청 방법을 OR로 결합. 
+* 파라미터
+    - 모든 조건이 AND로 결합
+* 헤더
+    - 스프링 3.1 에선 Content-Type과 Accept는 헤더에 기술해도 무시됨.(consumes/produces 속성으로 분리됨.)
+    - 모든 조건이 AND로 연결됨.
+* Content-Type 헤더(ConsumesRequestCondition; 속성은 consumes)
+    - Content-Type헤더는 요청의 내용이 어떤 형식인지 알려주는 헤더.
+        - e.g. form 전송의 경우 appliation/x-www-form-urlencoded, 파일을 보내는 경우 multipart/form-data, json의 경우 application/json
+    - 여러 조건은 OR로 연결, 타입과 메소드 동시에 지정되면 메소드 것만 적용.
+* Accept 헤더(ProducesRequestCondition; 속성은 produces)
+    - Accept 헤더는 클라이언트가 받아들일 수 있는 미디어 타입을 지정하는데 사용.
+    - 여러 조건은 OR로 연결, 타입과 메소드 동시에 지정되면 메소드 것만 적용.
+
+> 애노테이션은 자바 타입 정보가 아니여서 상속구조를 따라 상속되지 않음.  
+> 근데 프레임워크 단에서 클래스 계층구조를 따라 슈퍼클래스의 애노테이션 정보를 참고하도록 만들 수 있음.   
+> 스프링의 원칙은 현재 클래스와 메소드의 @RequestMapping을 우선시하고, 없으면 그 슈퍼클래스를 서치함. 현재 클래스와 메소드에 @RequestMapping이 있으면 슈퍼클래스의 것은 무시됨.(@RequestMapping이 오버라이딩 되는 느낌으로 파악.)
+
+* 커스텀 요청 조건의 경우 RequestCondition 인터페이스를 구현해서 만들고 RequestMappingHandlerMapping에 주입하면 됨.
+
+
 
 
 <hr>
-
-
-
