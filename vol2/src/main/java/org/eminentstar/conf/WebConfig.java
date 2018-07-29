@@ -16,6 +16,8 @@ import org.springframework.http.converter.json.MappingJacksonHttpMessageConverte
 import org.springframework.web.bind.support.ConfigurableWebBindingInitializer;
 import org.springframework.web.servlet.ViewResolver;
 import org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
 @Configuration
@@ -56,6 +58,16 @@ public class WebConfig {
     adapter.setMessageConverters(new HttpMessageConverter[] {new MappingJacksonHttpMessageConverter()});
 
     return adapter;
+  }
+
+  @Bean
+  public RequestMappingHandlerMapping getRequestMappingHandlerMapping() {
+    return new RequestMappingHandlerMapping();
+  }
+
+  @Bean
+  public RequestMappingHandlerAdapter getRequestMappingHandlerAdapter() {
+    return new RequestMappingHandlerAdapter();
   }
 
   @Bean

@@ -1644,6 +1644,37 @@ HandlerInterceptor를 적용하는 방법은 두가지.
 
 * 커스텀 요청 조건의 경우 RequestCondition 인터페이스를 구현해서 만들고 RequestMappingHandlerMapping에 주입하면 됨.
 
+### 4.9.3. @RequestMapping 핸들러 어댑터
+* HandlerMethod 타입의 핸들러를 담당하는 핸들러 어댑터는 RequestMappingHandlerAdapter
+
+#### 파라미터 타입(새로 추가됬거나 변경됨 것들 위주)
+* @Validated/@Valid
+    - 모델 애트리뷰트 파라미터에 붙은 @Valid를 통해 모델 클래스의 필드에 붙은 JSR-303 빈 검증기 애노테이션을 통해 모델 값 검증.
+    - 모델 오브젝트 검증시 특정 그룹의 제약 조건을 적용하고 싶을 때 @Validated를 사용하면 됨.
+* @Valid와 @RequestBody
+    - 스프링 3.1의 @Valid는 메시지 컨버터를 이용하는 @RequestBody 파라미터에도 사용 가능.
+    - 모델 오브젝트 검증 같이 간단히 검증 가능.
+* UriComponentsBuilder
+    - UriComponentsBuilder는 URI/URL 정보를 추상화한 UriComponents를 쉽게 생성할 수 있게 도와주는 빌더
+    - 파리미터 값 지정이나 변경하는 일이 간단해짐.
+* RedirectAttributes와 리다이렉트 뷰
+    - 리다이렉트는 현재 요청에 대한 응답을 뷰로 만들어서 보내는 대신 브라우저에게 새로운 URL로 요청을 다시 보내라고 지시하는 응답 방식.
+    - 핸들러 메소드에서 리다이렉트를 사용하려면 RedirectView 오브젝트나 `redirect:` 접두어가 붙은 뷰 이름을 리턴하면 됨.
+        - 모델 오브젝트에 애트리뷰트를 추가해주면 애트리뷰트 정보가 리다이렉트 url의 쿼리스트링에 자동으로 추가됨.
+    - 경로 파라미터(@PathVariable에 매핑되는)가 @RequestMapping 파라미터에 존재하고 컨트롤러 메소드 내에서 사용할 일이 없다면 @PathVariable을 선언하지 말고 "redirect:" 문자열안에 그대로 경로 파라미터로 쓰면 됨.
+    - 모델맵에 리다이렉트할 때 필요없는 모델까지 들어가면 이것도 리다이렉트 url의 쿼리스트링의 일부로 사용되는데, 모델로 이문젤 해결하려면 model을 clear해야함.
+        - 이 문제를 해결하기 위해서 스프링 3.1에서는 RedirectAttributes 라는 파라미터 타입을 지원함.(리다이렉트 url 쿼리스트링에 모델을 사용하는게 아니라 RedirectAttributes 모델에 담긴 것만 사용.)
+* RedirectAttributes와 플래시 애트리뷰트 
+    - redirectAttributes.addFlashAttribute()로 저장된 플래시 애트리뷰트는 리데이렉트시 다음 get 요청에서 자동으로 모델에 추가됨(아마 한번 사용되고 그다음엔 모델에 추가 안된다고 했는듯?)
+
+#### 확장 포인트 
+> WebArgumentResolver는 스프링 3.0의 @MVC에서 지우너하는 핸들러 메소드의 파라미터 타입 확장 포인트.
+
+* 파라미터 : HandlerMethodArgumentResolver
+    - 핸들러 메소드에서 사용할 수 있는 새로운 종류의 파라미터 타입을 추가하려면 HandlerMethodArgumentResolver 인터페이스를 구현한 클래스를 만들어 RequestMappingHandlerAdapter의 `customArgumentResolvers` 프로퍼티에 추가.
+* 리턴 값 : HandlerMethodReturnValueHandler
+    - HandlerMethodReturnValueHandler 인터페이스를 구현 후 RequestMappingHandlerAdapter의 `customReturnValueHandlers`프로퍼티에 추가.
+
 
 
 
