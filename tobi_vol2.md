@@ -1676,6 +1676,74 @@ HandlerInterceptor를 적용하는 방법은 두가지.
     - HandlerMethodReturnValueHandler 인터페이스를 구현 후 RequestMappingHandlerAdapter의 `customReturnValueHandlers`프로퍼티에 추가.
 
 
+### 4.9.4. @EnableWebMvc와 WebMvcConfigurationSupport를 이용한 @MVC 설정 
+* 스프링 3.1의 최신 @MVC 전략을 사용하려면 두가지 방법 사용 가능
+    1. XML 설정에 `<mvc:annotation-driven>`을 추가
+        - @MVC의 디폴트 설정을 그대로 사용한다면 충분함.
+        - @MVC 전략과 관련된 설정을 넣으려면 mvc 네임스페이스의 전용 태그는 불편함.
+    2. `인프라 빈 설정용 애노테이션`을 이용해 @MVC 빈이 등록되도록 함.
+        - 본격적으로 @MVC의 기능을 활용하려면 이와 같이 자바 코드를 이용한 @MVC 빈 등록 및 설정을 사용하는 것이 좋음.
+
+#### @EnableWebMvc와 WebMvcConfigurer
+* **_@Configuration 클래스에 @EnableWebMvc를 붙여주면 <mvc:annotation-driven>을 XML에 넣었을 때와 동일하게 스프링 3.1의 최신 전략 빈이 등록됨**
+* 다른 @Enable로 시작하는 애노테이션의 경우 설정을 바꾸기 위해서 해당 애노테이션의 엘리먼트를 활용했음.
+* 하지만 @MVC의 경우 설정 종류도 많고 방법도 복잡함.
+    - 예를 들면 새로운 오브젝트를 만들어서 추가하거나 가공하는 등의 작업.
+* **스프링은 @Enable 전용 애노테이션으로 등록되는 인프라 빈에 대한 추가 설정을 위해 설정용 빈을 활용하는 방법을 제공**
+    - 인프라 빈의 설정을 담당하는 기능을 가진 클래스를 만들어 빈으로 등록하면 @Enable 전용 애노테이션을 처리하는 단계에서 설정용 빈을 활용해 인프라 빈의 설정을 마무리함.
+    - @Enable 전용 애노테이션의 설정을 위해 사용되는 빈을 `configurer`라고함.
+        - 보통 이런 빈들의 인터페이스의 이름은 Configurer로 끝남.
+    - @EnableWebMvc의 빈 설정자가 구현해야 할 인터페이스는 WebMvcConfiguer
+    - WebMvcConfigurer를 구현한 클래스를 만들어 빈으로 등록해주면 됨. 
+        - WebMvcConfigurer의 메소드는 @MVC와 관련된 다양한 설정 옵션을 지정하거나 관련된 빈 또는 오브젝트를추가하는 등의 작업을 할 수 있게 설계됨.
+
+* WebMvcConfigurer 메소드 이름은 대부분 add나 configure로 시작함.
+    - add* : 레지스트리를 통해 빈이나 새로운 오브젝트를 추가하는 것.
+    - configure* : 수정자 인터페이스를 통해서 설정 작업을 할 수 있는 메소드.
+* 설정이 필요없는 경우에는 메소드를 빈 메소드로 구현하면 되고, 이게 불편하다면 필요한 메소드만 오버라이딩해서 구현할 수 있게 만들어진 WebMvcConfigurerAdapter 클래스를 상속가능.
+
+##### WebMvcConfigurer 인터페이스의 메소드
+* addFormatters()
+    - 포매터는 문자열로 된 폼 값과 모델 오브젝트의 프로퍼티 사이의 변환 작업을 지원해주는 MVC용 컨버터
+    - 스프링 3.1에선 addFormatters()가 제공하는 FormatterRegistry를 사용해 간단히 포메터 등록 가능.
+    - 이 메소드 내에서 오브젝트를 생성해 등록할 수도 있고, 포메터를 다른 곳에서도 주입받아 사용한다면 빈으로 만들어 넣어주면 됨.
+* configureMessageConverters()
+    - 스프링이 기본적으로 제공해주는 메시지 컨버터 구성을 사용하지 않고 직접 메시지 컨버터를 구성하고 싶을 때 사용.
+    - 메소드 명이 configure로 시작하는 것에서 알 수 있듯이 하나라도 메시지 컨버터를 추가하면 디폴트 메시지 컨버터가 무시됨.
+        - 디폴트 메시지 컨버터에 새로운 메시지 컨버터를 추가하고 싶다면 `WebMvcConfigurationSupport 확장을 이용해야함.`
+* getValidator()
+* addArgumentResolvers()
+    - RequestMappingHandlerAdapter의 파라미터 처리용 확장포인트인 Handl
+    - erMethodArgumentResolver를 추가할 수 있는 메소드
+    - 디폴트 파라미터 타입이나 애노테이션 외에 새로운 파라미터 종류를 지원할 경우에 사용.
+* addReturnValueHandlers() 
+    - RequestMappingHandlerAdapter의 리턴 값 처리용 확장포인트인 HandlerMethodReturnValueHandler를 추가할 수 있는 메소드
+    - 새로운 리턴 값 처리 방식을 추가할 때 사용
+* configureHandlerExceptionResolvers()
+    - 디폴트로 등록되는 핸들러 예외 전략을 새롭게 구성하려고 할 때 사용
+* addInterceptors()
+    - 인터셉터를 등록해주는 `<mvc:interceptors>`의 자바 코드 버전
+    - 인터셉터시 특정 URL 패턴만 지정해줄 수도 있음.
+* addViewControllers()
+    - 뷰 이름만 돌려주는 간단한 컨트롤러를 등록하는 메소드
+* addResourceHandlers()
+    - `<mvc:resources>`의 기능을 담당하는 메소드
+* configureDefaultServletHandling()
+    - `<mvc:default-servlet-handler/>`를 등록한 것과 같은 설정 결과를 가져올 때 사용.
+
+
+#### @MVC 설정자 빈 등록 방법
+- WebMvcConfigurer 클래스를 별도로 구현하고 @Configuration이 붙은 config 클래스에서 빈으로 등록할 수 있긴 하지만, 이경우 @Bean을 통해 등록해줘야하는 작업이 필요함.
+    * `@Configuration이 붙은 클래스도 빈으로 등록`되는데, 이 config 클래스가 WebMvcConfigurer를 구현하게 만들면 별도로 빈으로 등록할 필요가 없음.
+* 또한 여러 Configurer(e.g. securityConfigurer, customHandlerConfigurer, etc.)를 나둬서 구현해 config에 추가해줄 수도 잇음.
+
+* WebMvcConfigurationSupport는 @EnableWebMvc에 의해 등록되는 모든 전략 빈의 내용을 @Bean 메소드로 갖고 있는 클래스.
+    - 이 클래스를 상속해서 @Bean 메소드를 오버라이딩해서 @EnableWebMvc 전략 구성을 새롭게 바꿀 수 있음.
+
+#### @MVC 전략용 설정 빈 등록
+* WebMvcConfigurer를 통해 등록되지 않는 @MVC 관련 빈도 있음.
+    - 이경우 집접 config에 @Bean 메소드를 통해 등록하면 됨.
+    - View, ViewResolver, LocaleResolver, MultipartResolver, MessageSource같은 서블릿 컨텍스트에 빈 형태로 등록해줘야 하는 것들은 모두 @Bean을 통해 등록.
 
 
 <hr>
