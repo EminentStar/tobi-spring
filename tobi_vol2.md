@@ -60,6 +60,7 @@
     - 웹 환경에서 사용할 때 필요한 기능이 추가된 애플리케이션 컨텍스트.
         - 가장 많이 사용되는데, 스프링 애플리케이션은 대부분 서블릿 기반의 독립 웹 애플리케이션(WAR)으로 만들어지기 때문임.
     - WebApplicationContext의 특징은 자신이 만들어지고 동작되는 웹 모듈에 대한 정보에 접근가능하다는 것.
+    - default는 XmlWebApplicationContext이고, 자바 애노테이션을 이용한 설정리소스만 참고한다면 AnnotationConfigWebApplicationContext를 사용.
 
 > 스프링 IoC 컨테이너는 빈 설정 메타정보를 읽어서 빈 오브젝트를 만들고 DI 작업을 수행함.  
 > 근데 여기서 끝나는게 아니라, 어디선가는 특정 빈 오브젝트의 메소드를 호출함으로써 애플리케이션을 동작시켜야 함.  
@@ -83,6 +84,183 @@
 >    
 > 스프링은 웹 환경에서 애플리케이션 컨텍스트를 생성하고 설정 메타정보로 초기화하고 클라이언트 요청마다 적절한 빈을 찾아서 이를 실행해주는 기능을 가진 `DispatcherServlet`이란 서블릿을 제공함. 이 스프링이 제공해준 서블릿을 web.xml에 등록하는 것만으로 웹 환경에서 스프링 컨테이너가 만들어지고 애플리케이션을 실행할 준비는 대부분 끝남.  
 
+### 1.1.3. IoC 컨테이너 계층구조
+* IoC 컨테이너는 보통 한 애플리케이션에 하나면 충분.
+* 근데 트리 모양의 계층구조를 만들 때 한개 이상의 IoC 컨테이너를 만들어두고 사용할 필요가 있음.
+
+#### 부모 컨텍스트를 이용한 계층구조 효과 
+* 모든 애플리케이션 컨텍스트는 부모 애플리케이션 컨텍스트를 가질 수 있음.
+* 계층구조의 모든 애플리케이션 컨텍스트는 각자 독립된 설정정보를 이용해서 빈 오브젝트를 만들고 관리함.
+    - 그런데 DI를 위해 빈을 찾을 때는 부모 컨텍스트의 빈까지 모두 검색함.
+    - 자신한테서 찾고 없으면 부모, 부모의 부모로 빈이 있는지 요청함.
+    - 트리상에서 `자식이나 형제 컨텍스트엔 요청하지 않음.`
+    - 검색순서는 항상 자신이 먼저이고, 그다음 직계 부모의 순서
+* 이런 계층트리형 애플리케이션 컨텍스트 구조를 사용하는 이유
+    1. 이미 만들어진 애플리케이션의 설정을 가져다 사용하면서 일부 빈만 변경을 하고 싶은 경우 하위 컨텍스트에서만 빈을 다시설정해주기 위함.
+    2. 공유하고자 하는 설정을 만들기 위함.
+* 자식 컨텍스트는 부모 컨텍스트의 빈을 사용할 수 있지만, 그 반대는 안됨.
+* AOP처럼 컨텍스트 안의 많은 빈에 일괄적으로 적용되는 기능은 대부분 해당 컨텍스트로 제한됨.
+
+### 1.1.4. 웹 애플리케이션의 IoC 컨테이너 구성
+> 서버에서 동작하는 애플리케이션에서 스프링 IoC 컨테이너를 사용하는 방법은 크게 3가지.   
+> 두가지는 웹 모듈 안에 컨테이너를 두는 것.   
+> 나머지 한가지는 엔터프라이즈 애플리케이션 레벨에 두는 것(이게 뭐지..? 서블릿 컨테이너 단에 둔다는 것인가?)  
+> 우선 웹 애플리케이션 안에 WebApplicationContext 타입의 IoC 컨테이너를 두는 방법을 살펴볼 것임.
+
+> 자바 서버에는 하나 이상의 웹 모듈을 배치해서 사용 가능.  
+> 스프링을 사용한다면 보통 독립적으로 배포 가능한 웹 모듈(WAR) 형태로 애플리케이션 배포.  
+> _하나의 웹 애플리케이션은 여러개의 서블릿을 가질 수 있는데, 자바 기술이 등장했던 초창기에는 URL하나당 하나의 서블릿을 만들어 등록 후 각각 독립적인 기능을 담당하게 함._   
+> `하지만 최근에는 많은 웹 요청을 한 번에 받을 수 있는 대표 서블릿을 하나 두고, 공통작업을 수행하게 한 후에 각 요청의 기능을 담당하는 핸들러라고 불리는 클래스를 호출하는 방식으로 개발하는 경우가 일반적임.`(이런 방식을 프론트 컨트롤러 패턴이라 함.)   
+> 스프링도 프론트 컨트롤러 패턴을 사용하고, 스프링 웹 앱에서 사용하는 서블릿은 많아봐야 1~3개.
+
+* 웹 애플리케이션 안에서 동작하는 IoC 컨테이너를 만드는 방법은 2가지
+    1. 스프링 애플리케이션의 요청을 처리하는 서블릿 안에서 생성.
+    2. 웹 애플리케이션 레벨에서 만들어지는 것.
+* 일반적으로 이 두가지방법을 모두 사용해서 컨테이너를 만듬.
+    - 그래서 스프링 웹 애플리케이션에선 두개의 컨테이너, 즉 WebApplicationContext 오브젝트가 만들어짐.
+    - **스프링 애플리케이션의 프론트 컨트롤러 서블릿이 추가적으로 늘어난다면 그만큼 전체 컨테이너 갯수는 더 늘어날 것임.**
+
+#### 웹 애플리케이션의 컨텍스트 계층구조
+* 웹 애플리케이션 레벨에 등록되는 컨테이너는 보통 루트 웹 애플리케이션 컨텍스트라 불림.
+* 이 웹 애플리케이션에는 하나 이상의 스프링 애플리케이션의 프론트 컨트롤러 역할을 하는 서블릿이 등록될 수 있음.(일반적으로는 하나의 프론트 컨트롤러 서블릿만 둠.)
+    - 이 서블릿에는 각각 독립적으로 애플리케이션 컨텍스트가 만들어짐.(각 프론트 컨트롤러 서블릿은 각자 자신 전용의 애플리케이션 컨텍스트를 갖고 있음.)
+* 여러개의 서블릿의 컨텍스트가 공유하는 공통적인 빈이 있다면 루트 컨텍스트에 등록하면 중복 등록을 방지할 수 있음.
+* 계층구조로 만드는 또 다른 이유는, 전체 애플리케이션에서 웹 기술에 종속되는 부분과 그렇지 않은 부분을 구분하기 위해서.
+    - 스프링을 이용하지만 스프링의 웹 기술을 사용하지 않는 경우도 있음.(JSP/Servlet, Struts, etc.)
+    - 이런 경우 계층형태로 컨텍스트를 분리하는 것이 좋음.
+    - 비 스프링 웹기술에서 루트 애플리케이션 컨텍스트를 가져오기 위해, 스프링은 웹 애플리케이션마다 하나씩 존재하는 `ServletContext`를 통해 루트 애플리케이션 컨텍스트에 접근할 수 있는 방법 제공.
+        - `WebApplicationContextUtils.getWebApplicationContext(ServletContext sc)`
+        - `ServletContext`는 웹 애플리케이션마다 하나씩 만들어지는 것으로, `서블릿의 런타임 환경정보`를 담고 있음.
+            - HttpServletRequest/HttpSession 오브젝트를 갖고 있으면 간단히 ServletContext를 가져올 수 있음.
+        - 스프링과 연동해 사용하는 서드파티 웹 프레임워크를 사용한다면 루트 컨텍스트를 가져올때 이방법을 사용해야함.
+        - ServletContext에 접근할 수 있는 JSP, Servlet에서도 가능.
+
+#### 웹 애플리케이션의 컨텍스트 구성 방법
+1. 서블릿 컨텍스트와 루트 애플리케이션 컨텍스트 계층 구조 
+2. 루트 애플리케이션 컨텍스트 단일 구조 
+3. 서블릿 컨텍스트 단일 구조
+
+#### 루트 애플리케이션 컨텍스트 등록 
+* 가장 간단한 방법은 서블릿의 event listener를 이용하는 방법.
+    - 스프링은 `웹 애플리케이션의 시작과 종료시 발생하는 이벤트를 처리하는 리스너인 ServletContextListener`를 이용함.
+```java
+package javax.servlet;
+
+import java.util.EventListener;
+
+public interface ServletContextListener extends EventListener {
+  void contextInitialized(ServletContextEvent var1);
+  void contextDestroyed(ServletContextEvent var1);
+}
+```
+* ServletContextListener 인터페이스를 구현한 리스너는 웹 애플리케이션 전체에 적용가능한 DB 연결/로깅 같은 서비스를 만드는데 유용.
+* 이를 이용해서 웹 애플리케이션이 시작될 때 루트 애플리케이션 컨텍스트를 만들어 초기화하고, 웹 애플리케이션이 종료될 때 컨텍스트를 함꼐 종료하는 기능을 가진 리스너를 만들 수 있음.
+    - 스프링은 이를 위해 `ContextLoaderListener` 제공.
+
+```java
+package org.springframework.web.context;
+
+public class ContextLoaderListener extends ContextLoader implements ServletContextListener {
+  private ContextLoader contextLoader;
+  public ContextLoaderListener() { }
+  public ContextLoaderListener(WebApplicationContext context) {
+    super(context);
+  }
+  public void contextInitialized(ServletContextEvent event) {
+    this.contextLoader = this.createContextLoader();
+    if (this.contextLoader == null) {
+      this.contextLoader = this;
+    }
+    this.contextLoader.initWebApplicationContext(event.getServletContext());
+  }
+
+  public void contextDestroyed(ServletContextEvent event) {
+    if (this.contextLoader != null) {
+      this.contextLoader.closeWebApplicationContext(event.getServletContext());
+    }
+    ContextCleanupListener.cleanupAttributes(event.getServletContext());
+  }
+}
+```
+* ContextLoaderListener 등록
+```xml
+<listener>
+    <listener-class>org.springframework.web.context.ContextLoaderListener
+    </listener-class>
+</listener>
+```
+
+* ContextLoaderListener는 웹 애플리케이션이 시작할 때 자동으로 루트 애플리케이션 컨텍스트를 만들고 초기화해줌.
+* 디폴트 설정
+    - 애플리케이션 컨텍스트 클래스: XmlWebApplicationContext
+    - XML 설정파일 위치: /WEB-INF/applicationContext.xml
+* 컨텍스트 클래스와 설정파일 위치는 `서블릿 컨텍스트 파라미터`를 선언해서 변경할 수 있음.
+    - ContextLoaderListener가 이용할 파라미터를 `<context-param>`에 넣으면 디폴트 설정대신 파라미터로 지정한 내용이 적용됨.
+
+* contextConfigLocation
+    - 디폴트 xml 설정파일 위치를 변경 
+    - 설정파일의 위치는 리소스 로더가 사용하는 접두어를 사용해서 표현할 수도 있음.
+    - 접두어를 붙이지 않으면 웹 애플리케이션의 서블릿 리소스 패스로부터 파일을 찾음.(그래서 보통 `/WEB-INF/`로 시작)
+        - e.g. 클래스패스로부터 설정파일을 찾으려면 `classpath:applicationContext.xml`같은 류로 작성하면 됨.
+```xml
+<context-param>
+    <param-name>contextConfigLocation</param-name>
+    <param-value>
+        /WEB-INF/daoContext.xml
+        /WEB-INF/applicationContext.xml
+    </param-value>
+</context-param>
+```
+
+* contextClass
+        - ContextLoaderListener가 생성하는 컨텍스트의 클래스를 변경하고자 할 때.
+```xml
+<context-param>
+    <param-name>contextClass</param-name>
+    <param-value>
+        org.springframework.web.context.support.AnnotationConfigWebApplicationContext
+    </param-value>
+</context-param>
+```
+
+#### 서블릿 애플리케이션 컨텍스트 등록
+* 스프링의 프론트 컨트롤러 서블릿은 DispatcherServlet.
+* 웹 애플리케이션에 여러개의 DispatcherServlet을 등록가능.
+* 각 DispatcherServlet은 서블릿이 초기화될 때 자신만의 컨텍스트를 생성하고 초기화함.
+    - 이때 루트 애플리케이션 컨텍스트를 찾아서 부모 컨텍스트로 사용함.
+
+* 서블릿 등록 
+    * `<servlet-name>`
+        - DispatcherServlet에 의해 만들어지는 각 애플리케이션 컨텍스트는 독립적인 네임스페이스를 가짐.
+        - 이 네임스페이스가 서블릿 단위로 만들어지는 컨텍스트를 구분하는 키가 됨.
+    * `<load-on-startup>`
+        - 서블릿 컨테이너가, 등록된 서블릿을 언제 만들고 초기화할 지, 또 그 순서는 어떻게 되는지를 지정하는 정수 값.
+        - 0 이상을 넣으면 웹 애플리케이션이 시작되는 시점에 서블릿을 로딩하고 초기화한다.
+        - 여러 서블릿이 등록되어있다면 작은 수를 가진 서블릿이 우선적으로 만들어진다.
+    * 서블릿 컨텍스트의 파라미터 선언 방법은 루트 컨텍스트와 거의 비슷한데, 파라미터 선언에 context-param대신 servlet안에 있는 `<init-param>`을 이용한다는 점만 다름.
+```xml
+<servlet>
+    <servlet-name>spring</servlet-name>
+    <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+</servlet>
+```
+
+* 단일 서블릿 컨텍스트 구성 시(루트 컨텍스트 없이 서블릿 애플리케이션 컨텍스트에서 서비스/데이터액세스 레이어 빈, 웹 관련 빈을 모두 넣고자할 때)
+```xml
+<servlet>
+    <servlet-name>spring</servlet-name>
+    <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+    <init-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>
+            /WEB-INF/applicationContext.xml
+            /WEB-INF/spring-servlet.xml
+        </param-value>
+    </init-param>
+    <load-on-startup>1<load-on-startup>
+</servlet>
+```
 
 
 ## 1.5. 스프링 3.1의 IoC 컨테이너와 DI
