@@ -262,6 +262,203 @@ public class ContextLoaderListener extends ContextLoader implements ServletConte
 </servlet>
 ```
 
+## 1.2. IoC/DI를 위한 빈 설정 메타정보 작성
+* IoC 컨테이너의 가장 기본적인 역할은 코드를 대신해서 애플리케이션을 구성하는 빈 오브젝트를 생성하고 관리하는 것.
+* 컨테이너가 빈이라는 오브젝트를 만들고 관리하게 하는 것이 DI를 비롯한 스프링의 주요 기술을 적용하기 위한 전제조건임.
+* 각종 빈 설정 메타정보 리소스 파일을 BeanDefinitionReader가 읽어서 IoC 컨테이너가 읽을 수 있게 BeanDefinition 형태로 변환시킴.
+
+### 1.2.1. 빈 설정 메타정보
+* BeanDefinition은 여러개의 빈을 만드는데 사용가능.(한 클래스에서 이름이 다른 여러 빈 오브젝트를 생성할 수 있음)
+    - 그리서 BeanDefinition에는 id, name 정보는 들어가지 않음.
+
+#### 빈 설정 메타정보 항목 ( 항목이름(디폴트 값) )
+* **beanClassName** (없음)
+    - 빈 클래스 이름
+* parentName
+    - 빈 메타정보를 상속 받을 부모 BeanDefinition의 이름.
+* factoryBeanName
+    - 팩토리 역할하는 빈을 통해 빈 오브젝트를 생성하는 경우 팩토리 빈의 이름 지정
+* factoryMethodName
+    - 다른 빈 또는 클래스의 메소드를 통해 빈 오브젝트를 생성하는 경우 메소드 이름 지정
+* `scope` (싱글톤)
+    - 빈 오브젝트 생명주기를 결정하는 스코프를 지정. 크게 싱글톤/비싱글톤 으로 나뉨.
+* `lazyInit` (false)
+    - 빈 오브젝트 생성을 최대한 지연할 것인지를 지정.
+    - true이면 컨테이너는 빈 오브젝트의 생성을 꼭 필요한 시점까지 미룸. 
+* dependsOn
+    - 먼저 만들어져야 하는 빈을 지정.
+    - 빈 오브젝트 생성 순서가 보장되야하는 경우 이용.
+* autowireCandidate (true)
+    - 명시적인 설정없이도 자동으로 DI 후보를 결정하는 자동와이어링 대상으로 포함시킬지의 여부.
+* primary (false)
+    - 자동와이어링 중 DI 후보가 여럿이 발생한 경우 최종 선택의 우선권을 부여할지 여부.
+* abstract (false)
+    - 메타정보 상속에만 사용하는 추상 빈으로 만들지 여부
+* autowireMode
+* dependencyCheck
+* initMethod
+    - 빈이 생성되고 DI를 마친 뒤에 실행할 초기화 메소드의 이름
+* destroyMethod
+    - 빈의 생명주기가 다 돼서 제거하기 전에 호출할 메소드의 이름
+* propertyValues
+    - 프로퍼티의 이름과 설정 값 또는 레퍼런스.
+    - 수정자 메소드를 통한 DI 작업에서 사용.
+* constructorArgumentValues
+    - 생성자의 이름과 설정 값 또는 레퍼런스.
+    - 생성자를 통한 DI 작업에서 사용.
+* annotationMetadata
+
+### 1.2.2. 빈 등록 방법
+스프링에서 자주 사용되는 빈 등록 방법 5가지
+
+#### (1) XML: <bean> 태그
+* bean 태그를 통해 스프링 빈 메타정보의 거의 모든 항목을 지정가능함.
+* 이 태그는 beans라는 루트 엘러먼트를 가지는 xml문서에 포함됨.
+
+```xml
+<bean id="hello" class="org.eminentstar.ioc.Hello">
+</bean>
+```
+* bean은 다른 빈의 property 태그 안에 정의할 수도 있음.
+    - 이때는 bean의 id, name을 지정해주지 않음.
+    - 이렇게 다른 빈의 설정안에 정의되는 빈을 `inner bean`이라고 함.
+        - inner bean은 특정 빈에서만 참조하는 경우에 사용.
+        - 아이디가 없기에 다른 빈에서는 참조할 수 없음.
+        - `Q: 그렇다면 inner bean은 DI를 통해서는 참조 가능한가? 음 id가 없으니 안되려나? DI는 어떻게 흘러가는지를 알아야할듯.`
+```xml
+<bean id="hello" class="org.eminentstar.ioc.bean.Hello">
+    <property name="printer">
+        <bean class="org.eminentstar.ioc.bean.StringPrinter"/>
+    </property>
+</bean>
+```
+  
+
+#### (2) XML: 네임스페이스와 전용 태그
+* 다양한 스키마에 정의된 전용 태그를 사용해 빈을 등록하는 방법
+* 스프링의 빈을 분리를 하자면 `애플리케이션의 핵심 코드를 담은 컴포넌트`와 `서비스 또는 컨테이너 설정을 위한 빈`으로 구분가능.
+```xml
+<!-- vol1에서 AOP를 살펴볼 때 만들어 사용했던 빈. 이는 성격이 좀 다름. -->
+<bean id="mypointcut" class="org.springframework.aop.aspectj.AspectJExpressionPointcut">
+    <property name="expression" value="execution(* *..ServiceImpl.upgrade*(..))"/>
+</bean>
+```
+* 위의 빈은 애플리케이션 핵심 로직을 담는 컴포넌트가 아님.
+    - 단지 컨텍스트가 활용하는 기술적인 설정정보를 담고 있을뿐임.
+* `스프링은 DI의 원리를 애플리케이션 컨텍스트 자신에도 적용`하기 때문에 애플리케이션 컨텍스트가 필요로 하는 정보도 오브젝트 형태로 만들어 컨테이너 자신에게 DI해서 사용하게 함. (확장성)
+* `문제`: 근데 이렇게 컨텍스트가 사용하는 설정정보를 담은 빈을 일반 핵심 로직 컴포넌트 빈과 동일하게 bean태그를 사용해서 만들기에 구분이 잘 안됨.
+    * 그래서 스프링은 기술적인 설정과 기반 서비스를 빈으로 등록할 때를 위해 의미가 잘 드러나는 네임스페이스와 태그를 가진 설정 방법을 제공함.
+        - 이로 인해 내용이 분명하게 드러나고 선언 자체도 깔끔해짐.
+        - 애플리케이션 로직을 담은 빈과도 혼돈되지 않음.
+```xml
+<aop:pointcut id="mypointcut" expression="execution(* *..*ServiceImpl.upgrade*())"/>
+```
+* 전용 태그 하나로 동시에 여러개의 빈을 만들 수도 있음.
+* 애플리케이션에서 특정 패턴으로 자주 반복적으로 등장하는 빈 선언이 있거나 자주 사용하는 기술이 있다면 커스탬 태그를 만드는 것도 고려.
+
+
+#### (3) 자동인식을 이용한 빈 등록: 스테레오타입 애노테이션과 빈 스캐너
+* 빈으로 사용될 클래스에 특별한 애노테이션을 부여해주면 이런 클래스를 자동으로 찾아서 빈으로 등록해주게 할 수 있음.
+    - 이를 `bean scanning을 통한 자동인식 빈 등록` 이라함.
+* scanning을 담당하는 오브젝트를 `bean scanner`라고 함.
+    - bean scanner는 지정된 클래스패스 아래의 모든 패키지의 클래스를 대상으로 필터를 적용해서 빈 등록을 위한 클래스들을 선별해냄.
+    - bean scanner의 디폴트 필터는 @Component, 또는 @Component를 메타 애노테이션으로 가진 애노테이션이 부여된 클래스를 선택하도록 되어있음.
+        - 이런 @Component, @Component를 메타애노테이션으로 가지는 디폴트 필터에 적용되는 애노테이션을 스프링에선 `stereotype annotation`이라 함.
+            - stereotype annotation에 value를 지정해 bean name을 설정가능.
+    - bean scanner는 기본적으로 클래스 이름을 빈의 아이디로 사용.(클래스 이름의 첫글자가 소문자인.)
+        - 빈 등록을 위해선 최소한 클래스 이름과 아이디가 필요한데, 클래스 이름은 bean scanner가 클래스를 감지하기에 들고 올 수 있음.
+    - AnnotationConfigApplicationContext는 bean scanner를 내장하고 있는 애플리케이션 컨텍스트 구현 클래스
+* XML로 빈 설정 메타정보를 관리하는게 전체 애플리케이션의 의존관계나 설정등을 한눈에 보는게 편하긴함.
+    - 또한 빈 스캔에 의해 자동등록되는 빈은 xml처럼 상세한 메타정보 항목을 지정할 수 없음.
+    - 클래스당 한 개 이상의 빈을 등록할 수 없음.  
+    - 하지만 빈 이름, 스코프, 지연 생성 같은 건 다른 애노테이션으로 설정가능하고, 보통 한개 클래스당 하나 이상의 빈을 등록하는 경우는 별로 없음. 빈 스캐닝 방법으로 괜찮음.
+* 개발, 테스트, 운영 등 환경에 따라 독립된 설정정보를 두는 것을 권장.
+
+##### 자동인식을 통한 빈등록 방법
+1. XML을 이용한 bean scanner 등록
+    - XML 설정파일안에 context 스키마의 전용 태그를 넣어 간단히 bean scanner 등록 가능 
+```xml
+<!-- 이 태그로 등록된 빈 오브젝트가 빈스캐너로 동작하며 인식된 클래스를 빈으로 등록함. -->
+<context:component-scan base-package="org.eminentstar.ioc.bean" />
+```
+
+2. bean scanner를 내장한 ApplicationContext 사용
+```xml
+<!-- 루트 컨텍스트가 xml대신 빈 스캐너를 이용해 빈을 등록하도록 한 예시 -->
+<context-param>
+    <param-name>contextClass</param-name>
+    <param-value>
+        org.springframework.web.context.support.AnnotationConfigWebApplicationContext
+    </param-value>
+</context-param>
+
+<context-param>
+    <param-name>contextConfigLocation</param-name>
+    <param-value>
+        org.eminentstar.ioc.bean
+        org.eminentstar.mvc.controller
+    </param-value>
+</context-param>
+
+<!-- 서블릿 애플리케이션 컨텍스트라면 서블릿 안의 <init-param>을 이용해 동일 정보 설정. -->
+```
+* 빈 클래스 자동인식을 위한 stereotype annotation 종류 (여러 애노테이션을 사용하는 이유는 계층별 빈의 특성이나 종류를 나타내려는 목적, AOP 적용 대상 그룹을 만들기 위해서이기도 함.)
+    1. @Repository
+        - 데이터 액세스 계층의 DAO, or Repository 클래스에 적용.
+        - DataAccessException 자동변환 같은 AOP 적용 대상을 선정하기 위해서도 사용.
+    2. @Service
+        - 서비스 계층
+    3. @Controller
+        - 프레젠테이션 계층의 MVC 컨트롤러에 사용. 스프링 웹 서블릿에 의해 웹 요청을 처리하는 컨트롤러 빈으로 선정.
+
+#### (4) 자바 코드에 의한 빈 등록: @Configuration 클래스의 @Bean 메소드
+* 스프링은 코드를 이용해서 오브젝트를 생성하고 DI를 진행하는 방식으로 만들어진 오브젝트를 빈으로 쓸 수 있는 방법을 제공.
+* 하나의 클래스안에 여러 빈 정의 가능 
+* 애노테이션을 통해 빈 오브젝트의 메타정보를 추가하는 것 가능. 
+* 정의를 담고 있는 클래스 자체가 자동인식 빈의 대상이 되서 xml에 명시적으로 등록하지 않아도 됨.
+  
+* **빈 설정 메타정보를 담고 있는 자바코드**는 `@Configuration` 애노테이션이 달린 클래스를 이용해 작성.
+    - 이 클래스에 `@Bean이 붙은 메소드`를 정의할 수 있는데, **이 @Bean 메소드를 통해 빈 정의 가능**.
+    - xml과 비교해보면 @Configuration 클래스은 beans 태그, @Bean 메소드는 bean 태그에 대응된다 보면 됨.
+    - @Configuration과 @Bean이 붙으면 스프링 컨테이너가 인식할 수 있는 빈 메타정보 겸 빈 오브젝트 팩토리가 됨.
+        - @Configuration과 @Bean을 사용하는 클래스는 자바코드로 표현되는 메타정보로 이해하는 것이 좋음.
+    - @Bean 이 붙은 메소드의 이름이 빈의 이름이 됨.
+    - @Configuration이 붙은 클래스도 빈으로 등록이 됨.
+* `스프링은 @Bean이 붙은 메소드를 이용해 빈을 만들 때 싱글톤 빈이라면 한 개의 오브젝트만 생성이 되고 더 이상 새로운 오브젝트가 만들어지지 않도록 특별한 방법으로 @Bean 메소드를 조작해둠.`(**주의: @Configuration 클래스안에서 사용된 @Bean에만 해당.**)
+* 자바 코드를 이용한 빈 등록은 단순 빈 스캐닝을 통한 자동인식으로는 등록하기 어려운 기술 서비스의 빈의 등록이나, 컨테이너 설정용 빈을 xml 없이 등록하려 할 때 유용.
+    - 예를 들면, DataSource 빈을 bean tag대신 빈 스캐너로 자동등록하려면 좀 복잡한 방법을 거처야함. (빈 스캐너에서 패턴 필터를 적용한다거나, DataSource를 래핑한 클래스에서 @Component를 붙인다거나.)
+    - 위와 같이 일반 애플리케이션 클래스에 설정이 숨어있게하는 것보다, 아예 빈 설정 메타정보를 담는 것을 목적으로하는 @Configuration 클래스로 만드는게 훨씬 깔끔.
+        - 이렇게 하면 프로퍼티 값지정이나 다른 설정도 쉽게 가능.(xml 없이도)
+
+* 자바코드에 의한 설정이 XML 같은 외부 설정파일을 이용하는 것보다 유용한 점
+    1. 컴파일러나 IDE를 통한 타입 검증 가능.
+    2. 자동완성과 같은 IDE 지원 기능을 최대한 이용 가능.
+    3. 이해하기 쉬움.
+    4. 복잡한 빈 설정이나 초기화 작업을 손쉽게 적용 가능.
+
+
+#### (5) 자바 코드에 의한 빈 등록: 일반 빈 클래스의 @Bean 메소드
+* 일반 POJO 클래스에도 @Bean을 적용가능.
+    - 하지만 @Configuration 클래스내에서 @Bean이 선언되지 않았기에, @Bean 메소드 호출 시 매번 다른 오브젝트를 받게됨.
+    - `Q: Setter method를 통한 DI의 원리에 대해 좀 공부해야할 필요가 있을듯`
+* 일반적으로 @Bean을 통해 정의되는 빈이 해당 @Bean 메소드를 정의한 클래스와 밀접한 연관이 있을 때, 특히 종속적인 관계일때 사용.
+* 하지만 설정 수정시 일반 클래스를 수정해야 한다는 단점.
+
+
+#### 빈 등록 메타정보 구성 전략
+자주 사용되는 설정 방법
+1. XML 단독 사용 
+    - 모든 빈을 명시적으로 XML에 등록 (bean 태그와 스키마에 정의된 전용 태그를 이용)
+    - XML은 BeanDefinition을 제외했을 때 스프링이 제공하는 모든 종류의 빈 설정 메타정보 항목을 지정할 수 있는 유일한 방법이기도 함.
+2. XML과 빈 스캐닝의 혼용
+    - 애플리케이션 핵심로직을 담은 클래스는 보통 하나만 필요하기에 빈 스캐닝 대상으로 두면 됨.
+    - 자동인식 방법으로 등록하기 불편한 기술 서비스, 기반 서비스, 컨테이너 설정 등의 빈은 XML을 사용하면 됨.
+    - 자동인식 방식으로 설정하기 어려운 DataSource, 트랜잭션 매니저등은 bean 태그를 통해 설정. 
+    - 빈 스캐닝시 스캔 대상이 되는 클래스의 패키지를 미리 결정해둬야함에 주의
+        - `빈 스캐닝은 애플리케이션 컨텍스트별로 진행되는 작업`
+        - 중복 등록이 될 수도 있음. 주의.
+3. XML 없이 빈 스캐닝 단독 사용 
+
 
 ## 1.5. 스프링 3.1의 IoC 컨테이너와 DI
 ### 1.5.1. 빈의 역할과 구분
