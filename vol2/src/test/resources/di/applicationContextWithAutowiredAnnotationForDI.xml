@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans
+  http://www.springframework.org/schema/beans/spring-beans.xsd
+  http://www.springframework.org/schema/context
+  http://www.springframework.org/schema/context/spring-context-3.0.xsd
+">
+
+  <context:annotation-config />
+  <!--<context:component-scan base-package="org.eminentstar.ioc.bean.annotated"/>-->
+
+  <bean id="helloWithField" class="org.eminentstar.ioc.bean.annotated.autowired.HelloWithField">
+    <property name="name" value="Spring"/>
+  </bean>
+
+  <bean id="helloWithSetterMethod" class="org.eminentstar.ioc.bean.annotated.autowired.HelloWithSetterMethod">
+    <property name="name" value="Spring"/>
+  </bean>
+
+  <bean id="helloWithConstructor" class="org.eminentstar.ioc.bean.annotated.autowired.HelloWithConstructor">
+    <property name="name" value="Spring"/>
+  </bean>
+
+  <bean id="helloWithNormalMethod" class="org.eminentstar.ioc.bean.annotated.autowired.HelloWithNormalMethod">
+    <property name="name" value="Spring"/>
+  </bean>
+
+  <bean id="helloWithMultiplePrinters" class="org.eminentstar.ioc.bean.annotated.autowired.multiplebean.HelloWithMultiplePrinters">
+    <property name="name" value="Spring"/>
+  </bean>
+
+  <bean id="printer" class="org.eminentstar.ioc.bean.annotated.autowired.StringPrinter"/>
+  <bean id="printer2" class="org.eminentstar.ioc.bean.annotated.autowired.StringPrinter"/>
+
+  <bean id="diFailedDataSourceTransactionManager" class="org.eminentstar.ioc.bean.annotated.autowired.qualifier.DIFailedDataSourceTransactionManager"/>
+  <bean id="myDataSourceTransactionManager" class="org.eminentstar.ioc.bean.annotated.autowired.qualifier.MyDataSourceTransactionManager"/>
+
+  <bean id="oracleDataSource" class="org.eminentstar.ioc.bean.annotated.autowired.qualifier.OracleDataSource">
+    <!--<qualifier value="mainDB"/>-->
+  </bean>
+  <bean id="mySQLDataSource" class="org.eminentstar.ioc.bean.annotated.autowired.qualifier.MySQLDataSource">
+    <!--<qualifier value="subDB"/>-->
+  </bean>
+
+  <bean id="helloWithQualifier" class="org.eminentstar.ioc.bean.annotated.autowired.qualifier.HelloWithQualifier">
+    <property name="name" value="Spring"/>
+  </bean>
+
+</beans>

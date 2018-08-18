@@ -4,6 +4,15 @@ public class Hello {
   String name;
   Printer printer;
 
+  public Hello() {
+
+  }
+
+  public Hello(String name, Printer printer) {
+    this.name = name;
+    this.printer = printer;
+  }
+
   public String sayHello() {
     return "Hello " + name;
   }
@@ -24,6 +33,10 @@ public class Hello {
    */
   public void setPrinter(Printer printer) {
     this.printer = printer;
+  }
+
+  public String getName() {
+    return this.name;
   }
 
   public Printer getPrinter() {

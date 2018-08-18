@@ -456,8 +456,401 @@ public class ContextLoaderListener extends ContextLoader implements ServletConte
     - 자동인식 방식으로 설정하기 어려운 DataSource, 트랜잭션 매니저등은 bean 태그를 통해 설정. 
     - 빈 스캐닝시 스캔 대상이 되는 클래스의 패키지를 미리 결정해둬야함에 주의
         - `빈 스캐닝은 애플리케이션 컨텍스트별로 진행되는 작업`
-        - 중복 등록이 될 수도 있음. 주의.
+        - 빈 중복 등록이 될 수도 있음. 주의.(중복 등록시 빈의 부가 기능(e.g. AOP)이 무시 될 수도)
 3. XML 없이 빈 스캐닝 단독 사용 
+    - 자동인식을 위한 애노테이션을 부여할 수 있는 애플리케이션 컴포넌트 클래스는 빈 스캔 대상으로 삼음.
+    - 기술 서비스 빈, 컨테이너 설정용 빈 등은 @Configuration 자바 코드를 이용한 설정 메타정보로 만듬.
+    - 그리고 @Configuration 클래스들을 모두 빈 스캔 대상에 포함시킴.
+
+### 1.2.3. 빈 의존관계 설정 방법
+빈 오브젝트 `사이의` DI를 위한 의존관계 메타정보 작성 방법.
+
+* DI 할 대상을 선정하는 방법으로 분류 
+    1. 명시적으로 구체적인 빈을 지정하는 방법 
+        - DI할 `빈의 id를 직접 지정`
+    2. 일정한 규칙에 따라 자동으로 선정하는 방법
+        - `타입 비교`를 통해 호환되는 타입의 빈을 DI 후보로 삼는 방법.
+        - 보통 `autowiring`이라고 불림.
+
+* 메타정보 작성 방법으로 분류
+    1. XML bean tag
+    2. 스키마를 가진 전용 태그 
+    3. 애노테이션 
+    4. 자바 코드에 의한 직접적인 DI
+
+* 메타정보 작성 방법에 의한 분류도 다시 DI 할 대상을 선정하는 방법으로 나뉠 수 있음.(총 8가지 빈 의존관계 주입 방법)
+* 일반적으로 DI라 하면 스프링이 관리하는 빈 오브젝트 사이의 관계를 말하지만, 넓게 보면 빈 외의 오브젝트 또는 단순 값을 주입하는 것도 포함됨.
+
+
+빈 의존관계 메타정보 작성 방법
+#### (1) XML: <property>, <constructor-arg>
+* bean tag를 통해 빈을 등록했다면 프로퍼티, 생성자 두가지 방식으로 DI 지정 가능.
+    - property는 자바빈 규약을 따르는 수정자 메소드를 사용 
+    - 생성자는 빈 클래스의 생성자를 이용
+* 두가지 방법 모두 파라미터를 통해 의존 오브젝트나 값을 넘겨 주입.
+
+##### <property>: 수정자 주입
+* ref 속성을 사용시 빈 이름을 이용해 주입할 빈을 찾음.
+* value 속성을 통해 단순 값이나 빈이 아닌 오브젝트를 주입함. 
+    - value 속성에 넣을 수 있는 값의 타입에는 제한이 없음.
+    - 스프링은 문자열로 작성된 value의 값을 수정자의 타입에 맞게 적절한 변환을 시도.
+    - 문제가 없으면 DI 될 수 있음.
+```xml
+<bean ...>
+    <property name="printer" ref="defaultPrinter"/>
+    <property name="name" value="Spring"/>
+    <property name="age" value="30"/>
+    <property name="myClass" value="java.lang.String"/>
+</bean>
+
+<bean id="defaultPrinter" class="...">
+```
+
+##### <constructor-arg>: 생성자 주입
+* 생성자 주입은 생성자의 파라미터를 이용하기 때문에 한번에 여러개의 오브젝트를 주입가능.
+```xml
+  <bean id="hello" class="org.eminentstar.ioc.bean.Hello">
+    <!--<constructor-arg index="0" value="Spring"/>-->
+    <!--<constructor-arg index="1" ref="printer"/>-->
+    <constructor-arg type="java.lang.String" value="Spring"/>
+    <constructor-arg type="org.eminentstar.ioc.bean.Printer" ref="printer"/>
+  </bean>
+
+  <bean id="printer" class="org.eminentstar.ioc.bean.StringPrinter"/>
+```
+
+#### (2) XML: 자동 와이어링
+* autowiring은 미리 정해진 규칙을 이용해서 자동으로 DI 설정을 컨테이너가 추가하도록 만드는 것.
+
+##### byName: 빈 이름 자동와이어링
+* bean 태그에 `autowire` 모드를 지정하면 property 태그 넣는 것을 생략가능.
+* `autowire="byName"`으로 지정하면 클래스의 프로퍼티의 이름과 동일한 빈을 찾아서 자동으로 프로퍼티로 등록해줌.
+    - 해당 클래스에 프로퍼티에 대한 setter 메소드도 있고, 이름이 같은 빈이 있으니 DI해도된다고 판단.
+* 이름을 이용한 autowiring은 빈의 모든 프로퍼티에 대해 이름이 동일한 빈을 찾아 연결해줌.
+    - `Q: 테스트를 해보니 id나 name 둘중하나만 맞으면 autowiring되는 것 같은데? 음..`
+
+```xml
+  <bean id="hello" class="org.eminentstar.ioc.bean.Hello" autowire="byName">
+    <property name="name" value="Spring"/>
+    <!-- printer 프로퍼티는 autowiring을 통해 컨테이너가 자동으로 추가해줌. -->
+  </bean>
+
+  <bean id="printer" class="org.eminentstar.ioc.bean.StringPrinter"/>
+```
+* beans 태그에  default-autowire 속성을 지정해서 전체 bean 태그에 autowiring 적용 가능. 
+
+##### byType: 타입에 의한 자동와이어링 
+* 프로퍼티 타입과 각 빈의 타입을 비교해서 자동으로 연결해주는 방법
+* 단점:
+    1. 타입이 같은 빈이 두 개 이상 존재하는 경우 적용되지 못함.(어떤 빈을 사용해야될 지 결정을 못함.)
+    2. 성능이 느림.
+        - 타입을 비교하는 것은 스트링으로 된 이름을 비교하는 것보다 느림.
+    3. autowiring은 빈의 모든 프로퍼티에 일괄적용됨.
+        - 프로퍼티의 개수가 많아지면 자동와이어링 대상이 아니여도 한 번씩 모든 빈의 타입과 비교하는 작업이 일어나야 함.
+
+* XML내의 autowiring 방식의 단점
+    1. XML만 봐서는 빈 간의 의존관계를 파악하기 힘듬.
+    2. 이름을 이용한 autowiring에서 오타로 빈이름을 잘못 적으면 DI되지 않고 넘어감.
+    3. 타입에 의한 autowiring에서는 대입가능한 타입이 두 개 이상이면 문제가 됨.
+    4. 하나의 빈에 대해 한가지 autowiring 방식밖에 지정할 수 없음.
+
+* autowiring방식을 사용하면 기존의 빈에 새로운 의존관계가 추가될 때 그에 따른 `수정자 메소드만 추가해주면 되기에` 편리함.
+
+#### (3) XML: 네임스페이스와 전용 태그
+* 스키마를 정의해서 사용하는 전용 태그의 의존관계 지정방법은 단순히 property/constructor-arg 태그 와 같이 고정되어있지 않음.
+    - 각 스키마 마다 조금씩 다름.
+* 전용 태그에 의해 생성되는 빈이 일반 bean태그를 통해 생성되는 빈에 DI될 수도 있고,
+* bean 태그에 의해 생성되는 빈이 전용 태그에 의해 만들어지는 빈에 DI를 위해 참조될 수도 있음.
+
+
+#### (4) 애노테이션: @Resource
+> 애노테이션에 의해 빈의 의존관계를 정의할 수 있는 방법은 2가지로 첫번째는 `@Resource`, 두번째는 `@Autowired/@Inject`
+* @Resource는 (property 태그와 비슷하게) **주입할 빈의 id로 지정**하는 방법A
+* @Resource는 `자바 클래스의 수정자 뿐만 아니라 필드에도 붙일 수 있음.`
+    - 지금까지 본 DI는 수정자/생성자 같은 특정 메소드를 이용했었음.
+    - @Resource를 이용하면 수정자 메소드가 없어도 직접 내부 필드에 DI를 할 수 있음.
+
+##### 수정자 메소드
+* 수정자 메소드는 오브젝트 외부에서 내부로 다른 오브젝트의 레퍼런스나 값을 전달 할 수 있는 주입 경로가 됨.
+```java
+public class Hello {
+  private Printer printer;
+
+  /**
+   * <property name="printer" ref="printer"/>와
+   * 동일한 의존관계 메타정보로 변환됨.
+   */
+  @Resource(name = "printer")
+  public void setPrinter(Printer printer) {
+    this.printer = printer;
+  }
+
+}
+```
+* 참조할 빈의 이름은 @Resource의 name 속성을 통해 지정해줬지만 프로퍼티의 이름은 따로 지정해주지 않았음.
+    - 자바빈 수정자 메소드의 관례를 따라 *메소드 이름*으로부터 프로퍼티 이름을 끌어 낼 수 있음.
+* @Resource 같은 애노테이션으로 된 의존관계 정보를 이용해 DI가 이뤄지게 할 때 다음과 같은 방법을 사용해야함.
+    1. XML의 `<context:annotation-config />`
+        - `@Resource와 같은 애노테이션 의존관계 정보를 읽어서 메타정보를 추가해주는 기능을 가진 빈 후처리기를 등록`해주는 전용 태그
+        - 이 빈 후처리기는 (새로운 빈을 등록해주지는 않지만) 이미 등록된 빈의 메타정보에 프로퍼티 항목을 추가해주는 작업을 함.
+    2. XML의 `<context:component-scan />`
+        - 빈 스캐닝을 통한 빈 등록 방법을 지정.
+        - 내부적으로 'context:annotation-config 태그'로 만들어지는 빈을 함께 등록해줌.
+        - 빈 스캐닝은 항상 애노테이션 의존관계 설정을 지원한다고 기억.
+    3. AnnotationConfigApplicationContext 또는 AnnotationConfigWebApplicationContext
+        - 해당 컨텍스트는 빈 스캐너와 애노테이션 의존관계 정보를 읽는 후처리기를 내장함.
+
+##### 필드 
+* @Resource는 필드에도 적용 가능. 필드의 정보를 참고해서 프로퍼티 추가.
+* 수정자 메소드가 없어도 상관 없음.(`Field Injection`이라 부름`)
+* access modifier가 public이 아니여도 됨.
+* name 엘리먼트를 생략하면 DI할 빈의 이름이 프로퍼티나 필드 이름과 같다고 가정.
+
+
+* XML의 autowiring은 각 프로퍼티에 주입할 만한 빈 후보가 존재하지 않으면 그냥 지나치지만, @Resource가 붙어 있으면 DI할 빈을 찾을 수 없으면 예외가 발생함.
+
+* @Resource는 기본적으로 `참고할 빈의 이름을 이용해서 빈을 찾음`
+    - @Resource의 name을 지정하지 않았고, 디폴트 이름으로는 참조할 빈을 찾을 수 없는 경우 타입을 이용해 다시 빈을 찾기도함.(하지만 권장하지 않음.)
+
+
+#### (5) 애노테이션: @Autowired/@Inject
+> 두번째 애노테이션을 이용한 의존관계 설정 방법
+* 기본적으로 `타입`에 의한 autowiring 방식을 동작
+* @Autowired는 스프링 2.5때부터 적용된 스프링 전용 애노테이션 
+* @Inject는 JavaEE 6의 표준 스펙인 JSR-330(Dependency Injection for Java; DIJ)에 정의되어 있는 것.
+    - 스프링에서 개발한 POJO를 앞으로 다른 환경에서도 사용할 가능성이 있다면 @Inject와 DIJ에서 정의한 애노테이션을 사용하는 것이 좋음.
+
+<br>
+`@Autowired는 XML의 타입에 의한 autowiring 방식을 생성자, 필드, 수정자 메소드, 일반 메소드 이렇게 4가지 방식으로 확장한 것.`
+
+##### 수정자 메소드와 필드
+* @Autowired가 부여된 `필드 or 수정자`를 만들어주면 스프링이 자동으로 DI해주도록 만드는 것
+* (이름 대신) 필드나 프로퍼티 타입을 이용해 후보 빈을 찾음.
+* 대입 가능한 빈 후보가 하나 발견되면 자동으로 DI됨.
+
+```java
+// 필드에 적용
+public class HelloWithField {
+  @Autowired
+  private Printer printer;
+```
+
+```java
+// setter method에 적용.
+public class HelloWithSetterMethod {
+  private Printer printer;
+
+  @Autowired
+  public void setPrinter(Printer printer) {
+    this.printer = printer;
+  }
+}
+```
+
+##### 생성자
+* @Autowired를 생성자에 부여했을 경우, `생성자의 모든 파라미터에` *타입에 의한 autowiring이 적용*됨. 
+* @Autowired는 `단 하나의 생성자에만 사용`할 수 있다는 제한이 있음.
+
+```java
+public class HelloWithConstructor {
+
+  private String name;
+  private Printer printer;
+  private Printer printer2;
+
+  @Autowired
+  public HelloWithConstructor(Printer printer, Printer printer2) {
+    this.printer = printer;
+    this.printer = printer2;
+  }
+}
+```
+
+##### 일반 메소드
+* 파라미터를 가진 메소드에 @Autowired를 붙여주면 각 파라미터의 타입을 기준으로 autowiring을 해서 DI 해줄 수 있음.
+* 여러 개를 지정할 수 있음.
+* 이렇게 만들어진 클래스는 xml을 통해서는 의존관계를 설정할 방법이 없다는 점에 주의
+```java
+public class HelloWithNormalMethod {
+
+  private String name;
+  private Printer printer;
+  private Printer printer2;
+
+  @Autowired
+  public void config1(Printer printer) {
+    this.printer = printer;
+    //    this.printer2 = printer2;
+  }
+
+  @Autowired
+  public void config(Printer printer2) {
+    this.printer2 = printer2;
+  }
+}
+```
+
+<br>
+동일한 타입을 가진 빈이 하나 이상 존재할 때 @Autowired를 사용하는 방법에 대해 살펴보자.
+##### 컬렉션과 배열
+* @Autowired를 사용시 같은 타입의 빈이 하나 이상 존재할 때 그 빈들을 모두 DI받도록 할 수 있음.
+    - @Autowired의 대상이 되는 필드나 프로퍼티, 메소드의 파라미터를 컬렉션이나 배열,리스트, 셋, 맵등으로 선언하면 됨.
+    - 맵을 이용하면 빈의 이름을 키로 하는 맵을 DI 받을 수 있음.
+* DI 받을 타입이 컬렉션인 경우 @Autowired로 자동 설정이 불가능함.(@Resource를 사용해야함.)
+
+##### @Qualifier
+* 타입 외의 정보를 추가해서 자동와이어링을 세밀하게 제어할 수 있는 보조적이 방법
+* *타입만으로 원하는 빈을 지정하기 어려운 경우*가 종종 발생.
+* @Autowired를 위한 타입의 빈이 2개 이상일 때, 스프링은 이 중 어떤 빈을 DI해줘야할 지 판단할 수 없음.
+    - @Resource를 이용해서 이름을 통해 빈 주입을 할 수 있긴 하지만, 빈 이름은 변경되기 쉽고 그 자체로 의미를 부여하기는 힘듬.
+    - `빈 이름과는 별도로 추가적인 메타정보를 지정해서 의미를 부여해놓고 이를 @Autowired에서 사용 할 수 있게 하는 @Qualifier 가 직관적임.`
+* @Qualifier를 선언해서 qualifier를 가진 빈으로 autowiring 대상을 제한 가능.
+    - 스프링은 DI할 타입의 빈중에 autowired될 빈에 qualifier가 있는(`xml의 <qualifier> 태그나, 빈의 타입레벨에 @Qualifier가 있는`) 것으로 한정해서 autowiring 시도함.
+
+* e.g. autowired될 클래스
+```java
+public class MyDataSourceTransactionManager {
+  @Autowired
+  @Qualifier("mainDB")
+  private DataSource dataSource;
+}
+```
+
+* e.g. @Qualfier 지정할 빈
+```xml
+  <bean id="oracleDataSource" class="org.eminentstar.ioc.bean.annotated.autowired.qualifier.OracleDataSource">
+    <qualifier value="mainDB"/>
+  </bean>
+```
+```java
+@Component
+@Qualifier("mainDB") // <qualifier value="mainDB"/> 와 동일
+public class OracleDataSource implements DataSource {
+  @Override
+  public Connection getConnection() throws SQLException {
+    return null;
+  }
+}
+```
+* 지정한 qualifier가 없는 경우 `qualifier의 value에 해당하는 이름의 빈`이 한 번 더 있는 지 확인하고 있으면 그 빈을 DI 대상으로 선택.
+    - 별로 권장되지 않음.
+    - type과 qualifier를 활용하고 싶을 때만 @Autowired를 사용하는 것이 바람직.
+* @Qualifier는 부여 대상이 필드, 수정자, 파라미터.
+    - @Qualifier는 갖 파라미터마다 하나의 빈이 매핑되기에 생성자나, 메소드가 아니라 파라미터에 직접 각각 @Qualifier를 붙여야함.
+
+* @Autowired는 지정시 반드시 DI 할 후보 빈이 있어야함. 없으면 예외 발생.
+    - 없어도 세부 파라미터별로 선택적으로 DI가 가능하게하려면 @Autowired의 엘리먼트를 required=false로 선언.
+
+
+<br>
+JSR-300에도 @Autowired, @Qualifier와 비슷한 기능을 가진 @Inject, @Qualifier가 있음.(사용법은 약간 제한되어있고 다름.)
+##### @javax.inejct.Inject 
+* @Autowired와 매우 유사 
+* @Autowired의 requrired 엘리먼트에 해당하는 선택 기능은 없음.
+
+##### @javax.inject.Qualifier
+* javax의 @Qualifier는 자체로는 한정자로 사용해서 @Inject와 함께 쓸 수 없음.
+* 단지 다른 한정자 애노테이션을 정의하는 용도로만 사용 가능.
+
+#### (6) @Autowired와 getBean(), 스프링 테스트 
+* 해당 타입의 빈이 하나뿐이라면 애플리케이션 컨텍스트의 getBean(Class class)을 통해 가져 올 수 있음.
+* @Autowired는 ~~테스트 클래스의 필드에 빈을 Injection해주는 것이 아니라~~, 엄밀히 말하면 `테스트 클래스 오브젝트에 애노테이션을 이용한 의존관계를 설정해준다`라고 할 수 있음.
+
+#### (7) 자바 코드에 의한 의존관계 설정 
+##### 애노테이션에 의한 설정 @Autowired, @Resource
+* 빈은 자바코드에 의해 생성되지만 의존관계는 빈 클래스의 애노테이션을 이용하게 할 수 있음.
+    - @Autowired같은 애노테이션을 통한 의존관계 설정은 빈 오브젝트 등록을 마친 후에 `후처리기에 의해 별도의 작업으로 진행`되기 때문.
+    - @Autowired를 사용했더라도 일부 프로퍼티는 코드에서 직접 의존관계를 지정해줄 수 있음.
+
+```java
+public class Hello {
+
+    @Autowired
+    Printer printer;
+}
+
+@Configuration
+public class Config {
+    @Bean
+    public Hello hello() {
+        return new Hello();
+    }
+
+    @Bean
+    public Printer printer() {
+        return new Printer();
+    }
+
+}
+```
+
+##### @Bean 메소드 호출
+* @Configuration과 @Bean을 사용하는 자바 코드 설정 방식의 기본은 메소드로 정의된 다른 빈을 메소드 호출을 통해 참조하는 것.
+    - @Bean이 붙은 메소드 자체가 하나의 빈 이름처럼 사용됨.
+    - @Configuration이 붙은 클래스에서는 설정정보로 인식되 @Bean에서 생성되는 빈이 싱글톤으로 한번만 생성되지만, 일반 클래스의 @Bean에서는 이렇게 동작하지 않기에 유의.
+
+
+```java
+@Configuration
+public class Config {
+    @Bean
+    public Hello hello() {
+        Hello hello = new Hello();
+        hello.setPrinter(printer());
+        return hello;
+    }
+
+    @Bean
+    public Printer printer() {
+        return new Printer();
+    }
+}
+```
+
+##### @Bean과 메소드 자동와이어링
+* 메소드로 정의된 다른 빈을 가져와 자바 코드로 의존정보를 생성할 때 (직접 @Bean이 붙은 메소드를 호출하는 대신) 그 `빈의 레퍼런스를 파라미터로 주입받는 방식`을 사용.
+    - @Bean이 붙은 자바 코드 설정용 메소드에 애노테이션을 이용한 의존관계 설정 기법을 적용한 것.
+* @Bean이 붙은 메소드는 기본적으로 @Autowired가 붙은 메소드처럼 동작함.
+* @Configuration이 붙은 클래스도 하나의 빈이고, @Bean이 @Autowired를 포함하고 있다고 생각하면 이해하기 쉬움.
+* 파라미터에 @Qualifier를 추가해도됨.
+* 한 개 이상의 파라미터 추가 가능.
+* 파라미터의 빈은 해당 @Configuration 클래스안에 정의되지 않아도 됨.
+    - xml이나 빈 스캐너를 이용해서 등록되는 빈을 가져와 자바 코드에 의해 만들어지는 빈에 사용할 수 있음.
+
+```java
+@Configuration
+public class HelloConfig {
+
+  /**
+   * @Bean이 붙은 메소드는 기본적으로 @Autowired가 붙은 메소드처럼 동작함.
+   */
+  @Bean
+  public Hello hello(Printer printer) {
+    Hello hello = new Hello();
+    hello.setPrinter(printer);
+    
+    return hello;
+  }
+
+  /**
+   * hello(Printer printer)의 printer 파라미터로 지정 시,
+   * @Autowired한 것과 동일하게 파라미터로 Printer 타입의 빈 정보가 제공됨.
+   */
+  @Bean
+  public Printer printer() {
+    return new StringPrinter();
+  }
+
+}
+```
+
+#### 빈 의존관계 설정 전략
+자주 쓰이는 방법들.
+1. XML 단독 
+2. XML과 애노테이션 설정의 혼합
+    - 빈 등록은 XML로, 의존관계 설정은 애노테이션으로.
+3. 애노테이션 단독
+    - 빈 등록도 @Component 애노테이션을 이용해서 스캐너에 맡기고, 의존관계 역시 @Autowired와 같은 애노테이션을 이용해 자동으로 등록.
 
 
 ## 1.5. 스프링 3.1의 IoC 컨테이너와 DI
