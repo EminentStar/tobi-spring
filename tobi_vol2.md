@@ -609,7 +609,7 @@ public class Hello {
 
 * XML의 autowiring은 각 프로퍼티에 주입할 만한 빈 후보가 존재하지 않으면 그냥 지나치지만, @Resource가 붙어 있으면 DI할 빈을 찾을 수 없으면 예외가 발생함.
 
-* @Resource는 기본적으로 `참고할 빈의 이름을 이용해서 빈을 찾음`
+* `@Resource`는 기본적으로 참고할 `빈의 이름`을 이용해서 빈을 찾음
     - @Resource의 name을 지정하지 않았고, 디폴트 이름으로는 참조할 빈을 찾을 수 없는 경우 타입을 이용해 다시 빈을 찾기도함.(하지만 권장하지 않음.)
 
 
@@ -851,6 +851,151 @@ public class HelloConfig {
     - 빈 등록은 XML로, 의존관계 설정은 애노테이션으로.
 3. 애노테이션 단독
     - 빈 등록도 @Component 애노테이션을 이용해서 스캐너에 맡기고, 의존관계 역시 @Autowired와 같은 애노테이션을 이용해 자동으로 등록.
+
+
+### 1.2.4. 프로퍼티 값 설정 방법
+* DI를 통해 빈에 주입되는 것은 2가지 
+    1. 다른 빈 오브젝트의 레퍼런스 
+    2. 단순 값(스프링이 관리하는 빈이 아닌 모든 것. 오브젝트가 될 수 있음.)
+
+#### 메타정보 종류에 따른 값 설정 방법
+
+##### (1) XML: <property>와 전용 태그 
+* property 태그는 ref 애트리뷰트를 이용해 다른 빈의 아이디를 지정.
+```xml
+<bean id="hello" ...>
+    <!-- public setName(String name) 메소드를 호출해서 "Everyone" 이라는 값을 주입함. -->
+    <property name="name" value="Everyone" />
+</bean>
+```
+* 스프링 컨테이너는 XML의 문자열로 된 값을 프로퍼티 타입으로 변환해주는 변환 서비스를 내장하고 있음.
+
+##### (2) 애노테이션: @Value
+* 빈 의존관계는 아니지만 어떤 값을 외부에서 주입해야하는 용도가 2가지가 있음.
+    1. 환경에 따라 매번 달라질 수 있는 값.
+        - e.g. DataSource 타입 빈에 제공하는 DriverClass, URL, UserName, Password
+        - 환경에 의존적인 정보나, 상황에 따라 달라질 수 있는 값을 소스코드의 수정 없이 지정해주기 위해.
+    2. 초기값은 정해져 있고 특별한 경우에만 다른 값을 지정해주고 싶은 경우.
+* 코드와 외부 설정을 분리해 얻을 수 있는 장점은 설정이 바뀌더라도 소스코드를 다시 컴파일하지 않아도 된다는 점.
+
+* @Value는 소스코드의 애노테이션을 이용해서 프로퍼티 값을 지정하는 방법.
+```java
+public class Hello {
+    private String name;
+    @Value("Everyone")
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+```
+* @Value("Everyone")은 `<property ... value="Everyone"/>`과 동일.
+* @Value는 스프링 컨테이너가 참조하는 정보. 그자체로 클래스의 필드에 값을 넣어주는 기능이 있는 건 아님.
+* @Value로 값을 설정해준다는 건 자바 코드와 컨테이너가 런타임시에 주입하는 정보를 분리하겠다는 의미. 외부로부터 주입을 통한 초기화가 반드시 필요하다고 이해.
+* @Value 애노테이션의 주요 용도는 자바 코드 외부의 리소스나 환경정보에 담긴 값을 사용하도록 지정해주는 데 있음.
+
+* 다음과 같이 환경정보를 담은 프로퍼티 파일을 따로 만들어두고 그 값을 가져 올 수 있음.
+```java
+@Value("${database.username}")
+String username;
+```
+* 이때는 database.username 속성이 정의된 database.properties 파일을 xml에서 지정해둬야 함.
+```xml
+<context:property-placeholder location="classpath:database.properties" />
+```
+* 이렇게 외부 리소스에 담긴 정보를 지정하는 표현식을 사용하면 @Value 애노테이션은 실제 설정 값에서 독립시킬 수 있음.
+
+##### (3) 자바코드: @Value
+* @Configuration과 @Bean을 사용하는 경우도 프로퍼티 값을 외부로 독립시킬 수 있음.
+```java
+@Configuration
+public class Config {
+    
+    @Value("${database.username}")
+    private String name;
+
+    @Bean
+    public Hello hello() {
+        Hello hello = new Hello();
+        hello.setName(name);
+        return hello;
+    }
+
+}
+```
+* 또는 @Bean 메소드의 파라미터에 @Value를 직접 사용할 수 있음.
+```java
+@Bean
+public Hello hello(@Value("${database.username}") String name) {
+    Hello hello = new Hello();
+    hello.setName(name);
+    return hello;
+}
+``` 
+ 
+#### PropertyEditor와 ConversionService
+* XML의 value 애트리뷰트나 @Value의 엘러먼트는 모두 텍스트. 
+    - 값을 넣을 프로퍼티 타입이 스트링이면 상관없지만, 그외의 타입이면 타입 변환이 필요.
+* 스프링은 두가지 종류의 타입 변환 서비스를 제공.      
+    - 디폴트는 PropertyEditor라는 타입 변환기.
+        - 원래는 GUI 개발환경에서 자바빈 오브젝트의 프로퍼티 값을 직접 넣어주기 위해 만듬.
+        - 스프링은 PropertyEditor를 xml또는 @Value의 스트링 값에서 빈 오브젝트의 프로퍼티 타입으로 변경하는데 활용.
+
+* 스프링이 기본적으로 지원하는 변환 가능한 타입
+    * 기본 타입
+        - boolean, Boolean, byte, Byte, short, Short, int, Integer, long, Long, float, Float, double, Double, BigDecimal, BigInteger, char, Character, String
+        - e.g. `@Value(1.2) double rate;`
+    * 배열
+        - byte[], char[], short[], int[], long[]
+        - 값을 콤마로 구분해서 넣어주면 배열 형태로 변환됨.
+        - e.g. `@Value("1,2,3,4") int[] intarr;`
+    * 기타 
+        - Charset, Class, Currency, File, InputStream, Locale, Pattern, Resource, Timezone, URI, URL
+        
+* 스프링 3.0부터는 PropertyEditor 대신 사용할 수 있는 ConversionService를 제공.
+
+> 144, 145p 누락
+
+#### 프로퍼티 파일을 이용한 값 설정.
+* 일부 설정 정보를 별도의 파일로 분리해두면 유용할 때가 있음.
+    - 서버 환경에 종속적인 정보가 있다면 이를 애플리케이션 구성정보에서 분리하기 위함.
+* 환경에 따라 자주 변경되는 내용은 프로퍼티 파일로 분리하느 것이 가장 깔끔.
+* @Value에서 프로퍼티 파일의 내용을 참조하게 하면 소스코드 수정 없이 @Value를 통해 프로퍼티에 주입되는 값을 변경가능.
+
+* 프로퍼티 파일의 값을 사용하는 방법은 2가지.(모두 XML의 value나 @Value에 대체 가능한 이름 또는 표현식을 넣어두고 스프링 컨테이너가 그 자리에 프로퍼티 파일에서 읽은 값을 넣어줌.)
+    1. 수동 변환: PropertyPlaceHolderConfigurer
+        - `프로퍼티 치환자(placeholder)`는 프로퍼티 파일의 키 값을 `${}`안에 넣어서 만들어줌.
+        - xml 사용시 context 네임스페이스의 property-placeholder 태그를 추가하고 프로퍼티 파일의 위치를 지정.
+        - 스프링 컨테이너는 초기화 작업 중 프로퍼티 파일을 읽고 각 키에 대해 ${}를 붙인 값과 동일한 value 선언을 찾음. 그리고 발견된 value의 값을 프로퍼티 파일에 정의해둔 값으로 바꿔치기함.
+        - ${}로 선언된 값을 프로퍼티 파일의 내용으로 바꿔치기하는 것은 context:property-placeholder에 의해 자동으로 등록되는 `PropertyPlaceHolderConfigurer` 빈이 담당.
+            - 이 빈은 빈 팩토리 후처리기.
+            - 빈 팩토리 후처리기는 빈 후처리기와 비슷하지만 동작하는 시점과 다루는 대상이 다름.
+            - `빈 후처리기는 매 빈 오브젝트가 만들어진 직후에 오브젝트의 내용이나 오브젝트 자체를 변경할 때 사용.`
+            - `빈 팩토리 후처리기는 빈 설정 메타정보가 모두 준비됐을 때 빈 메타정보 자체를 조작하기 위해 사용.`
+        - PropertyPlaceHolderConfigurer는 프로퍼티 파일의 내용을 읽은 후에 빈 메타정보의 프로퍼티 값 정보에서 ${}로 둘러싸인 치환자를 찾음.
+        - 빈 메타정보의 프로퍼티 값 자체를 프로퍼티 파일의 내용을 이용해 변경해줌.
+        - 해당 방법은 대체할 위치를 치환자로 지정해두고 별도의 후처리기가 치환자 값을 변경해주기를 기대하는 것이기 때문에 수동적임.
+    2. 능동 변환: SpEL
+        - 다른 빈 오브젝트에 직접 접근할 수 있는 표현식을 이용해 원하는 프로퍼티 값을 능동적으로 가져오는 방법.
+        - SpEL의 대표적인 사용 경우가 스프링의 빈 메타정보의 값 설정에 이용하는 경우.
+        - SpEL은 기본적으로 `#{}`안에 표현식을 넣도록 되어있음.
+        - hello.name이라는 표현식은 hello인 빈의 name 프로퍼티를 의미함.
+        - util:properties 태그를 이용해서 프로퍼티 파일을 읽어 Properties 타입의 빈으로 만들 수 있음.
+            - util:properties는 빈 팩토리 후처리기로 동작하는 게 아니라, 단순 프로퍼티 파일의 내용을 담은 Properties 타입 빈을 만들어줄 뿐임.
+    * SpEL의 경우 좀 더 능동적으로 정보에 접근하는 방식이기에 오타와 같은 실수가 있을 때 에러 검증이 가능함.
+        - 맵을 사용하기에 키 값을 잘못적어도 예외가 발생하지 않고 무시되니 주의.
+    * ${}를 사용하는 프로퍼티 치환자 방식은 문자열을 비교해서 일치하는 게 있으면 바꿔주고, 없으면 그대로 두기 때문에 이름을 잘못 적는 실수를 해도 예외가 발생하지 않음.
+
+### 1.2.5. 컨테이너가 자동등록하는 빈 
+* ApplicationContext, BeanFactory
+    - 일반 빈에서 애플리케이션 컨텍스트를 사용하고 싶을 때 ApplicationContext 타입의 빈을 DI받도록 해주면 됨. 
+    - 컨텍스트 자신은 이름을 가진 빈으로 등록되어 있지는 않음.
+* ResourceLoader, ApplicationEventPublisher
+    - 스프링 컨테이너는 ResourceLoader이기도 함. (서버환경에서 다양한 Resource를 로딩할 수 있는 기능을 제공.)
+    - ApplicationEventPublisher는 ApplicationListener 인터페이스를 구현한 빈에게 이벤트를 발생시킬 수 있는 publishEvent() 메소드를 가진 인터페이스.
+* systemProperties, systemEnvironment
+    - systemProperties는 System.getProperties() 가 돌려주는 Properties 타입의 오브젝트를 읽기 전용으로 접근할 수 있게 만든 빈 오브젝트.
+        - JVM이 생성해주는 시스템 프로퍼티 값을 읽을 수 있게 해줌.
+    - systemProperties, systemEnvironment빈을 통째로 가져올 수도 있고, SpEL을 통해 특정 프로퍼티만 가져올 수 있음.
 
 
 ## 1.5. 스프링 3.1의 IoC 컨테이너와 DI
