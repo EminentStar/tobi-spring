@@ -1095,6 +1095,122 @@ public Hello hello(@Value("${database.username}") String name) {
     - @Scope 애노테이션으로 스코프를 지정했다면 `proxyMode` 엘러먼트를 이용해서 프록시를 이용한 DI가 되도록 지정할 수 있음.
         - 스코프 프록시는 프록시 패턴을 활용한 것.
 
+## 1.4. 기타 빈 설정 정보 
+### 1.4.1. 빈 이름
+
+#### XML 설정에서의 빈 식별자와 별칭
+빈 id, 빈 name 모두 특정 빈을 구분해서 가리키기 위해 사용되는 `bean identifier`를 말함.   
+빈은 하나 또는 그 이상의 식별자를 가질 수 있으며 빈의 식별자는 빈이 정의된 애플리케이션 컨텍스트 내에서 고유해야함.
+
+* id
+    - 명명 규칙:
+        - 공백이 들어갈 수 없음.
+        - 첫 글자는 알파벳과 언더바, 그외 허용된 문자만 사용가능 
+        - 나머지 글자는 알파벳, 언더바, 숫자와 dot을 허용. 그외 특수문자는 사용할 수 없음.
+    - id는 생략도 가능.
+        - 생략하면 스프링 컨테이너가 자동으로 빈의 아이디를 부여해줌.
+            - id를 지정하지 않았더라도 빈의 타입을 이용해 DI하는 것이 가능.
+* name 
+    - id와 달리 특별한 명명 제약이 없음.
+    - id와 달리 한번에 여러 개의 이름을 지정할 수 있음.
+        - 하나 이상의 이름을 부여할 때는 comma나 semi-colon을 이용해 각 이름을 구분.
+
+* id와 name은 동시에 사용할 수 있음.
+    - 하나의 빈을 다양한 이름으로 참조할 수 있음.
+    - id와 name을 이용해 여러 개의 이름을 부여하고 양쪽에서 각기 다른 이름을 참조하게 만드는 편이 나을 때가 있음.
+
+#### 애노테이션에서의 빈 이름
+* 클래스에 @Component같은 스테레오타입 애노테이션을 부여하고 빈 스캐너에 의해 자동인식되도록 만든 경우에는 보통 클래스 이름을 그대로 빈 이름으로 사용하는 방법을 선호.
+```java
+@Component
+public class UserService {}
+```
+* @Configuration이 달린 클래스의 @Bean 메소드를 이용해 빈을 정의하는 경우 메소드 이름이 그대로 빈 이름이 됨.
+```java
+@Configuration
+public class Config {
+    @Bean
+    public UserDao userDao() {}
+}
+```
+* 직접 빈 이름을 등록하는 경우도 있음.
+```java
+@Component("myUserService")
+public class UserService {}
+```
+```java
+@Configuration
+public class Config {
+    @Bean(name="myUserDao")
+    public UserDao userDao() {}
+}
+```
+* @Bean을 사용하는 경우 하나 이상의 빈 이름을 지정할 수 있음.
+```java
+@Configuration
+public class Config {
+    @Bean(name={"myUserDao", "useDao"})
+    public UserDao userDao() {}
+}
+```
+
+### 1.4.2. 빈 생명주기 메소드
+#### 초기화 메소드 
+> initialization method란 빈 오브젝트가 생성되고 DI작업까지 마친 다음에 실행되는 메소드.   
+> 오브젝트의 기본 초기화는 생성자에서 하면 되지만, DI를 통해 모든 프로퍼티가 주입된 후에야 가능한 초기화 작업들이 있음.   
+> 이런 경우 사용할 수 있는 것이 초기화 메소드.
+초기화 메소드를 지정하는 4가지 방법이 있음.
+1. 초기화 콜백 인터페이스 
+    - InitializingBean 인터페이스를 구현해서 빈을 작성.
+    - InitializingBean의 afterPropertiesSet()은 이름 그대로 프로퍼티 설정까지 마친 뒤에 호출됨.
+    - 별로 권장X. 애플리케이션 빈 코드에 스프링 인터페이스가 노출되기 떄문.
+2. init-method 지정 
+    - XML을 통해 빈을 등록할 때 bean 태그에 init-method 속성을 넣어서 초기화 작업을 수행할 메소드의 이름을 지정할 수 있음.
+    - 코드만 보고 초기화를 파악하긴 어려움.
+3. `@PostConstruct`
+    - 초기화를 담당할 메소드에 @PostConstruct 애노테이션을 부여해주기만 하면 됨.
+    - @PostConstruct는 자바의 표준 공통 애노테이션(JSR-250)
+    - 코드를 통해 파악하기 쉬움.
+    - 가장 권장됨.
+        - 근데 생각해보면 클래스의 코드가 엄청 많다면 @PostConstruct가 어디있는지 바로 보기는 어려울듯. InitializingBean 인터페이스를 구현하는 건 클래스 이름과 붙어 있기때문에 좀 더 파악하긴 쉬울듯.
+4. @Bean(initMethod)
+    - @Bean 메소드를 이용해 빈을 정의하는 경우 @Bean 애노테이션의 initMethod 엘리먼트를 사용해서 초기화 메소드를 지정할 수 있음.
+
+#### 제거 메소드 
+> 컨테이너가 종료될 때 호출돼서 빈이 사용한 리소스를 반환하거나 종료 전에 처리해야할 작업을 수행.
+1. 제거 콜백 인터페이스 
+    - DisposableBean 인터페이스를 구현해서 destroy()를 구현하는 방법
+2. destory-method
+    - bean 태그의 destroy-method 속성을 통해 지정 
+3. @PreDestroy
+    - 컨테이너가 종료될 때 실행될 메소드에 @PreDestroy를 붙여줌.
+4. @Bean(destroyMethod)
+    - @Bean 애노테이션의 destroyMethod를 붙여주면 됨.
+
+
+### 1.4.3. 팩토리 빈과 팩토리 메소드
+* 생성자 대신 오브젝트를 생성해주는 코드의 도움을 받아서 빈 오브젝트를 생성하는 것을 `팩토리 빈`
+    - 팩토리 빈 자신은 빈 오브젝트로 사용되지 않음.
+    - 대신 빈 오브젝트를 만들어주는 기능만 제공해줌.
+
+#### FactoryBean 인터페이스 
+* vol1에서 new 키워드나 리플렉션 API를 이용해 생성자를 호출하는 방식으로는 만들 수 없는 JDK프록시를 빈으로 등록하기 위해 FactoryBean 인터페이스를 구현해서 다이내믹 프록시를 생성하는 getObject() 메소드를 구현하고 팩토리 빈으로 등록해서 사용했음.
+* 보통 팩토리 빈은 기술 서비스 빈이나 기반 서비스 빈을 활용할 때 주로 사용됨.
+
+#### static factory method
+* 클래스의 스태틱 메소드를 호출해스 인스턴스를 생성하는 방식
+    - 내가 CommonBillingBaseResult abstract class의 오브젝트 생성을 구현했던 방법과 같나?
+* 스태틱 팩토리 메소드를 호출해서 빈 오브젝트를 생성해야 한다면 bean 태그에 사용할 수 있는 factory-method 애트리뷰트를 이용하는 것이 편리
+* 오브젝트 생성과 함께 초기화 작업이 필요한 경우 스태틱 팩토리 메소드를 이용해야함.(?)
+
+#### instance factory method 
+* 오브젝트의 인스턴스 메소드를 이용해 빈 오브젝트를 생성할 수 있음.
+    - FactoryBean 인터페이스를 구현한 팩토리 빈이 바로 팩토리 빈 오브젝트의 메소드를 이용해서 빈 오브젝트를 생성하는 대표적인 방법
+* 임의의 오브젝트의 메소드를 호출해서 빈을 생성해야 한다면 factory-bean, factory-method를 같이 사용할 수 있음.
+
+#### @Bean 메소드 
+* 자바 코드에 의한 빈 등록 방식에서 사용하는 @Bean 메소드도 일종의 팩토리 빈 메소드. 
+    - 스프링 컨테이너가 @Bean 메소드를 실행해 빈 오브젝트를 가져오는 방식이기 때문.
 
 ## 1.5. 스프링 3.1의 IoC 컨테이너와 DI
 ### 1.5.1. 빈의 역할과 구분
