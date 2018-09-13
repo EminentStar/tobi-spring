@@ -1213,11 +1213,53 @@ public class Config {
     - 스프링 컨테이너가 @Bean 메소드를 실행해 빈 오브젝트를 가져오는 방식이기 때문.
 
 ## 1.5. 스프링 3.1의 IoC 컨테이너와 DI
+
 ### 1.5.1. 빈의 역할과 구분
 #### 빈의 종류 
 1. 애플리케이션 로직 빈 
+    - 스프링에서 말하는 빈은 스프링 IoC/DI 컨테이너에 의해 생성되고 관리되는 오브젝트임.
+    - 일반적으로 `애플리케이션의 로직을 담고 있는` 주요 클래스의 오브젝트가 빈으로 지정됨.
 2. 애플리케이션 인프라 빈 
+    - e.g. DataSource와 같이 구현 클래스가 여러가지 여서 하나를 지정해야 하고 연결 방법과 관련된 속성은 코드 외부에서 제공하는 경우 빈으로 사용하기 적당함.
+    - e.g. TransactionManager의 경우는 DataSource 오브젝트와 관계를 맺으며 DB 커넥션에 대한 트랜잭션을 관리하는 책임을 가짐. 이역시 빈으로 등록돼서 스프링 IoC/DI 컨테이너에 의해 만들어지고 다른 빈과 관계를 맺고 동작함.
+    - 이런 DataSource나 TransactionManager의 경우 애플리케이션 로직 빈과 같이 스프링 컨테이너에 등록되는 빈이긴 하지만 성격이 다름.
+    * 애플리케이션의 로직을 담당하지 않음.
+    * 애플리케이션 로직 빈을 `지원`함. 
+    * 애플리케이션이 동작하는데 직접 참여하기에 애플리케이션 빈의 일종임.
 3. 컨테이너 인프라 빈
+    - e.g. DefaultAdvisorAutoProxyCreator의 경우 Advisor 타입 빈의 포인트 컷 정보를 이용해서 타깃 빈을 선정하고, 선정된 빈을 프록시로 바꿔주는 기능을 담당. 
+        - 이는 애플리케이션 로직을 담고 있지도 않고, 다른 애플리케이션 로직을 담은 빈과 관계를 맺고 외부 서비스를 이용하는데 도움을 주는 것도 아님.
+    * 스프링 컨테이너의 기능에 관여함.
+    * 스프링 IoC/DI 컨테이너의 기능을 확장하는 방법은 확장 기능을 가진 오브젝트를 스프링의 빈으로 등록하는 것임.
+    * 스프링 컨테이너의 기능을 확장해서 빈의 등록과 생성, 관계설정, 초기화 등의 작업에 참여하는 빈을 컨테이너 인프라스트럭처 빈이라 부르자.
+
+#### 컨테이너 인프라 빈과 전용 태그
+* 보통 컨테이너 인프라 빈은 bean 태그를 통해 직접 등록하는 것 보단 전용태그를 사용하는 방법이 많이 쓰임.  
+* 애플리케이션 로직/인프라 빈과는 
+    * 성격이 크게 다름.
+    * 이름이 김.
+    * 한 번에 여러 개의 빈을 동시에 설정해야 하는 경우도 많음.
+* 그래서 스프링은 이런 빈을 개발자가 직접 등록하는 것 대신, `전용 태그`를 사용해 간접적으로 등록하는 방법을 권장함.
+
+* IoC/DI 컨테이너에는 @Configuration/@Bean을 이용해 새로운 빈을등록해주는 기능이 없음.
+    - 그래서 예제에서 @Configuration 클래스를 직접 xml에 bean으로 등록했을 때(@Configuration/@Bean, 의존관계 설정 , 빈 초기화 메소드 기능을 담당하는 빈을 등록하지 않았을 경우), @Configuration 클래스에서 @Bean 메소드로 정의한 빈은 등록되지 않았음.
+* @Configuration/@Bean, @Autowired 같은 애노테이션을 이용한 빈 의존관계 설정방식, @PostConstruct를 통한 빈 초기화 메소드 기능 모두 스프링 컨테이너가 기본적으로 제공하는 기능이 아님.
+    - 스프링 컨테이너의 기능을 확장할 수 있는 컨테이너 인프라 빈이 제공하는 기능일 뿐임.
+* `<context:annotation-config>` 태그는 context 네임스페이스의 태그를 처리하는 핸들러를 통해 특정 빈이 등록되게 해줌.
+    - 이 과정에서 등록되는 빈이 스프링 컨테이너를 확장해서 빈의 등록과 관계 설정, 후처리 등에 새로운 기능을 부여하는 컨테이너 인프라 빈.
+
+* 스프링 3.1에서 context:annotation-config 태그를 추가할 때 등록되는 빈
+    * org.springframework.context.annotation.ConfigurationClassPostProcessor$ImportAwareBeanPostProcessor#0	org.springframework.context.annotation.ConfigurationClassPostProcessor$ImportAwareBeanPostProcessor
+    * org.springframework.context.annotation.ConfigurationClassPostProcessor
+        - @Configuration, @Bean을 이용해 새로운 빈을 등록하는 역할
+    * org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor
+        - @Autowired가 붙은 필드를 찾아서 빈 의존관계를 설정해줌.
+    * springframework.beans.factory.annotation.RequiredAnnotationBeanPostProcessor
+    * org.springframework.context.annotation.CommonAnnotationBeanPostProcessor
+        - @PostConstruct가 붙은 메소드를 빈이 초기화된 뒤에 호출해주는 기능을 제공.
+
+* 컨테이너 인프라 빈은 스프링 컨테이너의 기본 기능을 확장하는 데 사용되고 주로 전용 태그를 통해 간접적으로 등록함.
+    - 등록할 때 주로 일정한 설정 패턴이 있기 때문에 전용 태그로 등록하고 애트리뷰터를 통해 필요한 속성만 부여하도록 하는 것이 일반적.
 
 #### 빈의 역할 
 > 웹 환경에서 애플리케이션 컨텍스트는 web.xml의 설정에 따라 루트 애플리케이션 컨텍스트나 서블릿 컨텍스트 형태로 만들어짐.
