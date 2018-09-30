@@ -2004,6 +2004,13 @@ AOP를 이용해 트랜잭션 기능을 부여하는 방법은 보통 두가지�
     - DB 동기화가 필요한 시점(트랜잭션 종료 등.)이 되어야만 실제 DB에 등록함.
 * JPA/Hibernate에선 DB에서 가져온 엔티티 오브젝트의 필드를 수정하는 것만으로도 update가 일어나는 문제가 있음.
 
+## 2.7. 스프링 3.1의 데이터 액세스 기술 
+
+### 2.7.3 @EnableTransactionManagement
+* XML의 `<tx:annotation-driven />`과 동일한 컨테이너 인프라 빈을 등록해주는 자바 코드 설정용 애노테이션.
+* @Transactional 애노테이션을 이용한 트랜잭션 설정을 가능하게 해줌.
+* 트랜잭션 AOP 관련 인프라 빈들은 @EnableTransactionManagement로 모두 등록됨.
+
 
 <hr>
 
@@ -3696,3 +3703,454 @@ HandlerInterceptor를 적용하는 방법은 두가지.
 
 
 <hr>
+
+# Chap 07: 스프링의 기타 기술과 효과적인 학습 방법 
+
+## 7.1. 스프링 기술과 API를 효과적으로 학습하는 방법 
+* 스프링은 일관된 방식으로 개발된 프레임워크. 모든 코드와 API가 동일한 원리에 기반을 두고 만들어져 있음.
+    - DI. 스프링 자신도 DI를 이용해 만들어짐.
+* DI는 객체지향 설계 원칙을 충실히 적용했을 때 만들어지는 코드의 특징일 뿐임.
+* 스프링의 핵심 엔진 애플리케이션 컨텍스트/컨테이너, 웹 기술의 중심인 DispatcherServlet도 모두 DI 원리를 이용해 확장할 수 있도록 만들어졌음.
+
+### 7.1.1. 빈으로 등록되는 스프링 클래스와 DI
+* 어떤 오브젝트가 빈으로 사용된다는 데는 두가지 의미가 있음.
+    1. 다른 빈에 의해 DI돼서 사용되는 서비스라는 의미.
+        - 클라이언트를 갖는다는 의미임.
+    2. 다른 빈이나 정보에 의존하고 있다는 의미임.
+* 빈이 구현하고 있는 인터페이스는 빈이 제공하는 기능을 정의한 것임. 
+* 또한, 해당 빈을 사용하려는 클라이언트와의 연결 채널.
+* 빈의 프로퍼티는 빈 기능의 확장 포인트임.
+
+<br>
+
+스프링의 빈의 기능을 파악하고 사용하려면 두가지 관점(구현 인터페이스/프로퍼티)으로 분석해야함.
+* 구현 인터페이스 분석 
+    * 스프링 API 문서/IDE 클래스 타입 계층구조를 통해 세부 사항을 파악하자.
+* 프로퍼티 분석 
+
+
+#### DI/확장 포인트 분석 
+* 빈 클래스의 프로퍼티 중에서 `인터페이스 타입의 프로퍼티`를 보면 해당 구현 클래스의 `확장 포인트`라고 생각하면 됨.
+
+* (예시) DataSource
+    * LazyConnectionDataSourceProxy
+    * `AbstractRoutingDataSource`: (현재 우리 플랫폼에서 쓰고있음.)
+        - 다중 DataSource에 대한 라우팅을 제공하는 프록시. 
+        - 여러 개의 DataSource가 존재하지만 DAO나 트랜잭션 매니저에는 하나의 DataSource만 존재하는 것처럼 사용하도록 만들어야 할 때가 있음.
+        - 예로, MASTER/SLAVE 두가지 DB에 연결하는 DataSource를 각각 등록했을 때, 이 두가지 DataSource를 모든 DAO와 트랜잭션 매니저가 사용할 수 있으면서, 조회의 경우 SLAVE, 갱신의 경우 MASTER DB를 사용하게 만들고 싶을때 사용 
+        - lookup 키와 DataSource 맵을 정의해야함.
+            - 각각 룩업키에 대해 DataSource 빈을 지정해야함.
+
+## 7.2. IoC 컨테이너 DI
+* DispatcherServlet과 마찬가지로 스프링 IoC/DI 컨테이너 (애플리케이션 컨텍스트)도 그 자체는 빈이 아니지만 DI를 받음.
+    - (직접 property 태그로 설정해줄 순 없지만) 애플리케이션 컨텍스트는 자신의 확장 포인트 인터페이스를 구현한 빈을 찾아서 스스로 DI함.
+        - 엄밀히 말하면 DL이라고 볼 수 있음.
+
+### 7.2.1. BeanPostProcessor와 BeanFactoryPostProcessor
+> `가장 많이 사용되는 IoC 컨테이너의 확장포인트`
+
+#### BeanPostProcessor
+> `빈 오브젝트를 생성하는 시점`에 사용됨.
+* BeanPostProcessor의 postProcessBeforeInitialization() 은 빈 오브젝트가 처음 만들어지고 아직 초기화 메소드가 호출되기 이전에 실행됨.
+    - 만들어진 빈 오브젝트와 이름을 제공해주는데, 원한다면 빈 오브젝트를 바꿔치기할 수 있음.
+    - 기본 설정과 다르게 빈에 새로운 기능을 부여하거나, 설정에는 없는 프로퍼티 값을 설정해주거나, 아예 빈 오브젝트를 통째로 바꾸기도 함.
+* @Autowired, @Inject 같은 애노테이션을 이용해서 정의된 의존관계를 적용해주는 것도 BeanPostProcessor를 구현한 빈이 해주는 작업.
+    - XML이나 스캐닝을 통해 등록된 빈을 애노테이션 DI를 담당하는 BeanPostProcessor가 받아서, 필드나 메소드의 @Autowired를 ㄹ확인하고, 그에 따라 필요한 빈을 DI해줌.
+* AOP의 동작원리인 자동 프록시 생성기도 BeanPostProcessor를 구현한 빈.
+    - 자동 프록시 생성기는 새로운 프록시 오브젝트를 만든 뒤 원래 빈 오브젝트를 프록시 안으로 감춤
+    - 그리고 프록시 오브젝트가 빈 오브젝트인 것처럼 바꿔치기함.
+
+#### BeanFactoryPostProcessor
+> `빈 설정 메타데이터가 준비된 시점`에서 사용됨.
+* 빈 팩토리에 대한 후처리를 가능하게 하는 확장 포인트 인터페이스.(빈 오브젝트가 아니라)
+* 컨테이너는 빈 팩토리 후처리기가 있으면 postProcessBeanFactory()에 빈의 모든 메타정보를 담고있는 ConfigurableListableBeanFactory 타입의 오브젝트를 전달해줌.(컨테이너 자기 자신.)
+    - 이를 이용해서 등록된 빈의 메타정보 자체를 조작할 수 있음.
+    - 새로운 빈을 등록할 수도 있음.
+* @Configuration 태그가 붙은 클래스를 만들어서 빈으로 등록하면 @Bean 메소드 선언을 통해 빈을 등록할 수 있다고 했음.
+    - @Configuration에 의해 빈을 등록할 수 있는 이유가 BeanFactoryPostProcessor가 있기 때문.
+    - 스캐닝과 XML을 통해 빈이 등록되면 스프링 컨테이너는 등록된 BeanFactoryPostProcessor를 호출함.
+    - ConfigurationClassPostProcessor가 @Configuration과 @Bean이 붙은 클래스 정보를 이용해서 새로운 빈을 추가해주는 기능을 담당함.
+
+* 위 두가지 확장 포인트외에도, 컨테이너 레벨의 이벤트와 리스너 구현, XML의 프로퍼티 값에 대한 프로퍼티 에디터나 컨버전 서비스, 국제화 지원과 같은 IoC의 확장 포인트도 사용할 수 있음.
+    - 자세한 건 스프링 레퍼런스 매뉴얼의 `IoC 컨테이너 확장기능` 항목을 살펴볼 것.
+
+
+## 7.3. SpEL
+> 자바에는 다양한 종류의 표현식 언어가 존재함.   
+> 스프링 3.0부터 좀 더 강력하고 유연하면서 스프링에 잘 접목돼 사용할 수 있는 스프링 전용 EL을 직접 제공하기 시작.
+
+* SpEL은 다양한 용도로 사용됨.
+    - 빈 설정파일이나 애노테이션을 이용해 프로퍼티 값을 지정할 때.
+        - 빈 프로퍼티 값에 사용되는 SpEL에선 다른 빈 오브젝트를 직접 참조할 수 있음.
+    - JSP의 `<spring:eval>` 태그
+        - SpEL을 이용한 표현식으로 모델 오브젝트의 값을 가공해 출력할 수 있음.
+
+
+## 7.4. OXM
+
+## 7.5. 리모팅과 웹 서비스, EJB
+* 스프링이 직접 지원하는 리모팅 기술 종류 
+    - RMI
+    - 스프링 HTTP Invoker
+    - `Hessian`
+    - Burlap
+    - JAX-RPC
+    - JAX-WS
+    - JMS
+    - `RESTful`
+* 리모팅은 원격 시스템과 스프링 애플리케이션이 연동해서 동작하게 해주는 기술.
+    - 스프링 애플리케이션이 클라이언트 시스템에 원격 서비스를 제공하는 것과, 다른 원격 시스템의 서비스를 이용하는 것 두가지로 구분됨.
+
+### 7.5.1. 익스포터와 프록시 
+#### 익스포터 
+* 서비스를 제공할 때는 원격 요청을 받아서 특정 인터페이스를 구현한 서비스 빈에게 요청을 전달해주는 빈을 이용해야함.(익스포터)
+* 보통 익스포터는 원격 요청을 처리하는 서블릿 등을 통해서 HTTP 요청을 전달받고, 이를 해석한 후에 미리 설정을 통해서 등록된 인터페이스를 이용해 서비스 빈을 호출함.
+
+#### 프록시 
+* 원격 시스템에 있는 오브젝트를 대신해서 클라이언트 오브젝트의 호출을 받고, 이를 원격 오브젝트에 전송해서 결과를 가져와서 클라이언트 오브젝트에게 돌려주는 역할을 맡은 빈 오브젝트
+    - 이를 사용하는 빈 입장에선 원격 호출이 일어나는지를 신경 쓰지 않고, 같은 컨테이너 안의 빈 오브젝트를 사용하듯 쓰는 것임.(`리모팅 호출의 공통적인 동작원리`)
+
+### 7.5.2. RESTful 서비스 템플릿
+* RESTful 서비스를 요청할 때는 (서비스 인터페이스 타입의 프록시 대신) 템플릿/콜백 방식의 템플릿을 이용함.
+* 결과는 문자열 그대로 받을 수도 있고, 메시지 컨버터를 이용해서 오브젝트로 변환할 수도 있음.
+* XML, JSON 같은 포맷의 결과이면 *메시지 컨버터*를 이용해서 오브젝트로 변환해서 받을 수 있음.
+    - `RestTemplate`의 messageConverters 프로퍼티에 메시지 컨버터 등록.
+
+
+## 7.6. 태스크 실행과 스케줄링 
+### 7.6.1 TaskExecutor 서비스 추상화 
+> java.lang.Runnable은 run() 메소드를 가진 인터페이스로, 독립적인 스레드에 의해 실행되도록 의도된 오브젝트를 만들때 주로 사용.  
+> 이런 독립적인 스레드 안에서 동작하도록 만들어진 오브젝트를 독립적으로 실행 가능한 작업이라는 의미로 task라고 부름.   
+* 스프링은 이런 task를 다양한 방법으로 실행하도록 만들어진 오브젝트 특징을 추상화한 TaskExecutor 인터페이스를 제공함.
+
+* 대부분의 TaskExecutor가 추상화한 기술은 비동기적으로 독립적인 스레드에서 실행되며, 주로 스레드 풀을 사용하는 방식을 사용함.
+* 스프링이 직접 구현한 TaskExecutor에는 동기화 실행 방식도 있고, 스레드 풀을 사용하지 않고 계속 새로운 스레드를 만드는 구현 방식을 가진 것도 있는데, 실제로는 비동기 방식으로 스레드 풀을 이용해 실행되는 것이 유용하게 쓰이는 테스크 실행 모델임.
+
+* ThreadPoolExecutor
+    - JDK의 ThreadPoolExecutor에 대한 어댑터 클래스.
+    - 지정된 크기의 스레드 풀을 이용하며, 작업 요청은 큐를 통해 관리됨.
+
+### 7.6.2. TaskScheduler
+* 스프링은 TaskExecutor와 마찬가지로 서비스 추상화 기법을 사용해 스케줄링 기술에 독립적인 사용이 가능한 추상화 서비스 인터페이스인 TaskScheduler를 제공.
+* 젠킨스 + 배치 와 같은 걸 자바 코드로 비슷하게 하는 것 같은데, 젠킨스가 워낙 기능이 파워풀하고 코드단에서 스케줄을 건들 필요가 없어서 안쓰이는듯??
+
+
+### 7.6.4. 애노테이션을 이용한 스케줄링과 비동기 태스크 실행
+#### @Scheduled
+
+#### @Async
+* @Async가 부여된 메소드는 자동으로 비동기 방식으로 실행됨.
+* TaskExecutor를 코드로 사용하지 않고도 비동기 실행이 가능하게 해주는 편리한 애노테이션 
+* 비동기로 동작하기 때문에 메소드 내의 작업이 오랜 시간이 걸리더라도 메소드를 호출하면 바로 리턴됨. 
+* 메소드는 별도의 스레드에서 동작하게 됨.
+* 리턴 타입은 void또는 Future타입이어야 함.
+* 파라미터는 가질 수 있음.
+
+
+## 7.7. 캐시 추상화(스프링 3.1)
+* 스프링 3.1은 빈의 메소드에 캐시 서비스를 적용할 수 있는 기능을 제공함.
+* 캐시 서비스는 트랜잭션과 마찬가지로 `AOP를 이용해서 메소드 실행과정에 투명하게 적용`됨.
+* **캐시 서비스 `구현 기술에 종속되지 않게 추상화 서비스를 제공`하기 때문에 환경이 바뀌거나 적용할 기술을 변경해서 캐시 서비스의 종류가 달라지더라도 `애플리케이션 코드에 영향을 주지 않음`.**
+> 캐시는 반복적으로 동일한 결과가 돌아오는 작업에만 이용해야함.   
+> 매번 다른 결과를 돌려줘야하는 작업에는 캐시를 적용해봐야 성능이 떨어짐(매번 캐시에 저장하거나 캐시 확인을 하는 작업때문에 부하가 늘어남.)   
+> 캐시에 저장해둔 내용이 바뀌는 상황을 잘 파악해야함.    
+> 애플리케이션 빈의 메소드 결과를 캐시에 저장해두는 것이 적절한 경우라면 스프링 3.1이 제공하는 캐시 서비스 추상화 기능을 이용하면 됨.
+
+### 7.7.1 애노테이션을 이용한 캐시 속성 부여 
+> 스프링 캐시 서비스 추상화는 AOP를 이용함.   
+> 캐시 기능을 담은 advice는 스프링이 제공.   
+> 적용 대상 빈/메소드 선정 및 속성 부여는 기본 AOP 설정을 통해 이용.    
+> 트랜잭션에서 @Transactional을 이용하는 것처럼 애노테이션을 이용한 AOP 설정 방식을 사용하는 것이 편리.
+
+#### @Cacheable
+* 캐시 서비스는 보통 메소드 단위로 지정함. 
+* 캐시에 `저장할 내용`과 캐시 `속성 정보`로 `메소드의 리턴 값`과 `메소드 파라미터`를 사용
+* 디폴트 엘리먼트는 캐시 이름.
+```java
+@Cacheable("product")
+public Product bestProduct(String productNo) {
+
+}
+```
+* 하나의 캐시에 key가 다른 여러개의 오브젝트를 넣을 수 있음.
+    - 위에서 productNo가 "product" 캐시의 키가 됨.
+* 캐시에 오브젝트가 저장될 때는 키 정보도 함께 저장됨.
+* 메소드 요청이 있을 때 product 캐시에서 파라미터와 같은 키 값으로 저장된 오브젝트가 있는지 찾은 후, 있으면 메소드를 실행하지 않고 캐시에 저장된 Product 오브젝트를 돌려주고, 없으면 메소드 실행 후 결과 값을 캐시에 추가함.
+
+* 호출 과정 
+    1. @Cacheable 애노테이션이 적용된 메소드가 호출되면 AOP에 의해서 캐시 기능을 담당하는 advice가 먼저 실행됨.
+    2. 캐시에 키 값에 해당하는 오브젝트가 있는지 확인함.
+        1. 오브젝트를 찾지 못한 경우 캐시 어드바이스는 메소드를 실행함.
+            * 메소드 결과가 리턴되면 그 결과 값을 키와 함께 캐시에 저장함.
+        2. 오브젝트를찾은 경우 캐시 어드바이스는 저장된 오브젝트를 가져와 바로 리턴함.
+            * 이때 메소드는 실행되지 않음.
+            * AOP는 메소드 실행 전/후에 부가적인 작업을 추가하기도 하지만, 아예 메소드의 실행 여부를 결정 할 수도 있음.
+                * 캐시는 메소드 실행전에 키에 해당하는 오브젝트가 있는지 확인 후 존재한다면 메소드 실행을 아예 생략해버림.
+
+
+* 메소드 파라미터 값이 여러개인 경우
+    - 디폴트로는 모든 파라미터의 hashCode() 값을 조합해서 키로 만듬.
+        - 유의미하다면 사용해도됨.
+        - 유의미하지 않은 경우 
+            - @Cacheable 애노테이션을 이용해서 키 값으로 어떤 것을 사용할 지 지정해줄 필요가 있음.
+            - @Cacheable의 `key` 엘러먼트를 이용해서 키 값으로 사용할 파라미터를 지정해줄 수 있음.
+                - key 엘러먼트는 SpEL을 이용해서 키 값을 지정함.
+```java
+@Cacheable(value="product", key="#productNo")
+Product bestProduct(String productNo, User user, Date datetime) {
+
+}
+```
+
+* 파라미터가 오브젝트라 직접 캐시의 키로 사용할 수 없는경우 
+    - 파라미터의 특정 프로퍼티 값을 키로 사용해야함.
+        - SpEL을 통해 파라미터의 특정 프로퍼티를 키로 지정.
+
+```java
+@Cacheable(value="product", key="#condition.productNo")
+Product bestProduct(SearchCondition condition) {
+
+}
+```
+
+* 파라미터 값이 특정 조건을 만족시키는 경우에만 캐시를 적용하고, 그외의 경우에는 캐시 서비스를 적용하지 않아야 한다면 
+    - `condition` 엘러먼트를 이용.
+
+```java
+/**
+ * user 파라미터의 type 프로퍼티가 ADMIN인 경우만 캐시 적용 대상이 됨.
+**/
+@Cacheable(value="user", condition="#user.type == 'ADMIN'")
+public User findUser(User user) {
+}
+```
+
+#### @CacheEvict, @CachePut
+* 캐시 제거에 사용될 메소드에 간단히 @CacheEvict 애노테이션을 붙이면 됨.(캐시 서비스 AOP 기능 적용)
+```java
+@CacheEvict(value="bestProduct")
+public void refreshBestProducts() {
+
+}
+```
+* @CacheEvict는 기본적으로 메소드의 키 값에 해당하는 캐시만 제거함.
+    - 캐시에 저장된 값을 모두 제거할 필요가 있다면 다음과 같이 `allEntires` 엘러먼트를 true로 지정.
+
+```java
+@CacheEvict(value="product", allEntires=true)
+```
+
+* 메소드를 캐시에 값을 저장하는 용도로만 사용하기 위해 @CachePut 이용.
+    - @Cacheable과 비슷하게 메소드 실행 결과를 캐시에 저장은 하지만,
+    - 저장된 캐시의 내용을 사용하지는 않고 항상 메소드를 실행한다는 점이 다름.
+
+#### 애노테이션으 ㄹ이용한 캐시 기능 설정 
+* XML로는 `<cache:annotation-driven />`, 자바 코드 설정으로는 @Configuration 클래스에 `@EnableCaching`을 추가해주면 됨.
+
+
+### 7.7.2 캐시 매니저 
+> 스프링의 캐시 서비스는 AOP를 이용해서 `애플리케이션 코드를 수정하지 않고도` 캐시 부가기능을 메소드에 적용할 수 있게 해줌.   
+> 동시에 캐시 기술의 종류와 상관없이 추상화된 스프링 캐시 API를 이용할 수 있게 해주는 `서비스 추상화`를 제공함.   
+> AOP 어드바이스는 스프링이 제공해주는 것을 애노테이션을 통해 적용하면 됨.    
+
+* 트랜잭션 추상화에서 사용할 트랜잭션 기술에 맞는 트랜잭션 매니저를 빈으로 등록했던 것 처럼,    
+    - 캐시 추상화에선 적용할 캐시 기술을 지원하는 캐시 매니저를 빈으로 등록해줘야 함.
+* 캐시 추상화 API인 캐시 매니저는 org.springframework.cache 패키지의 CacheManager 인터페이스를 구현해서 만듬.
+
+* ConcurrentMapCacheManager
+    - ConcurrentMapCache 클래스를 캐시로 사용하는 캐시 매니저. 
+    - 자바 ConcurrentHashMAp을 이용해 캐시 기능을 구현한 간단한 캐시 
+    - 테스트 이외에 잘 사용하지 않음.
+* `SimpleCacheManager` 
+    - 기본적으로 제공하는 캐시가 없음.
+        - 프로퍼티를 이용해서 사용할 캐시를 직접 등록해줘야 함. 
+        - 스프링 Cachee 인터페이스를 구현해서 캐시 클래스를 직접 만드는 경우 테스트에서 사용하기에 적당함.
+* EhCacheCacheManager
+    - 자바에서 가장 인기 있는 캐시 프레임워크중 하나인 EhCache를 지원하는 캐시 매니저.
+
+## 7.8 @Enable* 애노테이션을 이용한 빈 설정정보 모듈화 
+> XML 전용태그는 작성하기 복잡한 빈 설정을 간단한 태그 한 두개로 만들 수 있었음. 이것은 `빈 설정정보를 모듈화`한 것임   
+> 모둘화의 가장 큰 이유는 효과적인 재사용. 반복적으로 사용되는 복잡한 빈 설정을 독립시켜 편리하게 재사용할 필요가 있었음.   
+> 자바코드를 이용한 빈 설정 방식은 재사용 가능한 설정정보 모듈로 만들기가 XML보다 훨씬 쉬움.
+
+
+### 7.8.1. @Import와 @Configuration 상속.
+#### @Import를 이용한 단순 재사용
+* @Configuration을 재사용하기 위한 방법중 가장 간단하고 쉬운 방법은 @Import하는 방법. 
+> 근데 설정정보를 파라미터로 넘기든지 하는 방법으로 해서 변경할 수가 없음.
+
+#### @Configuration 클래스 상속과 오버라이딩을 이용한 확장 방법
+* @Configuration으로 작성된 설정정보를 대부분 그대로 재사용하면서 일부 정보(프로퍼티 값 등)을 바꾸도록 하려면?
+    - @Configuration 상속을 하고 필요한 빈 설정만 오버라이딩해서 재정의하면 됨.
+> 재사용 빈 설정 클래스가 여러 개인 경우 불가능. 상속을 통해서는 한개의 설정 클래스 밖에 재사용하지 못함. 
+
+### 7.8.2. @Enable 전용 애노테이션과 ImportAware
+* @Enable로 시작하는 애노테이션은 보통 모듈화된 빈 설정을 추가하면서 엘리먼트 값을 통해 옵션 정보를 제공할 수 있게 해줌.
+
+#### @Enable 애노테이션 적용 
+* @Enable로 시작하는 애노테이션은 대부분 @Import를 메타 애노테이션으로 갖고 있음.
+* @Enable 애노테이션의 기본 기능은 @Import와 동일하게 다른 @Configuration 클래스 설정정보를 가져오는 것.
+    - @Import를 직접 노출하는 대신 메타 애노테이션으로 작성한 애노테이션을 사용하게 해줌.
+* @Enable은 관례적으로 사용하는 이름. 
+
+> **자바 애노테이션**   
+> 애노테이션을 정의할 때 @Target과 @Retention을 명시적으로 넣어주면 좋음.   
+> * @Target: 애노테이션을 적용할 수 있는 대상을 지정    
+> * @Retention: 애노테이션 정보의 유지 시점을 지정하는 것.
+
+#### ImportAware 인터페이스를 이용한 옵션 지정 
+* 애노테이션의 엘러먼트를 통해 애노테이션 사용시 값을 넘길 수 있음. 
+
+```java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Import(HelloConfig.class)
+public @interface EnableHelloWithElementOfAnnotation {
+  String name() default "";
+}
+```
+
+* @Configuration 클래스가 자신을 @Import한 애노테이션의 엘러먼트 값을 참조하려면 애노테이션 정보를 제공받기 위해 ImportAware 인터페이스를 구현해야함.
+
+```java
+@Configuration
+public class HelloConfig implements ImportAware {
+  @Bean
+  public Hello hello(Printer printer) {
+    Hello hello = new Hello();
+    hello.setPrinter(printer);
+
+    return hello;
+  }
+  @Bean public Printer printer() {...}
+
+  /**
+   * ImportAware의 setImportMetadata()는 AnnotationMetadata 타입의 파라미터에 @Enable 애노테이션 메타정보를 담아서 전달함.
+  **/
+  @Override
+  public void setImportMetadata(AnnotationMetadata importMetadata) {
+    Map<String, Object> elements = importMetadata.getAnnotationAttributes(
+      EnableHelloWithElementOfAnnotation.class.getName()
+    );
+    String name = (String)elements.get("name");
+    hello(printer()).setName(name);
+  }
+}
+```
+
+> 그런데, 재사용하려는 빈 설정정보의 양이 많거나 확장방법이 다양하고 복잡할 경우에는 애노테이션의 엘러먼트만으로는 부족할 수 있음.   
+
+### 7.8.3. 빈 설정자(Configurer)
+* 애노테이션의 엘러먼트로 충분하지 않을때, `코드를 이용해 복잡한 설정을 추가해야 할 필요가 있음.`
+    - 이럴 때, @Enable 애노테이션과 함께 자바 코드를 이용한 설정정보의 확장 포인트가 필요함. `빈 설정자(Configurer)`
+
+* 빈 설정자는 인터페이스로 정의됨. @Configuration 클래스가 빈 설정자를 구현해서 사용함.
+```java
+public interface HelloConfigurer {
+  void configName(Hello hello);
+}
+
+```
+
+* 빈 설정자를 적용하려면 빈 설정자를 구현한 클래스가 빈으로 등록되야함.
+    - 클래스로 따로 만들기보다는 @Configuration 클래스가 빈 설정자를 구현하게 만드는 것이 일반적임.
+        - @Configuration 클래스도 빈으로 등록되기 때문.
+
+```java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Import(HelloConfig2.class)
+public @interface EnableHelloWithConfigurer {
+}
+
+@EnableHelloWithConfigurer
+@Configuration
+public class Simple2Config implements HelloConfigurer {
+
+  public Hello hello() {
+    return new Hello();
+  }
+
+  @Override
+  public void configName(Hello hello) {
+    hello.setName("eminent.star.configurer");
+  }
+}
+```
+
+* _
+
+```java
+@Configuration
+public class HelloConfig2 {
+
+  /**
+   * HelloConfigurer를 구현한 @Configuration 클래스(Simple2Config)또한 빈 클래스이므로 빈 주입받을 수 있음. 
+   * 이를 통해 @Enable로 @Import되는 설정 클래스에서 @Enable을 부여한 클래스에서 구현한 코드를 실행할 수 있음.
+  **/
+  @Autowired
+  HelloConfigurer helloConfigurer;
+
+  @Bean
+  public Hello hello(Printer printer) {
+    Hello hello = new Hello();
+    helloConfigurer.configName(hello);
+    return hello;
+  }
+
+  @Bean
+  public Printer printer() {...}
+}
+```
+
+### 7.8.4. ImportSelector와 ImportBeanDefinitionRegister
+> @Enable 애노테이션은 @Import를 이용해서 @Configuration 클래스를 설정정보에 추가해주는 기능을 제공함.(@Configuration 클래스의 재사용을 기반으로 함)   
+> 근데 때로는 @Configuration의 재사용으론 충분하지 않는 경우가 있음. @Configuration 클래스는 @Bean메소드로 빈 설정정보를 갖고 있는데, `@Bean 메소드의 빈 타입을 바꾸거나 빈의 구성을 통째로 변경하는 것은 불가능함.`   
+* 옵션에 따라 빈의 종류나 구성이 아예 바뀌어야 한다면 @Import 기반의 방법으로는 충분하지 않음.
+    - 예로, AOP를 통해 트랜잭션 서비스를 지원해주는 @EnableTransactionManagement의 경우, 스프링이 지원하는 AOP는 JDK 다이내믹 프록시(프록시 기반 AOP)/AspectJ(바이트코드 조작 AspectJ AOP) 두가지임. 
+    - 이들의 적용 결과는 거의 비슷하지만 이에 사용되는 인프라 빈의 종류는 전혀 다름.
+    - 빈의 종류와 구성이 다르기 때문에 스프링은 이 두가지 종류의 트랜잭션 지원 AOP 빈 설정정보를 ProxyTransactionManagementConfiguration/AspectJTransactionManagementConfiguration에 분리해서 준비해놨음.
+    - 사용하고자 하는 AOP에 따라서 다른 설정을 가지고 와야함. 
+
+* @Enable 애노테이션은 @Import를 기반으로 하고 있고, @Import는 가져와 사용할 @Configuration 클래스를 직접 지정하고 있기에 @Configuration 클래스의 종류가 고정되어야만 함. 
+    * 옵션에 따라 다른 @Configuration 클래스를 사용하도록 만들어야함.
+    - 이런 문제를 해결하기 위해 스프링은 `ImportSelector`를 제공함. 
+        - 애노테이션 메타정보를 제공받아서 스트링 배열을 리턴하는 selectImport() 메소드를 갖고 있음.
+* ImportSelector는 `@Enable 애노테이션의 메타정보를 이용해서 @Import에 적용할 @Configuration 클래스를 결정해주는 오브젝트`
+```java
+public class HelloSelector implements ImportSelector {
+  @Override
+  public String[] selectImports(AnnotationMetadata importingClassMetadata) {
+    String mode = (String)importingClassMetadata.getAnnotationAttributes(
+      EnableHelloWithImportSelector.class.getName()).get("mode");
+
+    if (StringUtils.equals(mode, "mode1")) {
+      return new String[] {HelloConfigMode1.class.getName()};
+    } else {
+      return new String[] {HelloConfigMode2.class.getName()};
+    }
+  }
+}
+
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Import(HelloSelector.class)
+public @interface EnableHelloWithImportSelector {
+  String mode() default "mode1";
+}
+
+@EnableHelloWithImportSelector(mode = "mode1")
+@Configuration
+public class Simple3Config {
+  @Autowired
+  public Hello hello;
+
+  @Bean(name = "hello2")
+  public Hello hello() {
+    return new Hello();
+  }
+
+}
+```
+* 원래는 @Import에 @Configuration 클래스를 지정해주는 것이 일반적.
+    - ImportSelector를 구현한 클래스를 넣으면 ImportSelector를 이용해서 가져올 @Configuration 클래스를 결정하게 만들 수 있음.

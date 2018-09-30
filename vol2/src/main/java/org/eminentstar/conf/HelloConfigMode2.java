@@ -1,18 +1,13 @@
 package org.eminentstar.conf;
 
-import java.util.Map;
-
-import org.eminentstar.conf.extend.EnableHelloWithElementOfAnnotation;
 import org.eminentstar.ioc.bean.Hello;
 import org.eminentstar.ioc.bean.Printer;
 import org.eminentstar.ioc.bean.StringPrinter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.ImportAware;
-import org.springframework.core.type.AnnotationMetadata;
 
 @Configuration
-public class HelloConfig implements ImportAware {
+public class HelloConfigMode2 {
 
   /**
    * @Bean이 붙은 메소드는 기본적으로 @Autowired가 붙은 메소드처럼 동작함.
@@ -20,6 +15,7 @@ public class HelloConfig implements ImportAware {
   @Bean
   public Hello hello(Printer printer) {
     Hello hello = new Hello();
+    hello.setName("mode2");
     hello.setPrinter(printer);
 
     return hello;
@@ -33,12 +29,4 @@ public class HelloConfig implements ImportAware {
     return new StringPrinter();
   }
 
-  @Override
-  public void setImportMetadata(AnnotationMetadata importMetadata) {
-    Map<String, Object> elements = importMetadata.getAnnotationAttributes(
-      EnableHelloWithElementOfAnnotation.class.getName()
-    );
-    String name = (String)elements.get("name");
-    hello(printer()).setName(name);
-  }
 }

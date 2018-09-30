@@ -1,14 +1,15 @@
 package org.eminentstar.conf;
 
-import org.eminentstar.conf.extend.EnableHelloWithElementOfAnnotation;
+import org.eminentstar.conf.extend.EnableHelloWithConfigurer;
+import org.eminentstar.conf.extend.HelloConfigurer;
 import org.eminentstar.ioc.bean.Hello;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@EnableHelloWithElementOfAnnotation(name = "eminent.star.importaware")
+@EnableHelloWithConfigurer
 @Configuration
-public class SimpleConfig {
+public class Simple2Config implements HelloConfigurer {
   @Autowired
   public
   Hello hello;
@@ -18,4 +19,8 @@ public class SimpleConfig {
     return new Hello();
   }
 
+  @Override
+  public void configName(Hello hello) {
+    hello.setName("eminent.star.configurer");
+  }
 }
